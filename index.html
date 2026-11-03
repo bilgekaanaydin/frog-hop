@@ -326,7 +326,7 @@ function camY0() { return -Math.round(H * 0.22); }
 function newGame() {
   game.frog = { x: W / 2, y: 0, vx: 0, vy: 0, prevY: 0, anim: 'sit', landT: 9, dizzy: 0, blink: 0, blinkT: rnd(2, 4) };
   game.camY = camY0(); game.maxY = 0; game.score = 0; game.runCoins = 0;
-  game.exp = 0; game.level = 1; game.lives = 0; game.levelUpT = 0; game.oneUpT = 0; game.invuln = 0;
+  game.exp = 0; game.level = 1; game.lives = 0; game.levelUpT = 0; game.oneUpT = 0; game.eatT = 0; game.invuln = 0;
   game.superT = 0; game.tongueT = 0; game.tongue = null; game.charged = false;
   game.plats = []; game.coins = []; game.flies = []; game.items = []; game.parts = []; game.floaters = [];
   game.genY = 20; game.lastType = 'normal'; game.nextItemY = rnd(220, 320); game.shake = 0; game.time = 0; game.deadT = 0;
@@ -475,6 +475,7 @@ function step(dt) {
   if (game.tongueT > 0) game.tongueT -= dt;
   if (game.levelUpT > 0) game.levelUpT -= dt;
   if (game.oneUpT > 0) game.oneUpT -= dt;
+  if (game.eatT > 0) game.eatT -= dt;
   if (game.invuln > 0) game.invuln -= dt;
   // --- platforms
   for (const p of game.plats) {
@@ -497,7 +498,7 @@ function step(dt) {
   for (const it of game.items) {
     if (it.taken) continue; it.t += dt;
     if (Math.abs(it.x - f.x) < 16 && it.y > f.y - 6 && it.y < f.y + 32) {
-      it.taken = true; game.tongueT = TONGUE_TIME; sfx.pickup(); vibrate(15); addFloater(it.x, it.y + 8, 'EAT THE FLIES!', P.p);
+      it.taken = true; game.tongueT = TONGUE_TIME; sfx.pickup(); vibrate(15); game.eatT = 1.6;
       burst(it.x, it.y, 8, [P.p, P.a, P.w], 60, 0.4, 0);
     }
   }
@@ -880,11 +881,12 @@ function drawHUD() {
   }
   // level-up / 1UP banners
   // banners drop in from the top, hold, then fade out
-  const banner = (t, dur, y0, title, sub) => {
+  // returns the bottom edge so banners can stack
+  const banner = (t, dur, y0, title, sub, TS = 12) => {
     const k = 1 - t / dur, drop = Math.round((1 - easeOutBounce(clamp(k / 0.25, 0, 1))) * -40);
     // measured from the real glyph metrics: equal padding above the title and below the subtitle's descenders
-    const TS = 12, SS = 8, TT = 2, ST = 2; // title / subtitle size and letter spacing
-    const border = 2, pad = 5, gap = 4, padX = 10;
+    const SS = 8, TT = 2, ST = 2; // subtitle size, letter spacing
+    const border = 2, pad = TS <= 8 ? 4 : 5, gap = 4, padX = TS <= 8 ? 7 : 10;
     const titleH = Math.round(textH(TS)), subH = sub ? Math.round(textH(SS)) : 0;
     const pw = Math.round(Math.max(textW(title, TS, TT), sub ? textW(sub, SS, ST) : 0) + 2 * (padX + border));
     const ph = border * 2 + pad * 2 + titleH + (sub ? gap + subH : 0);
@@ -894,9 +896,12 @@ function drawHUD() {
     text(title, W / 2, py + border + pad, { size: TS, track: TT, align: 'center', color: INK, shadow: false });
     if (sub) text(sub, W / 2, py + border + pad + titleH + gap, { size: SS, track: ST, align: 'center', color: INK, shadow: false });
     ctx.globalAlpha = 1;
+    return y0 + ph + 10;
   };
-  if (game.levelUpT > 0) banner(game.levelUpT, 1.4, top + 62, 'LEVEL UP', 'JUMP +' + Math.round((jumpBoost() - 1) * 100) + '%');
-  if (game.oneUpT > 0) banner(game.oneUpT, 1.6, top + (game.levelUpT > 0 ? 110 : 62), '+1UP', 'EXTRA LIFE');
+  let bannerY = top + 62;
+  if (game.levelUpT > 0) bannerY = banner(game.levelUpT, 1.4, bannerY, 'LEVEL UP', 'JUMP +' + Math.round((jumpBoost() - 1) * 100) + '%');
+  if (game.oneUpT > 0) bannerY = banner(game.oneUpT, 1.6, bannerY, '+1UP', 'EXTRA LIFE');
+  if (game.eatT > 0) bannerY = banner(game.eatT, 1.6, bannerY, 'EAT THE FLIES!', null, 8);
 }
 let buttons = [];
 function addBtn(x, y, w, h, fn) { const b = { x, y, w, h, fn }; buttons.push(b); return b; }
