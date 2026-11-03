@@ -5,6 +5,8 @@ html = open('src/index.html').read()
 out = html.replace('<script src="assets.js"></script>\n<script src="game.js"></script>',
                    '<script>\n' + open('src/assets.js').read() + '\n</script>\n<script>\n' + open('src/game.js').read() + '\n</script>')
 assert '<script>' in out
+import datetime
+out = out.replace("'__BUILD__'", "'" + datetime.datetime.now(datetime.timezone.utc).strftime('%m.%d %H:%M') + "'", 1)  # version stamp for the title screen
 open('index.html', 'w').write(out)
 with zipfile.ZipFile('frog-hop.zip', 'w', zipfile.ZIP_DEFLATED) as z:
     z.write('index.html', 'frog-hop.html')

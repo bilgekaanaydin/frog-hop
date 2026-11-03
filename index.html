@@ -252,6 +252,7 @@ function glyph(ch, color, wide = false) {
 // brand palette: the logo's lime (#d0f053) and pure black, used across the whole interface
 const INK = '#000000', LIME = '#d0f053', LIME_DOT = '#b6d63e', GRAY = '#7d8f32';
 const PAPER = LIME; // default UI text / panel colour
+const BUILD = '11.03 22:04'; // replaced with the build time by build.py, shown on the title screen
 const FREE_SHOP = true; // test build: everything in the shop is free
 // size keeps its old meaning: the cap height is 7 * round(size / 8) game pixels (8 -> 7px, 16 -> 14px, 24 -> 21px)
 const capOf = size => (size || 16) * 7 / 8; // cap height in game pixels (8 -> 7, 12 -> 10.5, 16 -> 14, 24 -> 21)
@@ -1227,6 +1228,7 @@ function drawTitle() {
   // tap hint
   if (Math.floor(game.time * 2) % 2 === 0) { const hy = sy(0) + 24; ctx.drawImage(ICON.hand, W / 2 - 22, hy + Math.round(Math.sin(game.time * 8))); text('TAP!', W / 2 - 6, hy + 1, { size: 16, color: LIME, wide: true }); }
   if (save.runs < 3) text('HOLD & DRAG TO MOVE', W / 2, sy(0) + 44, { size: 8, align: 'center', color: LIME });
+  ctx.globalAlpha = 0.7; text('BUILD ' + BUILD, W - 4, H - 10, { size: 6, align: 'right', color: LIME }); ctx.globalAlpha = 1;
 }
 function drawDead() {
   flush(); // the dim overlay goes over the HUD text too
