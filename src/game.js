@@ -21,7 +21,6 @@ const P = {
 
 const POTION = '#7851f2'; // potion / tongue-power colour
 const CP = { k: '#0a0a0a', y: '#fab530', o: '#e0801e', c: '#ffecb4' }; // gold coin palette (from the coin reference)
-const CART_PAL = { R: '#e8202f', F: '#14707f', M: '#2a92a6', B: '#63b9cb', L: '#8fd8ea', X: '#c6eef7', w: '#ffffff', D: '#0b4f5c' };
 function makeSprite(rows, pal) {
   const h = rows.length, w = Math.max(...rows.map(r => r.length));
   const c = document.createElement('canvas'); c.width = w; c.height = h;
@@ -71,11 +70,11 @@ const ICON = {
   coinBig: makeSprite(['.....kkkkkk.....', '...kkoyyyyokk...', '..koyooccccyyk..', '.koyooyyyyccyyk.', '.kyoyyyyyyyycyk.', 'koooyyyyyyyyccyk', 'kyoyyyoyyoyyycyk', 'kyoyyyoyyoyyycyk', 'kyoyyyyyyyyyycyk', 'kyoyyooooooyycyk', 'koooyoyoyoyyccyk', '.kyoyyyyyyyycyk.', '.kyyooyyyyccyyk.', '..kyyooccccyyk..', '...kkyyyyyykk...', '.....kkkkkk.....'], CP), // UI coin, 16px, drawn at full resolution
   coinThin: makeSprite(['..kkk..', '.koyok.', '.kocck.', 'kyyyyyk', 'kooyock', 'kooyock', 'koyyyck', 'koooock', 'kyyyyyk', '.kocck.', '.kyyyk.', '..kkk..'], CP),
   coinLine: makeSprite(['.k.', 'kok', 'kyk', 'kyk', 'kyk', 'kyk', 'kyk', 'kyk', 'kyk', 'kyk', 'kok', '.k.'], CP),
-  trophy: makeSprite(['kkkkkkkkk', 'kyyyyyyyk', 'kkyYyyykk', '.kyyyyyk.', '..kyyyk..', '...kyk...', '...kyk...', '..kyyyk..', '.kkkkkkk.'], P),
-  cart: makeSprite(['RRM...............', '..FBBBBLLLLXXXXXL.', '...FBwBwwLwwwXwwL.', '...FBBBBBLLXXXXXL.', '...FBwBwwBwwLwwL..', '...FBBBBBBLLLXXL..', '....FwBwBBwwLwL...', '....FBBBBBBBLL....', '....FFFFMMMMMMMM..', '...............M..', '...MMMMMMMMMMMMM..', '....DD......DD....', '....FF......FF....'], CART_PAL), // shopping cart from the reference
+  trophy: makeSprite(['...kkkkkkkkkk...', '.kkkcyyyyyyokkk.', 'k.kkcyyyyyyokk.k', 'k.kkcyyyyyyokk.k', 'k.kkcyyyyyyokk.k', '.k.kccyyyyyok.k.', '..kkkcyyyyyokk..', '....kkyyyyokk...', '......kcyk......', '......kcyk......', '......kcok......', '.....kcyyok.....', '....kcyyyyok....', '....kkkkkkkk....'], { k: '#0a0a0a', y: '#ffc400', c: '#fff3b0', o: '#e48a00' }), // gold cup with handles
+  cart: makeSprite(['kkk...............', '..kkkkkkkkkkkkkkk.', '...kk.k..k...k..k.', '...kkkkkkkkkkkkkk.', '...kk.k..k..k..k..', '...kkkkkkkkkkkkk..', '....k.k.kk..k.k...', '....kkkkkkkkkk....', '....kkkkkkkkkkkk..', '...............k..', '...kkkkkkkkkkkkk..', '....kk......kk....', '....kk......kk....'], P), // solid black cart, basket gaps cut out
   gear: makeSprite(['....kk....', '.kk.kk.kk.', '.kkkkkkkk.', '..kk..kk..', 'kkkk..kkkk', 'kkkk..kkkk', '..kk..kk..', '.kkkkkkkk.', '.kk.kk.kk.', '....kk....'], P),
   close: makeSprite(['kk...kk', '.kk.kk.', '..kkk..', '..kkk..', '.kk.kk.', 'kk...kk'], P),
-  hand: makeSprite(['...kk.....', '..kwwk....', '..kwwk....', '..kwwkkk..', '..kwwkwwkk', 'kkkwwwwwwk', 'kwkwwwwwwk', 'kwwwwwwwwk', '.kwwwwwwk.', '..kwwwwk..', '..kkkkkk..'], P),
+  hand: makeSprite(['..kk.......', '.kwwk......', '.kwwk......', '.kwwk......', '.kwwkkkkk..', '.kwwkwwkwwk', 'kkwwwwwwwwk', 'kwkwwwwwwwk', 'kwwwwwwwwwk', 'kwwwwwwwwwk', '.kwwwwwwwwk', '..kwwwwwwk.', '..kkkkkkkk.'], P), // pointing hand
   speaker: makeSprite(['....k....', '...kk..k.', '..kwk.k.k', 'kkkwk..kk', 'kwwwk.k.k', 'kkkwk..kk', '..kwk.k.k', '...kk..k.', '....k....'], P),
   vibrate: makeSprite(['k..kkkkk..k', '.k.kwwwk.k.', 'k.kkwwwk.k.', '.k.kwwwk.k.', 'k..kwwwk..k', '.k.kwwwk.k.', 'k..kkkkk..k'], P),
   tilt: makeSprite(['..kkkkk....', '.kwwwwwk...', 'kkkkkkwwk..', '.kwwwwwwwk.', '..kwwwwwwwk', '...kkkkkkkk'], P),
@@ -170,10 +169,10 @@ addEventListener('resize', resize); resize();
 // NeueBit's fine detail instead of being squeezed into the chunky game pixels.
 const FONT = ASSETS.font, CAP = FONT.cap;
 const glyphCache = {};
-function glyph(ch, color) {
-  const key = color + ch;
+function glyph(ch, color, wide = false) {
+  const key = (wide ? 'W' : 'N') + color + ch;
   if (key in glyphCache) return glyphCache[key];
-  const gd = FONT.glyphs[ch] || FONT.glyphs['?'];
+  const gd = gOf(ch, wide);
   return (glyphCache[key] = gd.rows.length ? makeSprite(gd.rows, { '#': color }) : null);
 }
 // brand palette: the logo's lime (#d0f053) and pure black, used across the whole interface
@@ -184,13 +183,19 @@ const FREE_SHOP = true; // test build: everything in the shop is free
 const capOf = size => (size || 16) * 7 / 8; // cap height in game pixels (8 -> 7, 12 -> 10.5, 16 -> 14, 24 -> 21)
 const fontPx = size => Math.max(1, Math.round(capOf(size) * S / CAP)); // device pixels per font pixel
 const TRACK = 1; // extra letter spacing in font pixels: NeueBit is set tight, this opens it up a little
-// "bold expanded" style for numbers and button labels: NeueBit only ships a regular-width Bold, so the width is
-// stretched 1.5x on the pixel grid and each glyph is drawn twice, one font pixel apart, for a heavier stroke
+// "bold expanded" face for numbers, button labels and short callouts: a hand-drawn 7px-high pixel font with
+// 2px strokes and wide letterforms (in the spirit of Press Start 2P). Lowercase falls back to uppercase.
+const WIDE_GLYPHS = {"0":{"rows":[".#####.","##...##","##..###","##.#.##","###..##","##...##",".#####."],"x":0,"y":0,"adv":8},"1":{"rows":["..##..",".###..","..##..","..##..","..##..","..##..","######"],"x":0,"y":0,"adv":7},"2":{"rows":[".#####.","##...##",".....##","..####.",".###...","###....","#######"],"x":0,"y":0,"adv":8},"3":{"rows":["#######","....##.","...##..","..####.",".....##","##...##",".#####."],"x":0,"y":0,"adv":8},"4":{"rows":["...###.","..####.",".##.##.","##..##.","#######","....##.","....##."],"x":0,"y":0,"adv":8},"5":{"rows":["######.","##.....","######.",".....##",".....##","##...##",".#####."],"x":0,"y":0,"adv":8},"6":{"rows":["..####.",".##....","##.....","######.","##...##","##...##",".#####."],"x":0,"y":0,"adv":8},"7":{"rows":["#######","##...##","....##.","...##..","..##...","..##...","..##..."],"x":0,"y":0,"adv":8},"8":{"rows":[".#####.","##...##","##...##",".#####.","##...##","##...##",".#####."],"x":0,"y":0,"adv":8},"9":{"rows":[".#####.","##...##","##...##",".######",".....##","....##.",".####.."],"x":0,"y":0,"adv":8},"A":{"rows":["..###..",".##.##.","##...##","##...##","#######","##...##","##...##"],"x":0,"y":0,"adv":8},"B":{"rows":["######.","##...##","##...##","######.","##...##","##...##","######."],"x":0,"y":0,"adv":8},"C":{"rows":["..####.",".##..##","##.....","##.....","##.....",".##..##","..####."],"x":0,"y":0,"adv":8},"D":{"rows":["#####..","##..##.","##...##","##...##","##...##","##..##.","#####.."],"x":0,"y":0,"adv":8},"E":{"rows":["#######","##.....","##.....","######.","##.....","##.....","#######"],"x":0,"y":0,"adv":8},"F":{"rows":["#######","##.....","##.....","######.","##.....","##.....","##....."],"x":0,"y":0,"adv":8},"G":{"rows":["..#####",".##....","##.....","##..###","##...##",".##..##","..#####"],"x":0,"y":0,"adv":8},"H":{"rows":["##...##","##...##","##...##","#######","##...##","##...##","##...##"],"x":0,"y":0,"adv":8},"I":{"rows":["######","..##..","..##..","..##..","..##..","..##..","######"],"x":0,"y":0,"adv":7},"J":{"rows":["....###",".....##",".....##",".....##","##...##","##...##",".#####."],"x":0,"y":0,"adv":8},"K":{"rows":["##...##","##..##.","##.##..","####...","#####..","##.###.","##..###"],"x":0,"y":0,"adv":8},"L":{"rows":["##.....","##.....","##.....","##.....","##.....","##.....","#######"],"x":0,"y":0,"adv":8},"M":{"rows":["##...##","###.###","#######","#######","##.#.##","##...##","##...##"],"x":0,"y":0,"adv":8},"N":{"rows":["##...##","###..##","####.##","#######","##.####","##..###","##...##"],"x":0,"y":0,"adv":8},"O":{"rows":[".#####.","##...##","##...##","##...##","##...##","##...##",".#####."],"x":0,"y":0,"adv":8},"P":{"rows":["######.","##...##","##...##","##...##","######.","##.....","##....."],"x":0,"y":0,"adv":8},"Q":{"rows":[".#####.","##...##","##...##","##...##","##.####","##..##.",".####.#"],"x":0,"y":0,"adv":8},"R":{"rows":["######.","##...##","##...##","##..###","#####..","##.###.","##..###"],"x":0,"y":0,"adv":8},"S":{"rows":[".####..","##..##.","##.....",".#####.",".....##","##...##",".#####."],"x":0,"y":0,"adv":8},"T":{"rows":["######","..##..","..##..","..##..","..##..","..##..","..##.."],"x":0,"y":0,"adv":7},"U":{"rows":["##...##","##...##","##...##","##...##","##...##","##...##",".#####."],"x":0,"y":0,"adv":8},"V":{"rows":["##...##","##...##","##...##","###.###",".#####.","..###..","...#..."],"x":0,"y":0,"adv":8},"W":{"rows":["##...##","##...##","##.#.##","#######","#######","###.###","##...##"],"x":0,"y":0,"adv":8},"X":{"rows":["##...##","###.###",".#####.","..###..",".#####.","###.###","##...##"],"x":0,"y":0,"adv":8},"Y":{"rows":["##..##","##..##","##..##",".####.","..##..","..##..","..##.."],"x":0,"y":0,"adv":7},"Z":{"rows":["#######","....###","...###.","..###..",".###...","###....","#######"],"x":0,"y":0,"adv":8},"!":{"rows":["##","##","##","##","##","..","##"],"x":0,"y":0,"adv":3},"+":{"rows":["......","..##..","..##..","######","..##..","..##..","......"],"x":0,"y":0,"adv":7},"-":{"rows":["......","......","......","######","......","......","......"],"x":0,"y":0,"adv":7},"%":{"rows":["##...##","##..##.","...##..","..##...",".##....","##..##.","#...##."],"x":0,"y":0,"adv":8},":":{"rows":["..","##","##","..","##","##",".."],"x":0,"y":0,"adv":3},".":{"rows":["..","..","..","..","..","##","##"],"x":0,"y":0,"adv":3},",":{"rows":["..","..","..","..","..","##","#."],"x":0,"y":0,"adv":3},"?":{"rows":[".#####.","##...##","....##.","...##..","...##..",".......","...##.."],"x":0,"y":0,"adv":8},"&":{"rows":[".###...","##.##..",".###...",".###.##","##.###.","##..##.",".###.##"],"x":0,"y":0,"adv":8},"'":{"rows":["##","##",".#","..","..","..",".."],"x":0,"y":0,"adv":3},"/":{"rows":[".....##","....##.","...##..","..##...",".##....","##.....","#......"],"x":0,"y":0,"adv":8}};
+const WIDE = { cap: 7, glyphs: WIDE_GLYPHS };
+WIDE_GLYPHS[' '] = { rows: [], x: 0, y: 0, adv: 5 };
 const isNumeric = str => /^[+\-]?[\d%,.]+$/.test(str);
-const wideK = k => Math.max(k + 1, Math.round(k * 1.5));            // horizontal device pixels per font pixel
-function strAdv(str, track = TRACK, wide = false) { let a = 0; for (const ch of str) a += (FONT.glyphs[ch] || FONT.glyphs['?']).adv + track + (wide ? 1 : 0); return a - (str.length ? track : 0); }
-function textW(str, size = 16, track = TRACK, wide = isNumeric(String(str))) { const k = fontPx(size); return strAdv(String(str), track, wide) * (wide ? wideK(k) : k) / S; }
-const textH = size => CAP * fontPx(size) / S;
+const fontOf = wide => wide ? WIDE : FONT;
+const pxOf = (size, wide) => Math.max(1, Math.round(capOf(size) * S / fontOf(wide).cap)); // device px per font px
+const gOf = (ch, wide) => { const f = fontOf(wide).glyphs; return f[ch] || (wide && f[ch.toUpperCase()]) || f['?']; };
+function strAdv(str, track = TRACK, wide = false) { let a = 0; for (const ch of str) a += gOf(ch, wide).adv + track; return a - (str.length ? track : 0); }
+function textW(str, size = 16, track = TRACK, wide = isNumeric(String(str))) { return strAdv(String(str), track, wide) * pxOf(size, wide) / S; }
+// real drawn cap height in game pixels (the integer device-pixel scale can make it differ slightly from capOf)
+const textH = (size, wide = false) => fontOf(wide).cap * pxOf(size, wide) / S;
 let textQueue = [];
 // o: size, color, align ('center' | 'right'), shadow (colour or false), clip (array of [x, y, w, h] in game pixels)
 function text(str, x, y, o = {}) { textQueue.push({ str: String(str), x, y, o, alpha: ctx.globalAlpha }); }
@@ -202,7 +207,7 @@ function hiresSprite(spr, cx, cy, maxW, maxH, maxScale = 1) {
 }
 function drawTextNow(t) {
   if (t.spr) { vctx.save(); vctx.globalAlpha = t.alpha; vctx.imageSmoothingEnabled = false; vctx.drawImage(t.spr, t.x, t.y, t.spr.width * t.k, t.spr.height * t.k); vctx.restore(); return; }
-  const { str, o } = t, k = fontPx(o.size), track = o.track ?? TRACK, wide = o.wide ?? isNumeric(str), kx = wide ? wideK(k) : k, w = strAdv(str, track, wide) * kx;
+  const { str, o } = t, wide = o.wide ?? isNumeric(str), k = pxOf(o.size, wide), kx = k, track = o.track ?? TRACK, w = strAdv(str, track, wide) * kx;
   let x = Math.round(t.x * S), y = Math.round(t.y * S);
   if (o.align === 'center') x -= Math.round(w / 2); else if (o.align === 'right') x -= w;
   vctx.save(); vctx.globalAlpha = t.alpha; vctx.imageSmoothingEnabled = false;
@@ -213,12 +218,9 @@ function drawTextNow(t) {
   for (const [col, d] of passes) {
     let cx = x;
     for (const ch of str) {
-      const gd = FONT.glyphs[ch] || FONT.glyphs['?'], gl = glyph(ch, col);
-      if (gl) {
-        vctx.drawImage(gl, cx + gd.x * kx + d, y + gd.y * k + d, gl.width * kx, gl.height * k);
-        if (wide) vctx.drawImage(gl, cx + gd.x * kx + kx + d, y + gd.y * k + d, gl.width * kx, gl.height * k);
-      }
-      cx += (gd.adv + track + (wide ? 1 : 0)) * kx;
+      const gd = gOf(ch, wide), gl = glyph(ch, col, wide);
+      if (gl) vctx.drawImage(gl, cx + gd.x * kx + d, y + gd.y * k + d, gl.width * kx, gl.height * k);
+      cx += (gd.adv + track) * kx;
     }
   }
   vctx.restore();
@@ -246,8 +248,8 @@ function button(b, label, o = {}) {
   ctx.fillStyle = INK; ctx.fillRect(x, y, w, h);
   ctx.fillStyle = fill; ctx.fillRect(x + 1, y + 1, w - 2, h - 2);
   if (p) { ctx.fillStyle = INK; ctx.fillRect(x + 2, y + 2, w - 4, 1); ctx.fillRect(x + 2, y + h - 3, w - 4, 1); ctx.fillRect(x + 2, y + 2, 1, h - 4); ctx.fillRect(x + w - 3, y + 2, 1, h - 4); }
-  if (label) text(label, x + w / 2, y + Math.round((h - textH(o.size || 16)) / 2), { align: 'center', size: o.size || 16, color, shadow: false, wide: true });
-  if (o.icon) hiresSprite(o.icon, x + w / 2, y + h / 2, w - 3, h - 3, 1);
+  if (label) text(label, x + w / 2, y + (h - textH(o.size || 16, true)) / 2, { align: 'center', size: o.size || 16, color, shadow: false, wide: true });
+  if (o.icon) hiresSprite(o.icon, x + w / 2, y + h / 2, w - 8, h - 8, 1);
   return p;
 }
 const hit = (b, px, py) => px >= b.x && px <= b.x + b.w + 2 && py >= b.y && py <= b.y + b.h + 2;
@@ -826,7 +828,7 @@ function drawWorld() {
 const uiCoin = (x, y, size = 9) => hiresSprite(ICON.coinBig, x + size / 2, y + 3.5, size, size); // UI coin centred on the text line
 function drawCoinCounter(x, y, n, color = LIME, shadow) { uiCoin(x, y, 12); text('' + n, x + 14, y, { size: 8, color, shadow }); }
 function iconButton(x, y, icon, fn, o = {}) {
-  const b = addBtn(x, y, 18, 18, fn);
+  const b = addBtn(x, y, 20, 20, fn);
   button(b, null, { icon, fill: o.fill || LIME });
   return b;
 }
@@ -843,14 +845,15 @@ function drawHUD() {
   const top = SAFE_TOP, blinkOn = Math.floor(game.time * 6) % 2 === 0;
   // left column, stacked under the safe area: coins, EXP bar, hearts (outlined so they read on any sky)
   drawCoinCounter(6, top + 5, game.runCoins);
-  const bw = 58, bh = 11, bx = 7, by = top + 18;
+  const bw = 66, bh = 11, bx = 7, by = top + 18;
   const frac = clamp(game.exp / expNeeded(game.level), 0, 1), fw = Math.round(bw * frac);
   ctx.fillStyle = INK; ctx.fillRect(bx - 2, by - 2, bw + 4, bh + 4);
   ctx.fillStyle = LIME;
   const rowW = r => Math.max(0, Math.min(bw, fw - Math.floor(r / 2))); // stepped diagonal edge
   for (let r = 0; r < bh; r++) ctx.fillRect(bx, by + r, rowW(r), 1);
   // labels flip colour where they cross the fill edge: black on lime, lime on black
-  const labels = (col, clip) => { text('EXP', bx + 3, by + 2, { size: 8, color: col, shadow: false, clip }); text('LV' + game.level, bx + bw - 3, by + 2, { size: 8, align: 'right', color: col, shadow: false, clip }); };
+  const ly = by + (bh - textH(8)) / 2;
+  const labels = (col, clip) => { text('EXP', bx + 3, ly, { size: 8, color: col, shadow: false, clip }); text('LV' + game.level, bx + bw - 3, ly, { size: 8, align: 'right', color: col, shadow: false, clip }); };
   const fillClip = [], emptyClip = [];
   for (let r = 0; r < bh; r++) { fillClip.push([bx, by + r, rowW(r), 1]); emptyClip.push([bx + rowW(r), by + r, bw - rowW(r), 1]); }
   labels(INK, fillClip); labels(LIME, emptyClip);
@@ -922,15 +925,15 @@ function drawLogo() {
 function drawTitle() {
   const it = game.introT, lr = logoRect(); // the logo itself is drawn later on the full-resolution canvas
   if (it > 1.2) {
-    const by = lr.restY + lr.h + 6, bw = 12 + textW('' + save.best, 8);
-    ctx.drawImage(ICON.trophy, Math.round(W / 2 - bw / 2), by); text('' + save.best, W / 2 - bw / 2 + 12, by + 1, { size: 8 });
+    const by = lr.restY + lr.h + 6, bw = 13 + textW('' + save.best, 8);
+    hiresSprite(ICON.trophy, W / 2 - bw / 2 + 5, by + 3.5, 11, 11); text('' + save.best, W / 2 - bw / 2 + 13, by, { size: 8 });
   }
   drawCoinCounter(5, SAFE_TOP + 5, FREE_SHOP ? 'FREE' : save.coins);
   iconButton(W - 23, SAFE_TOP + 4, ICON.cart, () => { scene = 'shop'; shopTab = 0; });
   iconButton(W - 23, SAFE_TOP + 26, ICON.gear, () => { settingsOpen = true; });
   if (it < 1.6) return; // hints wait for the frog to arrive
   // tap hint
-  if (Math.floor(game.time * 2) % 2 === 0) { const hy = sy(0) + 24; ctx.drawImage(ICON.hand, W / 2 - 22, hy + Math.round(Math.sin(game.time * 8))); text('TAP!', W / 2 - 8, hy + 2, { size: 16, color: LIME }); }
+  if (Math.floor(game.time * 2) % 2 === 0) { const hy = sy(0) + 24; ctx.drawImage(ICON.hand, W / 2 - 22, hy + Math.round(Math.sin(game.time * 8))); text('TAP!', W / 2 - 6, hy + 1, { size: 16, color: LIME, wide: true }); }
   if (save.runs < 3) text('HOLD & DRAG TO MOVE', W / 2, sy(0) + 44, { size: 8, align: 'center', color: LIME });
 }
 function drawDead() {
@@ -938,22 +941,22 @@ function drawDead() {
   const t = clamp(game.deadT * 2.2, 0, 1), ease = 1 - Math.pow(1 - t, 3);
   ctx.fillStyle = 'rgba(0,0,0,' + (0.5 * ease) + ')'; ctx.fillRect(0, 0, W, H);
   if (game.deadT < 0.25) return;
-  const pw = Math.min(W - 28, 190), ph = 146, px = Math.round((W - pw) / 2), py = Math.round(H * 0.5 - ph / 2 - 10 + (1 - ease) * 40);
+  const pw = Math.min(W - 28, 190), ph = 160, px = Math.round((W - pw) / 2), py = Math.round(H * 0.5 - ph / 2 - 10 + (1 - ease) * 40);
   panel(px, py, pw, ph);
   text('SPLASH!', W / 2, py + 10, { size: 16, align: 'center', color: INK, shadow: false });
   text('' + game.score, W / 2, py + 30, { size: 32, align: 'center', color: INK, shadow: false });
   const rowY = py + 72;
   if (game.newBest) { if (Math.floor(game.time * 4) % 2 === 0) text('NEW BEST!', W / 2, rowY, { size: 8, align: 'center', color: INK, shadow: false }); }
-  else { const bw = 12 + textW('' + save.best, 8); ctx.drawImage(ICON.trophy, Math.round(W / 2 - bw / 2), rowY - 1); text('' + save.best, W / 2 - bw / 2 + 12, rowY, { size: 8, color: INK, shadow: false }); }
+  else { const bw = 13 + textW('' + save.best, 8); hiresSprite(ICON.trophy, W / 2 - bw / 2 + 5, rowY + 3.5, 11, 11); text('' + save.best, W / 2 - bw / 2 + 13, rowY, { size: 8, color: INK, shadow: false }); }
   const cw = 12 + textW('+' + game.runCoins, 8);
   uiCoin(Math.round(W / 2 - cw / 2), rowY + 11); text('+' + game.runCoins, W / 2 - cw / 2 + 12, rowY + 11, { size: 8, color: INK, shadow: false });
   if (game.deadT < 0.6) return;
-  const rb = addBtn(px + 10, py + ph - 46, pw - 22, 18, () => { newGame(); startGame(); });
+  const rb = addBtn(px + 10, py + ph - 58, pw - 22, 24, () => { newGame(); startGame(); });
   button(rb, 'RETRY', { size: 8 });
   const half = Math.floor((pw - 26) / 2);
-  const hb = addBtn(px + 10, py + ph - 24, half, 14, () => { newGame(); scene = 'title'; });
+  const hb = addBtn(px + 10, py + ph - 28, half, 20, () => { newGame(); scene = 'title'; });
   button(hb, null, { icon: ICON.home, fill: LIME });
-  const sb = addBtn(px + 14 + half, py + ph - 24, half, 14, () => { scene = 'shop'; shopTab = 0; });
+  const sb = addBtn(px + 14 + half, py + ph - 28, half, 20, () => { scene = 'shop'; shopTab = 0; });
   button(sb, null, { icon: ICON.cart, fill: LIME });
 }
 let shopTab = 0, shopMsg = null;
