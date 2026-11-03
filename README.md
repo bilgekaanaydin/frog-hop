@@ -1,4 +1,4 @@
-# FROG HOP
+# FROHG
 
 Doodle Jump tarzı, piksel sanatı bir zıplama oyunu. Tek dosya mantığında çalışır: `index.html` + `game.js` + `assets.js`.
 Hiçbir harici kütüphane ya da sunucu tarafı yoktur; font ve sprite verileri `assets.js` içine gömülüdür.

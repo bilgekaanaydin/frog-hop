@@ -1,4 +1,4 @@
-/* FROG HOP - a Doodle-Jump style pixel game. Everything renders on a low-res canvas, then scaled up pixel-perfect. */
+/* FROHG - a Doodle-Jump style pixel game. Everything renders on a low-res canvas, then scaled up pixel-perfect. */
 'use strict';
 
 // ============================================================ helpers
@@ -838,17 +838,17 @@ function addBtn(x, y, w, h, fn) { const b = { x, y, w, h, fn }; buttons.push(b);
 function drawTitle() {
   // intro: the title letters drop in one by one with a little overshoot
   const bob = Math.round(Math.sin(game.time * 3) * 2), it = game.introT;
-  const letters = [['F', 'R', 'O', 'G'], ['H', 'O', 'P']];
+  const letters = [['F', 'R', 'O', 'H', 'G']];
   letters.forEach((word, row) => {
-    const sc = 6, adv = 6 * sc, totalW = word.length * adv - sc, x0 = Math.round(W / 2 - totalW / 2), yBase = Math.round(H * 0.12 + row * 50 + bob);
+    const sc = 5, adv = 6 * sc, totalW = word.length * adv - sc, x0 = Math.round(W / 2 - totalW / 2), yBase = Math.round(H * 0.14 + row * 50 + bob);
     word.forEach((ch, i) => {
-      const t = clamp((it - 0.15 - (row * 4 + i) * 0.07) * 2.5, 0, 1);
+      const t = clamp((it - 0.15 - (row * 5 + i) * 0.08) * 2.5, 0, 1);
       const off = Math.round(-(1 - t) * (1 - t) * 90 + Math.sin(t * Math.PI) * 6);
-      text(ch, x0 + i * adv, yBase + off, { size: 48, color: LIME });
+      text(ch, x0 + i * adv, yBase + off, { size: 40, color: LIME });
     });
   });
   if (it > 1.2) {
-    const by = H * 0.12 + 104;
+    const by = H * 0.14 + 48;
     ctx.drawImage(ICON.trophy, Math.round(W / 2 - 16), by); text('' + save.best, W / 2 - 4, by + 1, { size: 8 });
   }
   drawCoinCounter(5, 5, FREE_SHOP ? 'FREE' : save.coins);
