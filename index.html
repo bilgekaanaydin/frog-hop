@@ -608,7 +608,7 @@ function cloudBlend(ph) {
 const STARS = []; for (let i = 0; i < 70; i++) STARS.push({ x: Math.random(), y: Math.random(), tw: rnd(0, 6), big: Math.random() < 0.2 });
 
 // ------------------------------------------------------------ outer space (score 1800 -> 2000)
-const SPACE_FROM = 1800, SPACE_TO = 2000;
+const SPACE_FROM = 800, SPACE_TO = 1000;
 const spaceAmt = () => clamp((game.camY / 10 - SPACE_FROM) / (SPACE_TO - SPACE_FROM), 0, 1);
 const hash2 = (x, y) => { const v = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453; return v - Math.floor(v); };
 // pixel planet: banded / spotted sphere lit from the top-left, dark 1px rim, optional flat ring
@@ -824,28 +824,39 @@ function drawGround() {
 }
 // pixel pill: rounded ends, navy outline, white highlight along the top (like the reference platform art)
 const PILL_OUTLINE = '#2b1d4e';
-function pill(x, y, w, h, fill, hi) {
+function pill(x, y, w, h, fill, hi, outline = PILL_OUTLINE, glow) {
   const inset = r => (r === 0 || r === h - 1) ? 2 : (r === 1 || r === h - 2) ? 1 : 0;
-  ctx.fillStyle = PILL_OUTLINE;
+  if (glow) { ctx.save(); ctx.globalAlpha *= glow[1]; ctx.fillStyle = glow[0]; ctx.fillRect(x + 2, y - 1, w - 4, h + 2); ctx.fillRect(x, y + 1, w, h - 2); ctx.restore(); }
+  ctx.fillStyle = outline;
   for (let r = 0; r < h; r++) ctx.fillRect(x + inset(r), y + r, w - 2 * inset(r), 1);
   ctx.fillStyle = fill;
   for (let r = 1; r < h - 1; r++) { const i = inset(r) + 1; ctx.fillRect(x + i, y + r, w - 2 * i, 1); }
   if (hi) { ctx.fillStyle = hi; ctx.fillRect(x + 3, y + 1, w - 6, 1); ctx.fillRect(x + 2, y + 2, 1, 1); ctx.fillRect(x + w - 3, y + 2, 1, 1); }
 }
+// platform colours on earth and in space (neon violet / pink / alien slime / crystal), blended by altitude
+const PLAT_COLS = {
+  normal: { earth: ['#8cc63f', '#ffffff'], space: ['#7a5cff', '#d6ccff'] },
+  moving: { earth: ['#ffb400', '#ffffff'], space: ['#ff4fd8', '#ffd0f5'] },
+  swamp: { earth: ['#5a7a2e', '#8aa84a', '#9ec25a', '#3f5a1e'], space: ['#1fae7a', '#5cf0b0', '#9dffd6', '#0f6e4c'] },
+  crumble: { earth: ['#bfefff', '#ffffff', '#7fcbe8'], space: ['#9fe8ff', '#ffffff', '#4fb6e8'] },
+};
+const platCol = (type, i, amt) => { const c = PLAT_COLS[type]; return amt <= 0 ? c.earth[i] : amt >= 1 ? c.space[i] : mixHex(c.earth[i], c.space[i], amt); };
 function drawPlat(p) {
   const x = Math.round(p.x), y = sy(p.y), w = p.w, h = PLAT_H + 1;
   if (y < -10 || y > H + 10) return;
-  if (p.type === 'normal') pill(x, y, w, h, '#8cc63f', '#ffffff');
-  else if (p.type === 'moving') pill(x, y, w, h, '#ffb400', '#ffffff');
+  const amt = spaceAmt(), outline = amt > 0 ? mixHex(PILL_OUTLINE, '#0d0726', amt) : PILL_OUTLINE;
+  const glow = amt > 0 ? [platCol(p.type, 0, 1), 0.25 * amt * (0.8 + 0.2 * Math.sin(p.t * 3))] : null; // soft neon halo in space
+  if (p.type === 'normal') pill(x, y, w, h, platCol('normal', 0, amt), platCol('normal', 1, amt), outline, glow);
+  else if (p.type === 'moving') pill(x, y, w, h, platCol('moving', 0, amt), platCol('moving', 1, amt), outline, glow);
   else if (p.type === 'swamp') {
-    pill(x, y, w, h, '#5a7a2e', '#8aa84a');
-    // bubbles that pop in the mud
-    ctx.fillStyle = '#9ec25a';
+    pill(x, y, w, h, platCol('swamp', 0, amt), platCol('swamp', 1, amt), outline, glow);
+    // bubbles that pop in the mud (alien slime in space)
+    ctx.fillStyle = platCol('swamp', 2, amt);
     for (let i = 0; i < 3; i++) { const ph = (p.t * 1.5 + i * 1.7) % 2; if (ph < 1.2) { const bx = x + 6 + ((i * 13 + Math.floor(p.t / 2) * 7) % Math.max(1, w - 12)); ctx.fillRect(bx, y + 2 + Math.round(ph * 1.5), ph < 0.6 ? 1 : 2, ph < 0.6 ? 1 : 2); } }
-    if (p.splashT > 0) { ctx.fillStyle = '#3f5a1e'; ctx.fillRect(x + 2, y + 1, w - 4, 2); }
+    if (p.splashT > 0) { ctx.fillStyle = platCol('swamp', 3, amt); ctx.fillRect(x + 2, y + 1, w - 4, 2); }
   } else { // glass: pale cyan, see-through look, crack lines
-    pill(x, y, w, h, '#bfefff', '#ffffff');
-    ctx.fillStyle = '#7fcbe8';
+    pill(x, y, w, h, platCol('crumble', 0, amt), platCol('crumble', 1, amt), outline, glow);
+    ctx.fillStyle = platCol('crumble', 2, amt);
     for (let i = 5; i < w - 5; i += 9) { ctx.fillRect(x + i, y + 2, 1, 1); ctx.fillRect(x + i + 1, y + 3, 1, 1); ctx.fillRect(x + i + 2, y + 4, 1, 1); ctx.fillRect(x + i + 1, y + 1, 1, 1); }
     ctx.fillStyle = '#ffffff'; ctx.fillRect(x + w - 10, y + 3, 4, 1);
   }
