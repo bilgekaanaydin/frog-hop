@@ -65,19 +65,19 @@ const ASSETS_POTION_ROWS = ['....kkkkk....',
     '..kkPPPPPkk..',
     '....kkkkk....'];
 const ICON = {
-  coin: makeSprite(['...kkkkk...', '..kyYYYyk..', '.kyYYyyyyk.', 'kyYYyyyyyok', 'kyYyyykyyok', 'kyyyykyyyok', 'kyyykyyyook', 'kyyyyyyoook', '.kyyyooook.', '..koooook..', '...kkkkk...'], CP),
-  coinThin: makeSprite(['..kkk..', '.kyYyk.', 'kyYyyok', 'kyYyyok', 'kyYkyok', 'kyykyok', 'kyyyyok', 'kyyyook', 'kyooook', '.koook.', '..kkk..'], CP),
-  coinLine: makeSprite(['.kk.', 'kyok', 'kyok', 'kyok', 'kyok', 'kyok', 'kyok', 'kyok', 'kyok', 'kyok', '.kk.'], CP),
-  coinSmall: makeSprite(['..kkkkk..', '.kyYYYyk.', 'kyYYyyyok', 'kyYyykyok', 'kyyykyyok', 'kyyyyyook', 'kyyoooook', '.kooooook', '..kkkkk..'], CP),
+  coin: makeSprite(['...kkkkk...', '.kkyyyyykk.', '.kyYyyyyyk.', 'kyyyoooyyyk', 'kyyoyyyoyyk', 'kyyoyyyoyyk', 'kyyoyyyoyyk', 'kyyyoooyyyk', '.kyyyyyyyk.', '.kkyyyyykk.', '...kkkkk...'], CP),
+  coinThin: makeSprite(['..kkk..', '.kyyyk.', 'kyYyyyk', 'kyyoyyk', 'kyyoyyk', 'kyyoyyk', 'kyyoyyk', 'kyyoyyk', 'kyyyyyk', '.kyyyk.', '..kkk..'], CP),
+  coinLine: makeSprite(['.k.', 'kyk', 'kyk', 'kok', 'kok', 'kok', 'kok', 'kok', 'kyk', 'kyk', '.k.'], CP),
+  coinSmall: makeSprite(['..kkkkk..', '.kyyyyyk.', 'kyyoooyyk', 'kyoyyyoyk', 'kyoyyyoyk', 'kyoyyyoyk', 'kyyoooyyk', '.kyyyyyk.', '..kkkkk..'], CP),
   trophy: makeSprite(['kkkkkkkkk', 'kyyyyyyyk', 'kkyYyyykk', '.kyyyyyk.', '..kyyyk..', '...kyk...', '...kyk...', '..kyyyk..', '.kkkkkkk.'], P),
-  cart: makeSprite(['kkk.........', '..kkkkkkkkkk', '..kyyyyyyyyk', '..kyyyyyyyyk', '...kyyyyyyk.', '...kkkkkkkk.', '...kwk..kwk.', '....k....k..'], P),
+  cart: makeSprite(['kk.........', '.k.........', '.kkkkkkkkkk', '.kkkkkkkkkk', '..kkkkkkkk.', '..kkkkkkkk.', '...........', '..kkk..kkk.', '..kkk..kkk.'], P), // solid cart, wheels cut out
   gear: makeSprite(['....kk....', '.kk.kk.kk.', '.kkkkkkkk.', '..kk..kk..', 'kkkk..kkkk', 'kkkk..kkkk', '..kk..kk..', '.kkkkkkkk.', '.kk.kk.kk.', '....kk....'], P),
   close: makeSprite(['kk...kk', '.kk.kk.', '..kkk..', '..kkk..', '.kk.kk.', 'kk...kk'], P),
   hand: makeSprite(['...kk.....', '..kwwk....', '..kwwk....', '..kwwkkk..', '..kwwkwwkk', 'kkkwwwwwwk', 'kwkwwwwwwk', 'kwwwwwwwwk', '.kwwwwwwk.', '..kwwwwk..', '..kkkkkk..'], P),
   speaker: makeSprite(['....k....', '...kk..k.', '..kwk.k.k', 'kkkwk..kk', 'kwwwk.k.k', 'kkkwk..kk', '..kwk.k.k', '...kk..k.', '....k....'], P),
   vibrate: makeSprite(['k..kkkkk..k', '.k.kwwwk.k.', 'k.kkwwwk.k.', '.k.kwwwk.k.', 'k..kwwwk..k', '.k.kwwwk.k.', 'k..kkkkk..k'], P),
   tilt: makeSprite(['..kkkkk....', '.kwwwwwk...', 'kkkkkkwwk..', '.kwwwwwwwk.', '..kwwwwwwwk', '...kkkkkkkk'], P),
-  home: makeSprite(['....kk....', '...kyyk...', '..kyyyyk..', '.kyyyyyyk.', 'kkkyyyykkk', '..kyykkyk.', '..kyykkyk.', '..kkkkkkk.'], P),
+  home: makeSprite(['....k....', '...kkk...', '..kkkkk..', '.kkkkkkk.', 'kkkkkkkkk', '.kkkkkkk.', '.kkk.kkk.', '.kkk.kkk.', '.kkk.kkk.'], P), // solid house, door cut out
   retry: makeSprite(['..kkkkk...', '.kk...kk..', 'kk.....kk.', 'kk....kkkk', 'kk.....kk.', 'kk....k.k.', '.kk..kk...', '..kkkk....'], P),
   heart: makeSprite(['.kk..kk.', 'krrkkrrk', 'krrrrrrk', 'krrrrrrk', '.krrrrk.', '..krrk..', '...kk...'], P),
   heartEmpty: makeSprite(['.kk..kk.', 'k..kk..k', 'k......k', 'k......k', '.k....k.', '..k..k..', '...kk...'], P),
@@ -867,22 +867,22 @@ function drawHUD() {
   // Returns the bottom edge so banners can stack.
   const banner = (t, dur, y0, title, sub) => {
     const k = 1 - t / dur, ease = 1 - Math.pow(1 - clamp(k / 0.18, 0, 1), 3);
-    const border = 2, pad = 4, padX = 6, lineH = Math.round(textH(8));
-    const pw = Math.round(Math.max(textW(title, 8, 2), sub ? textW(sub, 8, 1) : 0) + 2 * (padX + border));
-    const titleBlock = pad * 2 + lineH, subBlock = sub ? lineH + 6 : 0;
+    const border = 2, pad = 2, padX = 4, lineH = Math.round(textH(8));
+    const pw = Math.round(Math.max(textW(title, 8, 1), sub ? textW(sub, 8, 1) : 0) + 2 * (padX + border));
+    const titleBlock = pad * 2 + lineH, subBlock = sub ? lineH + 4 : 0;
     const ph = border * 2 + titleBlock + subBlock;
     const px = Math.round(6 - (1 - ease) * (pw + 12)), py = Math.round(y0);
     ctx.globalAlpha = clamp(t * 3, 0, 1);
-    logoPanel(px, py, pw, ph, 3);
-    text(title, px + pw / 2, py + border + pad, { size: 8, track: 2, align: 'center', color: INK, shadow: false });
+    logoPanel(px, py, pw, ph, 2);
+    text(title, px + pw / 2, py + border + pad, { size: 8, track: 1, align: 'center', color: INK, shadow: false });
     if (sub) {
       ctx.fillStyle = INK; ctx.fillRect(px + border, py + border + titleBlock, pw - 2 * border, subBlock);
-      text(sub, px + pw / 2, py + border + titleBlock + 3, { size: 8, track: 1, align: 'center', color: LIME, shadow: false });
+      text(sub, px + pw / 2, py + border + titleBlock + 2, { size: 8, track: 1, align: 'center', color: LIME, shadow: false });
     }
     ctx.globalAlpha = 1;
-    return y0 + ph + 8;
+    return y0 + ph + 6;
   };
-  let bannerY = top + 50;
+  let bannerY = top + 48;
   if (game.levelUpT > 0) bannerY = banner(game.levelUpT, 1.4, bannerY, 'LEVEL UP', 'JUMP +' + Math.round((jumpBoost() - 1) * 100) + '%');
   if (game.oneUpT > 0) bannerY = banner(game.oneUpT, 1.6, bannerY, '+1UP', 'EXTRA LIFE');
   if (game.eatT > 0) bannerY = banner(game.eatT, 1.6, bannerY, 'EAT THE FLIES!', null);
