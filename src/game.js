@@ -158,92 +158,63 @@ function resize() {
 }
 addEventListener('resize', resize); resize();
 
-// ============================================================ text: a hand-made 5x7 bitmap font
-// Browsers always anti-alias canvas text, which looks blurry once the low-res canvas is scaled up.
-// Drawing glyphs as pixel rectangles keeps every letter perfectly crisp at any integer scale.
-const GLYPHS = {
-  A: ['.###.', '#...#', '#...#', '#####', '#...#', '#...#', '#...#'],
-  B: ['####.', '#...#', '#...#', '####.', '#...#', '#...#', '####.'],
-  C: ['.####', '#....', '#....', '#....', '#....', '#....', '.####'],
-  D: ['####.', '#...#', '#...#', '#...#', '#...#', '#...#', '####.'],
-  E: ['#####', '#....', '#....', '####.', '#....', '#....', '#####'],
-  F: ['#####', '#....', '#....', '####.', '#....', '#....', '#....'],
-  G: ['.####', '#....', '#....', '#.###', '#...#', '#...#', '.####'],
-  H: ['#...#', '#...#', '#...#', '#####', '#...#', '#...#', '#...#'],
-  I: ['#####', '..#..', '..#..', '..#..', '..#..', '..#..', '#####'],
-  J: ['....#', '....#', '....#', '....#', '#...#', '#...#', '.###.'],
-  K: ['#...#', '#..#.', '#.#..', '##...', '#.#..', '#..#.', '#...#'],
-  L: ['#....', '#....', '#....', '#....', '#....', '#....', '#####'],
-  M: ['#...#', '##.##', '#.#.#', '#.#.#', '#...#', '#...#', '#...#'],
-  N: ['#...#', '##..#', '#.#.#', '#..##', '#...#', '#...#', '#...#'],
-  O: ['.###.', '#...#', '#...#', '#...#', '#...#', '#...#', '.###.'],
-  P: ['####.', '#...#', '#...#', '####.', '#....', '#....', '#....'],
-  Q: ['.###.', '#...#', '#...#', '#...#', '#.#.#', '#..#.', '.##.#'],
-  R: ['####.', '#...#', '#...#', '####.', '#.#..', '#..#.', '#...#'],
-  S: ['.####', '#....', '#....', '.###.', '....#', '....#', '####.'],
-  T: ['#####', '..#..', '..#..', '..#..', '..#..', '..#..', '..#..'],
-  U: ['#...#', '#...#', '#...#', '#...#', '#...#', '#...#', '.###.'],
-  V: ['#...#', '#...#', '#...#', '#...#', '.#.#.', '.#.#.', '..#..'],
-  W: ['#...#', '#...#', '#...#', '#.#.#', '#.#.#', '##.##', '#...#'],
-  X: ['#...#', '#...#', '.#.#.', '..#..', '.#.#.', '#...#', '#...#'],
-  Y: ['#...#', '#...#', '.#.#.', '..#..', '..#..', '..#..', '..#..'],
-  Z: ['#####', '....#', '...#.', '..#..', '.#...', '#....', '#####'],
-  0: ['.###.', '#...#', '#..##', '#.#.#', '##..#', '#...#', '.###.'],
-  1: ['..#..', '.##..', '..#..', '..#..', '..#..', '..#..', '.###.'],
-  2: ['.###.', '#...#', '....#', '...#.', '..#..', '.#...', '#####'],
-  3: ['#####', '...#.', '..#..', '...#.', '....#', '#...#', '.###.'],
-  4: ['...#.', '..##.', '.#.#.', '#..#.', '#####', '...#.', '...#.'],
-  5: ['#####', '#....', '####.', '....#', '....#', '#...#', '.###.'],
-  6: ['..##.', '.#...', '#....', '####.', '#...#', '#...#', '.###.'],
-  7: ['#####', '....#', '...#.', '..#..', '.#...', '.#...', '.#...'],
-  8: ['.###.', '#...#', '#...#', '.###.', '#...#', '#...#', '.###.'],
-  9: ['.###.', '#...#', '#...#', '.####', '....#', '..#..', '.##..'],
-  '!': ['..#..', '..#..', '..#..', '..#..', '..#..', '.....', '..#..'],
-  '+': ['.....', '..#..', '..#..', '#####', '..#..', '..#..', '.....'],
-  '-': ['.....', '.....', '.....', '#####', '.....', '.....', '.....'],
-  ':': ['.....', '..#..', '..#..', '.....', '..#..', '..#..', '.....'],
-  '.': ['.....', '.....', '.....', '.....', '.....', '.....', '..#..'],
-  ',': ['.....', '.....', '.....', '.....', '.....', '..#..', '.#...'],
-  '?': ['.###.', '#...#', '....#', '...#.', '..#..', '.....', '..#..'],
-  '&': ['.##..', '#..#.', '#..#.', '.##..', '#.#.#', '#..#.', '.##.#'],
-  "'": ['..#..', '..#..', '.....', '.....', '.....', '.....', '.....'],
-  '/': ['....#', '....#', '...#.', '..#..', '.#...', '#....', '#....'],
-  '%': ['##..#', '##..#', '...#.', '..#..', '.#...', '#..##', '#..##'],
-  ' ': ['.....', '.....', '.....', '.....', '.....', '.....', '.....'],
-};
+// ============================================================ text: PP NeueBit Bold as a bitmap font
+// Glyphs are extracted on the font's own pixel grid by tools/make_font.py (1 font pixel = 1/28 em, cap height 14).
+// Text is queued and drawn on the full-resolution canvas at an integer scale, so it stays crisp and keeps
+// NeueBit's fine detail instead of being squeezed into the chunky game pixels.
+const FONT = ASSETS.font, CAP = FONT.cap;
 const glyphCache = {};
 function glyph(ch, color) {
   const key = color + ch;
-  if (glyphCache[key]) return glyphCache[key];
-  const rows = GLYPHS[ch] || GLYPHS['?'];
-  const c = makeSprite(rows, { '#': color });
-  glyphCache[key] = c; return c;
+  if (key in glyphCache) return glyphCache[key];
+  const gd = FONT.glyphs[ch] || FONT.glyphs['?'];
+  return (glyphCache[key] = gd.rows.length ? makeSprite(gd.rows, { '#': color }) : null);
 }
 // brand palette: the logo's lime (#d0f053) and pure black, used across the whole interface
 const INK = '#000000', LIME = '#d0f053', LIME_DOT = '#b6d63e', GRAY = '#7d8f32';
 const PAPER = LIME; // default UI text / panel colour
 const FREE_SHOP = true; // test build: everything in the shop is free
-// size is kept for call-site compatibility: it maps to an integer pixel scale (8 -> 1x, 16 -> 2x, 24 -> 3x, 48 -> 6x)
-const textScale = size => Math.max(1, Math.round((size || 16) / 8));
-function textW(str, size = 16) { return str.length * 6 * textScale(size) - textScale(size); }
-function text(str, x, y, o = {}) {
-  str = String(str).toUpperCase();
-  const sc = textScale(o.size), w = textW(str, o.size);
-  x = Math.round(x); y = Math.round(y);
+// size keeps its old meaning: the cap height is 7 * round(size / 8) game pixels (8 -> 7px, 16 -> 14px, 24 -> 21px)
+const capOf = size => 7 * Math.max(1, Math.round((size || 16) / 8));
+const fontPx = size => Math.max(1, Math.round(capOf(size) * S / CAP)); // device pixels per font pixel
+function strAdv(str) { let a = 0; for (const ch of str) a += (FONT.glyphs[ch] || FONT.glyphs['?']).adv; return a; }
+function textW(str, size = 16) { return strAdv(String(str)) * fontPx(size) / S; }
+const textH = size => CAP * fontPx(size) / S;
+let textQueue = [];
+// o: size, color, align ('center' | 'right'), shadow (colour or false), clip (array of [x, y, w, h] in game pixels)
+function text(str, x, y, o = {}) { textQueue.push({ str: String(str), x, y, o, alpha: ctx.globalAlpha }); }
+// pixel sprite drawn on the full-resolution layer, centred on (cx, cy), at the largest whole device-pixel scale
+// that fits maxW x maxH game pixels and stays at most maxScale times its game-pixel size
+function hiresSprite(spr, cx, cy, maxW, maxH, maxScale = 1) {
+  const k = Math.max(1, Math.floor(Math.min(maxW * S / spr.width, maxH * S / spr.height, maxScale * S)));
+  textQueue.push({ spr, k, x: Math.round(cx * S - spr.width * k / 2), y: Math.round(cy * S - spr.height * k / 2), alpha: ctx.globalAlpha });
+}
+function drawTextNow(t) {
+  if (t.spr) { vctx.save(); vctx.globalAlpha = t.alpha; vctx.imageSmoothingEnabled = false; vctx.drawImage(t.spr, t.x, t.y, t.spr.width * t.k, t.spr.height * t.k); vctx.restore(); return; }
+  const { str, o } = t, k = fontPx(o.size), w = strAdv(str) * k;
+  let x = Math.round(t.x * S), y = Math.round(t.y * S);
   if (o.align === 'center') x -= Math.round(w / 2); else if (o.align === 'right') x -= w;
-  const color = o.color || PAPER;
+  vctx.save(); vctx.globalAlpha = t.alpha; vctx.imageSmoothingEnabled = false;
+  if (o.clip) { vctx.beginPath(); for (const r of o.clip) vctx.rect(r[0] * S, r[1] * S, r[2] * S, r[3] * S); vctx.clip(); }
   const passes = [];
-  if (o.shadow !== false) passes.push([o.shadow || INK, sc >= 3 ? 2 : 1]);
-  passes.push([color, 0]);
+  if (o.shadow !== false) passes.push([o.shadow || INK, S * (capOf(o.size) >= 21 ? 2 : 1)]);
+  passes.push([o.color || PAPER, 0]);
   for (const [col, d] of passes) {
     let cx = x;
     for (const ch of str) {
-      if (ch !== ' ') { const gl = glyph(ch, col); ctx.drawImage(gl, cx + d, y + d, 5 * sc, 7 * sc); }
-      cx += 6 * sc;
+      const gd = FONT.glyphs[ch] || FONT.glyphs['?'], gl = glyph(ch, col);
+      if (gl) vctx.drawImage(gl, cx + gd.x * k + d, y + gd.y * k + d, gl.width * k, gl.height * k);
+      cx += gd.adv * k;
     }
   }
+  vctx.restore();
 }
-const textH = size => 7 * textScale(size);
+// composites everything drawn so far onto the screen: the pixel layer, then the queued text on top of it
+function flush() {
+  vctx.drawImage(g, 0, 0, W, H, 0, 0, W * S, H * S);
+  for (const t of textQueue) drawTextNow(t);
+  textQueue = []; ctx.clearRect(0, 0, W, H);
+}
 
 // pixel panel: lime box, black border, hard black drop shadow
 function panel(x, y, w, h, fill = LIME) {
@@ -394,7 +365,7 @@ function genClouds() {
   }
 }
 
-function addFloater(x, y, str) { game.floaters.push({ x, y, str, color: LIME, life: 0.9 }); }
+function addFloater(x, y, str) { game.floaters.push({ x, y, str: str.toLowerCase(), color: LIME, life: 0.9 }); }
 function burst(x, y, n, colors, spd = 60, life = 0.5, gravity = 300) {
   for (let i = 0; i < n; i++) { const a = rnd(0, Math.PI * 2), s = rnd(spd * 0.3, spd); game.parts.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: rnd(life * 0.6, life), max: life, c: pick(colors), g: gravity }); }
 }
@@ -814,7 +785,7 @@ function drawWorld() {
   ctx.globalAlpha = 1;
   drawFrog(); drawTongue();
   for (const fl of game.flies) drawFly(fl);
-  for (const fl of game.floaters) { ctx.globalAlpha = clamp(fl.life * 2, 0, 1); text(fl.str, fl.x, sy(fl.y), { size: 16, align: 'center', color: fl.color }); }
+  for (const fl of game.floaters) { ctx.globalAlpha = clamp(fl.life * 2, 0, 1); text(fl.str, fl.x, sy(fl.y), { size: 8, align: 'center', color: fl.color }); }
   ctx.globalAlpha = 1;
   ctx.restore();
 }
@@ -829,6 +800,7 @@ function iconButton(x, y, icon, fn, o = {}) {
 const HUD_BAR_H = 46; // height of the lime top bar below the safe-area inset
 function drawHUD() {
   // lime top bar, extended up behind the notch / status bar
+  flush(); // world text (floaters) stays under the bar
   const top = SAFE_TOP, blinkOn = Math.floor(game.time * 6) % 2 === 0;
   ctx.fillStyle = LIME; ctx.fillRect(0, 0, W, top + HUD_BAR_H);
   // left column, stacked: coins, EXP bar, hearts
@@ -840,9 +812,10 @@ function drawHUD() {
   const rowW = r => Math.max(0, Math.min(bw, fw - Math.floor(r / 2))); // stepped diagonal edge
   for (let r = 0; r < bh; r++) ctx.fillRect(bx, by + r, rowW(r), 1);
   // labels flip colour where they cross the fill edge: black on lime, lime on black
-  const labels = col => { text('EXP', bx + 3, by + 2, { size: 8, color: col, shadow: false }); text('LV' + game.level, bx + bw - 3, by + 2, { size: 8, align: 'right', color: col, shadow: false }); };
-  ctx.save(); ctx.beginPath(); for (let r = 0; r < bh; r++) ctx.rect(bx, by + r, rowW(r), 1); ctx.clip(); labels(INK); ctx.restore();
-  ctx.save(); ctx.beginPath(); for (let r = 0; r < bh; r++) ctx.rect(bx + rowW(r), by + r, bw - rowW(r), 1); ctx.clip(); labels(LIME); ctx.restore();
+  const labels = (col, clip) => { text('EXP', bx + 3, by + 2, { size: 8, color: col, shadow: false, clip }); text('LV' + game.level, bx + bw - 3, by + 2, { size: 8, align: 'right', color: col, shadow: false, clip }); };
+  const fillClip = [], emptyClip = [];
+  for (let r = 0; r < bh; r++) { fillClip.push([bx, by + r, rowW(r), 1]); emptyClip.push([bx + rowW(r), by + r, bw - rowW(r), 1]); }
+  labels(INK, fillClip); labels(LIME, emptyClip);
   // hearts: the current life plus spare lives, empty outlines for the slots still to earn
   const hy = by + bh + 5;
   for (let i = 0; i < 1 + MAX_LIVES; i++) ctx.drawImage(i <= game.lives ? ICON.heart : ICON.heartEmpty, bx - 1 + i * 10, hy);
@@ -907,6 +880,7 @@ function drawTitle() {
   if (save.runs < 3) text('HOLD & DRAG TO MOVE', W / 2, sy(0) + 44, { size: 8, align: 'center', color: LIME });
 }
 function drawDead() {
+  flush(); // the dim overlay goes over the HUD text too
   const t = clamp(game.deadT * 2.2, 0, 1), ease = 1 - Math.pow(1 - t, 3);
   ctx.fillStyle = 'rgba(0,0,0,' + (0.5 * ease) + ')'; ctx.fillRect(0, 0, W, H);
   if (game.deadT < 0.25) return;
@@ -943,7 +917,7 @@ function drawShop() {
     const tx = Math.round(W / 2 - tabW * 1.5 - 6 + i * (tabW + 6));
     const b = addBtn(tx, tabY, tabW, 20, () => { shopTab = i; });
     const p = button(b, null, { fill: LIME, pressed: shopTab === i });
-    const ic = tabs[i]; ctx.drawImage(ic, Math.round(tx + p + tabW / 2 - ic.width / 2), Math.round(tabY + p + 10 - ic.height / 2));
+    hiresSprite(tabs[i], tx + p + tabW / 2, tabY + p + 10, tabW - 6, 14, 1.75);
   }
   // item grid
   const cat = CATS[shopTab], list = ITEMS[cat];
@@ -954,12 +928,13 @@ function drawShop() {
     const key = cat + ':' + it.id, owned = save.owned.includes(key), equipped = save.eq[cat] === it.id;
     const b = addBtn(bx0, by0, cw, ch, () => shopTap(cat, it));
     const p = button(b, null, { fill: LIME, pressed: equipped }), x = bx0 + p, y = by0 + p;
+    // the item is centred in the card (in the space above the price / check mark) and drawn larger
+    const iconCy = y + (ch - 12) / 2 + 1;
     if (it.spr) {
-      const s = it.spr;
       ctx.globalAlpha = owned ? 1 : 0.7;
-      ctx.drawImage(s, Math.round(x + cw / 2 - s.width / 2), Math.round(y + 14 - s.height / 2));
+      hiresSprite(it.spr, x + cw / 2, iconCy, cw - 6, ch - 18, 1.75);
       ctx.globalAlpha = 1;
-    } else { ctx.fillStyle = INK; ctx.fillRect(x + Math.round(cw / 2) - 4, y + 13, 8, 2); }
+    } else { ctx.fillStyle = INK; ctx.fillRect(x + Math.round(cw / 2) - 5, Math.round(iconCy) - 1, 10, 2); }
     if (owned) { if (equipped) ctx.drawImage(ICON.check, Math.round(x + cw / 2 - 4), y + ch - 12); }
     else {
       const can = FREE_SHOP || save.coins >= it.price, pw = 10 + textW('' + it.price, 8);
@@ -1095,10 +1070,10 @@ function frame(now) {
     else if (scene === 'title') drawTitle();
     else if (scene === 'dead') { drawHUD(); drawDead(); }
   }
-  vctx.drawImage(g, 0, 0, W, H, 0, 0, W * S, H * S);
+  flush();
   if (scene === 'title') drawLogo();
-  // the settings overlay goes on top of the logo, so it gets its own pixel pass
-  if (settingsOpen && scene !== 'shop') { ctx.clearRect(0, 0, W, H); drawSettings(); vctx.drawImage(g, 0, 0, W, H, 0, 0, W * S, H * S); }
+  // the settings overlay goes on top of the logo, so it gets its own pass
+  if (settingsOpen && scene !== 'shop') { drawSettings(); flush(); }
 }
 addEventListener('resize', () => { if (scene === 'title' || scene === 'shop') { newGame(); } });
 document.addEventListener('visibilitychange', () => { if (document.hidden && scene === 'play') { input.touchX = null; } });

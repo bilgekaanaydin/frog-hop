@@ -26,7 +26,7 @@ Safari'de "Ana Ekrana Ekle" dersen tam ekran açılır.
 ## Geliştirme
 
 Kaynak kod `src/` içinde. Değişiklikten sonra `python3 build.py` çalıştır: `src/` dosyalarını tek bir `index.html` içine gömer ve `frog-hop.zip`'i yeniler.
-Yazılar tarayıcı fontu yerine koddaki 5x7 bitmap fontla çizilir; bu sayede her ölçekte keskin kalır.
+Yazılar PP NeueBit Bold ile çizilir. `tools/make_font.py` fontu kendi piksel ızgarasında (1 piksel = 1/28 em) bitmap'e çevirip `src/assets.js` içine yazar. Yazılar ekranın tam çözünürlüğünde tam sayı ölçekle çizildiği için her cihazda keskin kalır.
 
 ## Görsel kimlik
 
