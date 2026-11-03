@@ -66,6 +66,7 @@ const ICON = {
   home: makeSprite(['....kk....', '...kyyk...', '..kyyyyk..', '.kyyyyyyk.', 'kkkyyyykkk', '..kyykkyk.', '..kyykkyk.', '..kkkkkkk.'], P),
   retry: makeSprite(['..kkkkk...', '.kk...kk..', 'kk.....kk.', 'kk....kkkk', 'kk.....kk.', 'kk....k.k.', '.kk..kk...', '..kkkk....'], P),
   heart: makeSprite(['.kk..kk.', 'krrkkrrk', 'krrrrrrk', 'krrrrrrk', '.krrrrk.', '..krrk..', '...kk...'], P),
+  heartEmpty: makeSprite(['.kk..kk.', 'k..kk..k', 'k......k', 'k......k', '.k....k.', '..k..k..', '...kk...'], P),
   glassesTab: makeSprite(['kkkkk.kkkkk', 'kiiiikiiiik', 'kiwiikiwiik', '.kiik.kiik.', '..kk...kk..'], P),
   bolt: makeSprite(['...kk', '..kyk', '.kyyk', 'kyyyk', 'kkkyk', '..kyk', '..kk.'], P),
   star: makeSprite(['..y..', '.yyy.', 'yyyyy', '.yyy.', '..y..'], P),
@@ -138,13 +139,18 @@ const view = document.getElementById('c');
 const vctx = view.getContext('2d');
 const g = document.createElement('canvas');
 const ctx = g.getContext('2d');
-let W = BASE_W, H = 384, S = 2, CSS_W = 0, CSS_H = 0;
+let W = BASE_W, H = 384, S = 2, CSS_W = 0, CSS_H = 0, SAFE_TOP = 0;
+// reads the iPhone notch / status-bar inset (env(safe-area-inset-top)) so the top bar never hides under it
+const safeProbe = document.createElement('div');
+safeProbe.style.cssText = 'position:fixed;top:0;left:0;width:0;height:env(safe-area-inset-top,0px);visibility:hidden;pointer-events:none';
+document.body.appendChild(safeProbe);
 function resize() {
   const dpr = Math.min(window.devicePixelRatio || 1, 3);
   CSS_W = Math.min(innerWidth, innerHeight * 0.62); CSS_H = innerHeight;
   const pw = Math.round(CSS_W * dpr), ph = Math.round(CSS_H * dpr);
   S = Math.max(1, Math.round(pw / BASE_W));
   W = Math.ceil(pw / S); H = Math.ceil(ph / S);
+  SAFE_TOP = Math.ceil(safeProbe.getBoundingClientRect().height * dpr / S);
   view.width = W * S; view.height = H * S;
   view.style.width = (W * S / dpr) + 'px'; view.style.height = (H * S / dpr) + 'px';
   g.width = W; g.height = H;
@@ -820,11 +826,14 @@ function iconButton(x, y, icon, fn, o = {}) {
   button(b, null, { icon, fill: o.fill || LIME });
   return b;
 }
+const HUD_BAR_H = 46; // height of the lime top bar below the safe-area inset
 function drawHUD() {
-  drawCoinCounter(5, 5, game.runCoins);
-  text('' + game.score, W / 2, 3, { size: 24, align: 'center' });
-  // EXP bar, left aligned under the coins (green fill with a stair-stepped end, like the reference sticker)
-  const bw = 58, bh = 11, bx = 5, by = 18, blinkOn = Math.floor(game.time * 6) % 2 === 0;
+  // lime top bar, extended up behind the notch / status bar
+  const top = SAFE_TOP, blinkOn = Math.floor(game.time * 6) % 2 === 0;
+  ctx.fillStyle = LIME; ctx.fillRect(0, 0, W, top + HUD_BAR_H);
+  // left column, stacked: coins, EXP bar, hearts
+  drawCoinCounter(6, top + 5, game.runCoins, INK, false);
+  const bw = 58, bh = 11, bx = 7, by = top + 18;
   const frac = clamp(game.exp / expNeeded(game.level), 0, 1), fw = Math.round(bw * frac);
   ctx.fillStyle = INK; ctx.fillRect(bx - 2, by - 2, bw + 4, bh + 4);
   ctx.fillStyle = LIME;
@@ -834,15 +843,17 @@ function drawHUD() {
   const labels = col => { text('EXP', bx + 3, by + 2, { size: 8, color: col, shadow: false }); text('LV' + game.level, bx + bw - 3, by + 2, { size: 8, align: 'right', color: col, shadow: false }); };
   ctx.save(); ctx.beginPath(); for (let r = 0; r < bh; r++) ctx.rect(bx, by + r, rowW(r), 1); ctx.clip(); labels(INK); ctx.restore();
   ctx.save(); ctx.beginPath(); for (let r = 0; r < bh; r++) ctx.rect(bx + rowW(r), by + r, bw - rowW(r), 1); ctx.clip(); labels(LIME); ctx.restore();
-  if (game.charged && blinkOn) text('SUPER JUMP!', bx, by + bh + 5, { size: 8, color: LIME });
-  // spare lives
-  for (let i = 0; i < game.lives; i++) ctx.drawImage(ICON.heart, bx + i * 10, by + bh + 5 + (game.charged ? 9 : 0));
-  // tongue timer
+  // hearts: the current life plus spare lives, empty outlines for the slots still to earn
+  const hy = by + bh + 5;
+  for (let i = 0; i < 1 + MAX_LIVES; i++) ctx.drawImage(i <= game.lives ? ICON.heart : ICON.heartEmpty, bx - 1 + i * 10, hy);
+  if (game.charged && blinkOn) text('SUPER JUMP!', bx + (1 + MAX_LIVES) * 10 + 4, hy, { size: 8, color: INK, shadow: false });
+  // right column: score, and the tongue timer under it while the potion is active
+  text('' + game.score, W - 6, top + 4, { size: 24, align: 'right', color: INK, shadow: false });
   if (game.tongueT > 0) {
-    const pt = ICON.potion, tx = W - pt.width - 4, ty = 4; ctx.drawImage(pt, tx, ty);
-    ctx.fillStyle = INK; ctx.fillRect(tx - 36, ty + 4, 33, 7);
-    ctx.fillStyle = LIME; ctx.fillRect(tx - 35, ty + 5, Math.round(31 * game.tongueT / TONGUE_TIME), 5);
-    text('TONGUE', tx - 36, ty + 13, { size: 8, color: LIME });
+    const pt = ICON.potion, tx = W - pt.width - 5, ty = top + 29;
+    ctx.drawImage(pt, tx, ty - 2);
+    ctx.fillStyle = INK; ctx.fillRect(tx - 37, ty + 3, 33, 7);
+    ctx.fillStyle = LIME; ctx.fillRect(tx - 36, ty + 4, Math.round(31 * game.tongueT / TONGUE_TIME), 5);
   }
   // level-up / 1UP banners
   if (game.levelUpT > 0) {
@@ -869,7 +880,7 @@ const LOGO_ASPECT = 117 / 253;
 const easeOutBounce = t => { const n = 7.5625, d = 2.75; if (t < 1 / d) return n * t * t; if (t < 2 / d) return n * (t -= 1.5 / d) * t + 0.75; if (t < 2.5 / d) return n * (t -= 2.25 / d) * t + 0.9375; return n * (t -= 2.625 / d) * t + 0.984375; };
 function logoRect() {
   const w = Math.min(W - 24, 180), h = Math.round(w * LOGO_ASPECT), x = Math.round((W - w) / 2);
-  const restY = Math.round(H * 0.1 + Math.sin(game.time * 3) * 2);
+  const restY = Math.round(SAFE_TOP + H * 0.1 + Math.sin(game.time * 3) * 2);
   const t = clamp((game.introT - 0.1) * 1.4, 0, 1);
   return { x, y: Math.round(restY - (1 - easeOutBounce(t)) * (restY + h + 10)), w, h, restY };
 }
@@ -887,9 +898,9 @@ function drawTitle() {
     const by = lr.restY + lr.h + 6, bw = 12 + textW('' + save.best, 8);
     ctx.drawImage(ICON.trophy, Math.round(W / 2 - bw / 2), by); text('' + save.best, W / 2 - bw / 2 + 12, by + 1, { size: 8 });
   }
-  drawCoinCounter(5, 5, FREE_SHOP ? 'FREE' : save.coins);
-  iconButton(W - 23, 4, ICON.cart, () => { scene = 'shop'; shopTab = 0; });
-  iconButton(W - 23, 26, ICON.gear, () => { settingsOpen = true; });
+  drawCoinCounter(5, SAFE_TOP + 5, FREE_SHOP ? 'FREE' : save.coins);
+  iconButton(W - 23, SAFE_TOP + 4, ICON.cart, () => { scene = 'shop'; shopTab = 0; });
+  iconButton(W - 23, SAFE_TOP + 26, ICON.gear, () => { settingsOpen = true; });
   if (it < 1.6) return; // hints wait for the frog to arrive
   // tap hint
   if (Math.floor(game.time * 2) % 2 === 0) { const hy = sy(0) + 24; ctx.drawImage(ICON.hand, W / 2 - 22, hy + Math.round(Math.sin(game.time * 8))); text('TAP!', W / 2 - 8, hy + 2, { size: 16, color: LIME }); }
@@ -920,10 +931,10 @@ function drawDead() {
 let shopTab = 0, shopMsg = null;
 function drawShop() {
   dotBackground();
-  drawCoinCounter(6, 8, FREE_SHOP ? 'FREE' : save.coins, INK, false);
-  iconButton(W - 23, 5, ICON.close, () => { scene = game.started ? 'dead' : 'title'; });
+  drawCoinCounter(6, SAFE_TOP + 8, FREE_SHOP ? 'FREE' : save.coins, INK, false);
+  iconButton(W - 23, SAFE_TOP + 5, ICON.close, () => { scene = game.started ? 'dead' : 'title'; });
   // preview panel with the frog wearing the equipped items
-  const pvW = 72, pvH = 50, pvX = Math.round(W / 2 - pvW / 2), pvY = 28;
+  const pvW = 72, pvH = 50, pvX = Math.round(W / 2 - pvW / 2), pvY = SAFE_TOP + 28;
   panel(pvX, pvY, pvW, pvH, INK);
   drawFrogAt(W / 2, pvY + pvH - 7 + Math.round(Math.sin(game.time * 3)), 'sit', 0, game.frog.blink > 0, null);
   // category tabs (the selected one is pressed in)
