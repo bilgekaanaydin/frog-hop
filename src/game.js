@@ -856,16 +856,20 @@ function drawHUD() {
   // banners drop in from the top, hold, then fade out
   const banner = (t, dur, y0, title, sub) => {
     const k = 1 - t / dur, drop = Math.round((1 - easeOutBounce(clamp(k / 0.25, 0, 1))) * -40);
-    const pw = Math.round(Math.max(textW(title, 16), sub ? textW(sub, 8) : 0) + 20), ph = sub ? 34 : 24;
+    // measured from the real glyph metrics: equal padding above the title and below the subtitle's descenders
+    const border = 2, pad = 5, gap = 4, padX = 12;
+    const titleH = Math.round(textH(16)), subH = sub ? Math.round(textH(8) + 4 * fontPx(8) / S) : 0; // cap + descender
+    const pw = Math.round(Math.max(textW(title, 16), sub ? textW(sub, 8) : 0) + 2 * (padX + border));
+    const ph = border * 2 + pad * 2 + titleH + (sub ? gap + subH : 0);
     const px = Math.round(W / 2 - pw / 2), py = Math.round(y0 + drop);
     ctx.globalAlpha = clamp(t * 3, 0, 1);
     logoPanel(px, py, pw, ph);
-    text(title, W / 2, py + 5, { size: 16, align: 'center', color: INK, shadow: false });
-    if (sub) text(sub, W / 2, py + 22, { size: 8, align: 'center', color: INK, shadow: false });
+    text(title, W / 2, py + border + pad, { size: 16, align: 'center', color: INK, shadow: false });
+    if (sub) text(sub, W / 2, py + border + pad + titleH + gap, { size: 8, align: 'center', color: INK, shadow: false });
     ctx.globalAlpha = 1;
   };
   if (game.levelUpT > 0) banner(game.levelUpT, 1.4, top + 62, 'LEVEL UP', 'jump +' + Math.round((jumpBoost() - 1) * 100) + '%');
-  if (game.oneUpT > 0) banner(game.oneUpT, 1.6, top + (game.levelUpT > 0 ? 104 : 62), '+1UP', 'extra life');
+  if (game.oneUpT > 0) banner(game.oneUpT, 1.6, top + (game.levelUpT > 0 ? 112 : 62), '+1UP', 'extra life');
 }
 let buttons = [];
 function addBtn(x, y, w, h, fn) { const b = { x, y, w, h, fn }; buttons.push(b); return b; }
