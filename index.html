@@ -898,8 +898,8 @@ function drawDead() {
   const cw = 12 + textW('+' + game.runCoins, 8);
   ctx.drawImage(ICON.coin, Math.round(W / 2 - cw / 2), rowY + 11); text('+' + game.runCoins, W / 2 - cw / 2 + 12, rowY + 11, { size: 8, color: INK, shadow: false });
   if (game.deadT < 0.6) return;
-  const rb = addBtn(px + 10, py + ph - 48, pw - 22, 20, () => { newGame(); startGame(); });
-  button(rb, 'RETRY', { size: 16 });
+  const rb = addBtn(px + 10, py + ph - 46, pw - 22, 18, () => { newGame(); startGame(); });
+  button(rb, 'RETRY', { size: 8 });
   const half = Math.floor((pw - 26) / 2);
   const hb = addBtn(px + 10, py + ph - 24, half, 14, () => { newGame(); scene = 'title'; });
   button(hb, null, { icon: ICON.home, fill: LAV });
