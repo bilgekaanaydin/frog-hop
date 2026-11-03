@@ -69,6 +69,21 @@ const ICON = {
   glassesTab: makeSprite(['kkkkk.kkkkk', 'kiiiikiiiik', 'kiwiikiwiik', '.kiik.kiik.', '..kk...kk..'], P),
   bolt: makeSprite(['...kk', '..kyk', '.kyyk', 'kyyyk', 'kkkyk', '..kyk', '..kk.'], P),
   star: makeSprite(['..y..', '.yyy.', 'yyyyy', '.yyy.', '..y..'], P),
+  potion: makeSprite([ // corked potion bottle with pink "tongue" brew
+    '....kkkkk....',
+    '....kmmmk....',
+    '....knnnk....',
+    '....kqwqk....',
+    '...kkqwqkk...',
+    '..kqqqqqqqk..',
+    '.kqppppppPqk.',
+    'kwpaappppppPk',
+    'kwpawppppppPk',
+    'kwpappppwpPPk',
+    'kwppppppppPPk',
+    '.kwpppppPPPk.',
+    '..kkPPPPPkk..',
+    '....kkkkk....'], P),
   tongue: makeSprite(['..kkkkkk..', '.k......k.', 'k...kk...k', 'k..kppk..k', 'k..kppk..k', 'k..kppk..k', 'k.kppppk.k', 'k.kppppk.k', '.k.kkkk.k.', '..kkkkkk..'], P),
   spring: makeSprite(['kkkkkkkkkk', 'ksSsSsSsSk', 'kSsSsSsSsk', '.kkkkkkkk.'], P),
   fly0: makeSprite(['.qqq...qqq.', 'qkqqq.qqqkq', '.qqkkkkkqq.', '..kkikikk..', '..kkkkkkk..', '...kkkkk...'], P),
@@ -198,8 +213,9 @@ function glyph(ch, color) {
   const c = makeSprite(rows, { '#': color });
   glyphCache[key] = c; return c;
 }
-// menu palette (from the sticker-sheet reference): black, cream, orange, lime, lavender
-const INK = '#0a0a0a', PAPER = '#f2ead8', ACCENT = '#ff4a1c', LIME = '#c6ff00', LAV = '#b9b6ff', PINK = '#0a0a0a', PINK_DOT = '#2b2b2b', GRAY = '#8a8478';
+// brand palette: the logo's lime (#d0f053) and pure black, used across the whole interface
+const INK = '#000000', LIME = '#d0f053', LIME_DOT = '#b6d63e', GRAY = '#7d8f32';
+const PAPER = LIME; // default UI text / panel colour
 const FREE_SHOP = true; // test build: everything in the shop is free
 // size is kept for call-site compatibility: it maps to an integer pixel scale (8 -> 1x, 16 -> 2x, 24 -> 3x, 48 -> 6x)
 const textScale = size => Math.max(1, Math.round((size || 16) / 8));
@@ -223,25 +239,29 @@ function text(str, x, y, o = {}) {
 }
 const textH = size => 7 * textScale(size);
 
-// pixel panel: white box, thick ink border, hard drop shadow (like the reference UI)
-function panel(x, y, w, h, fill = PAPER) {
+// pixel panel: lime box, black border, hard black drop shadow
+function panel(x, y, w, h, fill = LIME) {
   x = Math.round(x); y = Math.round(y);
   ctx.fillStyle = INK; ctx.fillRect(x + 2, y + 2, w, h);
   ctx.fillStyle = INK; ctx.fillRect(x, y, w, h);
   ctx.fillStyle = fill; ctx.fillRect(x + 1, y + 1, w - 2, h - 2);
 }
+// default button is black with lime text; o.fill = LIME gives the light variant.
+// o.pressed draws the selected state: sunk into its shadow with an inner black frame. Returns the pixel offset used.
 function button(b, label, o = {}) {
-  const x = b.x, y = b.y, w = b.w, h = b.h;
-  const fill = o.fill || ACCENT, color = o.color || (o.fill ? INK : PAPER);
-  ctx.fillStyle = INK; ctx.fillRect(x + 2, y + 2, w, h);
+  const p = o.pressed ? 2 : 0, x = b.x + p, y = b.y + p, w = b.w, h = b.h;
+  const fill = o.fill || INK, color = o.color || (fill === INK ? LIME : INK);
+  if (!p) { ctx.fillStyle = INK; ctx.fillRect(x + 2, y + 2, w, h); }
   ctx.fillStyle = INK; ctx.fillRect(x, y, w, h);
   ctx.fillStyle = fill; ctx.fillRect(x + 1, y + 1, w - 2, h - 2);
+  if (p) { ctx.fillStyle = INK; ctx.fillRect(x + 2, y + 2, w - 4, 1); ctx.fillRect(x + 2, y + h - 3, w - 4, 1); ctx.fillRect(x + 2, y + 2, 1, h - 4); ctx.fillRect(x + w - 3, y + 2, 1, h - 4); }
   if (label) text(label, x + w / 2, y + Math.round((h - textH(o.size || 16)) / 2), { align: 'center', size: o.size || 16, color, shadow: false });
   if (o.icon) ctx.drawImage(o.icon, Math.round(x + (w - o.icon.width) / 2), Math.round(y + (h - o.icon.height) / 2));
+  return p;
 }
 const hit = (b, px, py) => px >= b.x && px <= b.x + b.w + 2 && py >= b.y && py <= b.y + b.h + 2;
-// dotted pastel background used by the shop and overlays
-function dotBackground(bg = PINK, dot = PINK_DOT) {
+// dotted background used by the shop
+function dotBackground(bg = LIME, dot = LIME_DOT) {
   ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
   ctx.fillStyle = dot; for (let y = 2; y < H; y += 6) for (let x = 2; x < W; x += 6) ctx.fillRect(x, y, 1, 1);
 }
@@ -368,7 +388,7 @@ function genClouds() {
   }
 }
 
-function addFloater(x, y, str, color) { game.floaters.push({ x, y, str, color: color || P.Y, life: 0.9 }); }
+function addFloater(x, y, str) { game.floaters.push({ x, y, str, color: LIME, life: 0.9 }); }
 function burst(x, y, n, colors, spd = 60, life = 0.5, gravity = 300) {
   for (let i = 0; i < n; i++) { const a = rnd(0, Math.PI * 2), s = rnd(spd * 0.3, spd); game.parts.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: rnd(life * 0.6, life), max: life, c: pick(colors), g: gravity }); }
 }
@@ -763,11 +783,14 @@ function drawCoin(c) {
   if (y < -10 || y > H + 10) return;
   ctx.drawImage(fr, Math.round(c.x - fr.width / 2), y - Math.floor(fr.height / 2));
 }
+// tongue power-up: a corked potion bottle that bobs and sparkles
 function drawItem(it) {
   const y = sy(it.y) + Math.round(Math.sin(it.t * 3) * 2), x = Math.round(it.x);
-  if (y < -14 || y > H + 14) return;
-  ctx.globalAlpha = 0.25 + 0.15 * Math.sin(it.t * 5); ctx.fillStyle = P.p; ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
-  ctx.drawImage(ICON.tongue, x - 5, y - 5);
+  if (y < -16 || y > H + 16) return;
+  ctx.globalAlpha = 0.18 + 0.1 * Math.sin(it.t * 5); ctx.fillStyle = P.p; ctx.beginPath(); ctx.arc(x, y, 10, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
+  const pt = ICON.potion; ctx.drawImage(pt, x - Math.floor(pt.width / 2), y - Math.floor(pt.height / 2));
+  ctx.fillStyle = '#ffffff';
+  for (let i = 0; i < 3; i++) { const ph = (it.t * 1.3 + i * 0.33) % 1; if (ph < 0.5) { const a = i * 2.1 + Math.floor(it.t * 1.3) * 1.3; ctx.fillRect(x + Math.round(Math.cos(a) * 10), y + Math.round(Math.sin(a) * 9), 1, 1); } }
 }
 function drawWorld() {
   ctx.save();
@@ -791,10 +814,10 @@ function drawWorld() {
 }
 
 // ------------------------------------------------------------ HUD / screens
-function drawCoinCounter(x, y, n, color = P.Y, shadow) { ctx.drawImage(ICON.coinSmall, x, y); text('' + n, x + 11, y, { size: 8, color, shadow }); }
+function drawCoinCounter(x, y, n, color = LIME, shadow) { ctx.drawImage(ICON.coinSmall, x, y); text('' + n, x + 11, y, { size: 8, color, shadow }); }
 function iconButton(x, y, icon, fn, o = {}) {
   const b = addBtn(x, y, 18, 18, fn);
-  button(b, null, { icon, fill: o.fill || PAPER });
+  button(b, null, { icon, fill: o.fill || LIME });
   return b;
 }
 function drawHUD() {
@@ -804,73 +827,84 @@ function drawHUD() {
   const bw = 58, bh = 11, bx = 5, by = 18, blinkOn = Math.floor(game.time * 6) % 2 === 0;
   const frac = clamp(game.exp / expNeeded(game.level), 0, 1), fw = Math.round(bw * frac);
   ctx.fillStyle = INK; ctx.fillRect(bx - 2, by - 2, bw + 4, bh + 4);
-  ctx.fillStyle = '#ffffff'; ctx.fillRect(bx, by, bw, bh);
-  ctx.fillStyle = '#8fd27a';
-  for (let r = 0; r < bh; r++) ctx.fillRect(bx, by + r, Math.max(0, Math.min(bw, fw - Math.floor(r / 2))), 1); // stepped diagonal edge
-  text('EXP', bx + 3, by + 2, { size: 8, color: INK, shadow: false });
-  text('LV' + game.level, bx + bw - 3, by + 2, { size: 8, align: 'right', color: INK, shadow: false });
-  if (game.charged && blinkOn) text('SUPER JUMP!', bx, by + bh + 5, { size: 8, color: P.Y });
+  ctx.fillStyle = LIME;
+  const rowW = r => Math.max(0, Math.min(bw, fw - Math.floor(r / 2))); // stepped diagonal edge
+  for (let r = 0; r < bh; r++) ctx.fillRect(bx, by + r, rowW(r), 1);
+  // labels flip colour where they cross the fill edge: black on lime, lime on black
+  const labels = col => { text('EXP', bx + 3, by + 2, { size: 8, color: col, shadow: false }); text('LV' + game.level, bx + bw - 3, by + 2, { size: 8, align: 'right', color: col, shadow: false }); };
+  ctx.save(); ctx.beginPath(); for (let r = 0; r < bh; r++) ctx.rect(bx, by + r, rowW(r), 1); ctx.clip(); labels(INK); ctx.restore();
+  ctx.save(); ctx.beginPath(); for (let r = 0; r < bh; r++) ctx.rect(bx + rowW(r), by + r, bw - rowW(r), 1); ctx.clip(); labels(LIME); ctx.restore();
+  if (game.charged && blinkOn) text('SUPER JUMP!', bx, by + bh + 5, { size: 8, color: LIME });
   // spare lives
   for (let i = 0; i < game.lives; i++) ctx.drawImage(ICON.heart, bx + i * 10, by + bh + 5 + (game.charged ? 9 : 0));
   // tongue timer
   if (game.tongueT > 0) {
-    const tx = W - 14, ty = 6; ctx.drawImage(ICON.tongue, tx, ty);
-    ctx.fillStyle = INK; ctx.fillRect(tx - 34, ty + 2, 32, 7); ctx.fillStyle = PAPER; ctx.fillRect(tx - 33, ty + 3, 30, 5);
-    ctx.fillStyle = P.p; ctx.fillRect(tx - 33, ty + 3, Math.round(30 * game.tongueT / TONGUE_TIME), 5);
-    text('TONGUE', tx - 34, ty + 11, { size: 8, color: P.a });
+    const pt = ICON.potion, tx = W - pt.width - 4, ty = 4; ctx.drawImage(pt, tx, ty);
+    ctx.fillStyle = INK; ctx.fillRect(tx - 36, ty + 4, 33, 7);
+    ctx.fillStyle = LIME; ctx.fillRect(tx - 35, ty + 5, Math.round(31 * game.tongueT / TONGUE_TIME), 5);
+    text('TONGUE', tx - 36, ty + 13, { size: 8, color: LIME });
   }
   // level-up / 1UP banners
   if (game.levelUpT > 0) {
     const k = 1 - game.levelUpT / 1.4, yy = Math.round(H * 0.3 - k * 12);
     ctx.globalAlpha = clamp(game.levelUpT * 2, 0, 1);
-    text('LEVEL UP', W / 2, yy, { size: 24, align: 'center', color: '#8fd27a' });
-    text('JUMP +' + Math.round((jumpBoost() - 1) * 100) + '%', W / 2, yy + 24, { size: 8, align: 'center', color: PAPER });
+    text('LEVEL UP', W / 2, yy, { size: 24, align: 'center', color: LIME });
+    text('JUMP +' + Math.round((jumpBoost() - 1) * 100) + '%', W / 2, yy + 24, { size: 8, align: 'center', color: LIME });
     ctx.globalAlpha = 1;
   }
   if (game.oneUpT > 0) {
     const k = 1 - game.oneUpT / 1.6, yy = Math.round(H * 0.42 - k * 16);
     ctx.globalAlpha = clamp(game.oneUpT * 2, 0, 1);
-    text('+1UP', W / 2, yy, { size: 24, align: 'center', color: blinkOn ? '#ffb400' : '#ff5c1c' });
+    if (blinkOn) text('+1UP', W / 2, yy, { size: 24, align: 'center', color: LIME });
     ctx.globalAlpha = 1;
   }
 }
 let buttons = [];
 function addBtn(x, y, w, h, fn) { const b = { x, y, w, h, fn }; buttons.push(b); return b; }
 
+// ------------------------------------------------------------ logo (vector SVG, drawn on the full-resolution canvas so it stays sharp)
+const LOGO = new Image();
+LOGO.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(ASSETS.logoSvg);
+const LOGO_ASPECT = 117 / 253;
+const easeOutBounce = t => { const n = 7.5625, d = 2.75; if (t < 1 / d) return n * t * t; if (t < 2 / d) return n * (t -= 1.5 / d) * t + 0.75; if (t < 2.5 / d) return n * (t -= 2.25 / d) * t + 0.9375; return n * (t -= 2.625 / d) * t + 0.984375; };
+function logoRect() {
+  const w = Math.min(W - 24, 180), h = Math.round(w * LOGO_ASPECT), x = Math.round((W - w) / 2);
+  const restY = Math.round(H * 0.1 + Math.sin(game.time * 3) * 2);
+  const t = clamp((game.introT - 0.1) * 1.4, 0, 1);
+  return { x, y: Math.round(restY - (1 - easeOutBounce(t)) * (restY + h + 10)), w, h, restY };
+}
+function drawLogo() {
+  if (!LOGO.complete || !LOGO.naturalWidth) return;
+  const r = logoRect();
+  vctx.imageSmoothingEnabled = true; vctx.imageSmoothingQuality = 'high';
+  vctx.drawImage(LOGO, r.x * S, r.y * S, r.w * S, r.h * S);
+  vctx.imageSmoothingEnabled = false;
+}
+
 function drawTitle() {
-  // intro: the title letters drop in one by one with a little overshoot
-  const bob = Math.round(Math.sin(game.time * 3) * 2), it = game.introT;
-  const letters = [['F', 'R', 'O', 'H', 'G']];
-  letters.forEach((word, row) => {
-    const sc = 5, adv = 6 * sc, totalW = word.length * adv - sc, x0 = Math.round(W / 2 - totalW / 2), yBase = Math.round(H * 0.14 + row * 50 + bob);
-    word.forEach((ch, i) => {
-      const t = clamp((it - 0.15 - (row * 5 + i) * 0.08) * 2.5, 0, 1);
-      const off = Math.round(-(1 - t) * (1 - t) * 90 + Math.sin(t * Math.PI) * 6);
-      text(ch, x0 + i * adv, yBase + off, { size: 40, color: LIME });
-    });
-  });
+  const it = game.introT, lr = logoRect(); // the logo itself is drawn later on the full-resolution canvas
   if (it > 1.2) {
-    const by = H * 0.14 + 48;
-    ctx.drawImage(ICON.trophy, Math.round(W / 2 - 16), by); text('' + save.best, W / 2 - 4, by + 1, { size: 8 });
+    const by = lr.restY + lr.h + 6, bw = 12 + textW('' + save.best, 8);
+    ctx.drawImage(ICON.trophy, Math.round(W / 2 - bw / 2), by); text('' + save.best, W / 2 - bw / 2 + 12, by + 1, { size: 8 });
   }
   drawCoinCounter(5, 5, FREE_SHOP ? 'FREE' : save.coins);
-  iconButton(W - 23, 4, ICON.cart, () => { scene = 'shop'; shopTab = 0; }, { fill: LIME });
-  iconButton(W - 23, 26, ICON.gear, () => { settingsOpen = true; }, { fill: LIME });
+  iconButton(W - 23, 4, ICON.cart, () => { scene = 'shop'; shopTab = 0; });
+  iconButton(W - 23, 26, ICON.gear, () => { settingsOpen = true; });
   if (it < 1.6) return; // hints wait for the frog to arrive
   // tap hint
-  if (Math.floor(game.time * 2) % 2 === 0) { const hy = sy(0) + 24; ctx.drawImage(ICON.hand, W / 2 - 22, hy + Math.round(Math.sin(game.time * 8))); text('TAP!', W / 2 - 8, hy + 2, { size: 16, color: P.Y }); }
-  if (save.runs < 3) text('HOLD & DRAG TO MOVE', W / 2, sy(0) + 44, { size: 8, align: 'center', color: PAPER });
+  if (Math.floor(game.time * 2) % 2 === 0) { const hy = sy(0) + 24; ctx.drawImage(ICON.hand, W / 2 - 22, hy + Math.round(Math.sin(game.time * 8))); text('TAP!', W / 2 - 8, hy + 2, { size: 16, color: LIME }); }
+  if (save.runs < 3) text('HOLD & DRAG TO MOVE', W / 2, sy(0) + 44, { size: 8, align: 'center', color: LIME });
 }
 function drawDead() {
   const t = clamp(game.deadT * 2.2, 0, 1), ease = 1 - Math.pow(1 - t, 3);
-  ctx.fillStyle = 'rgba(20,10,30,' + (0.45 * ease) + ')'; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = 'rgba(0,0,0,' + (0.5 * ease) + ')'; ctx.fillRect(0, 0, W, H);
   if (game.deadT < 0.25) return;
   const pw = Math.min(W - 28, 190), ph = 146, px = Math.round((W - pw) / 2), py = Math.round(H * 0.5 - ph / 2 - 10 + (1 - ease) * 40);
   panel(px, py, pw, ph);
-  text('SPLASH!', W / 2, py + 10, { size: 16, align: 'center', color: ACCENT, shadow: false });
+  text('SPLASH!', W / 2, py + 10, { size: 16, align: 'center', color: INK, shadow: false });
   text('' + game.score, W / 2, py + 30, { size: 40, align: 'center', color: INK, shadow: false });
   const rowY = py + 72;
-  if (game.newBest) { if (Math.floor(game.time * 4) % 2 === 0) text('NEW BEST!', W / 2, rowY, { size: 8, align: 'center', color: ACCENT, shadow: false }); }
+  if (game.newBest) { if (Math.floor(game.time * 4) % 2 === 0) text('NEW BEST!', W / 2, rowY, { size: 8, align: 'center', color: INK, shadow: false }); }
   else { const bw = 12 + textW('' + save.best, 8); ctx.drawImage(ICON.trophy, Math.round(W / 2 - bw / 2), rowY - 1); text('' + save.best, W / 2 - bw / 2 + 12, rowY, { size: 8, color: INK, shadow: false }); }
   const cw = 12 + textW('+' + game.runCoins, 8);
   ctx.drawImage(ICON.coinSmall, Math.round(W / 2 - cw / 2), rowY + 11); text('+' + game.runCoins, W / 2 - cw / 2 + 12, rowY + 11, { size: 8, color: INK, shadow: false });
@@ -879,42 +913,42 @@ function drawDead() {
   button(rb, 'RETRY', { size: 8 });
   const half = Math.floor((pw - 26) / 2);
   const hb = addBtn(px + 10, py + ph - 24, half, 14, () => { newGame(); scene = 'title'; });
-  button(hb, null, { icon: ICON.home, fill: LAV });
+  button(hb, null, { icon: ICON.home, fill: LIME });
   const sb = addBtn(px + 14 + half, py + ph - 24, half, 14, () => { scene = 'shop'; shopTab = 0; });
-  button(sb, null, { icon: ICON.cart, fill: LAV });
+  button(sb, null, { icon: ICON.cart, fill: LIME });
 }
 let shopTab = 0, shopMsg = null;
 function drawShop() {
   dotBackground();
-  drawCoinCounter(6, 8, FREE_SHOP ? 'FREE' : save.coins, LIME, false);
-  iconButton(W - 23, 5, ICON.close, () => { scene = game.started ? 'dead' : 'title'; }, { fill: LAV });
+  drawCoinCounter(6, 8, FREE_SHOP ? 'FREE' : save.coins, INK, false);
+  iconButton(W - 23, 5, ICON.close, () => { scene = game.started ? 'dead' : 'title'; });
   // preview panel with the frog wearing the equipped items
   const pvW = 72, pvH = 50, pvX = Math.round(W / 2 - pvW / 2), pvY = 28;
-  panel(pvX, pvY, pvW, pvH, LIME);
+  panel(pvX, pvY, pvW, pvH, INK);
   drawFrogAt(W / 2, pvY + pvH - 7 + Math.round(Math.sin(game.time * 3)), 'sit', 0, game.frog.blink > 0, null);
-  // category tabs
+  // category tabs (the selected one is pressed in)
   const tabW = 30, tabY = pvY + pvH + 10, tabs = [ITEMS.hat[2].spr, ICON.glassesTab, ICON.heart];
   for (let i = 0; i < 3; i++) {
     const tx = Math.round(W / 2 - tabW * 1.5 - 6 + i * (tabW + 6));
     const b = addBtn(tx, tabY, tabW, 20, () => { shopTab = i; });
-    button(b, null, { fill: shopTab === i ? ACCENT : LAV });
-    const ic = tabs[i]; ctx.drawImage(ic, Math.round(tx + tabW / 2 - ic.width / 2), Math.round(tabY + 10 - ic.height / 2));
+    const p = button(b, null, { fill: LIME, pressed: shopTab === i });
+    const ic = tabs[i]; ctx.drawImage(ic, Math.round(tx + p + tabW / 2 - ic.width / 2), Math.round(tabY + p + 10 - ic.height / 2));
   }
   // item grid
   const cat = CATS[shopTab], list = ITEMS[cat];
   const cols = 4, gap = 6, cw = Math.floor((W - 16 - gap * (cols - 1)) / cols), ch = 40, gx0 = Math.round((W - (cw * cols + gap * (cols - 1))) / 2), gy0 = tabY + 32;
   list.forEach((it, idx) => {
     const col = idx % cols, row = Math.floor(idx / cols);
-    const x = gx0 + col * (cw + gap), y = gy0 + row * (ch + gap);
+    const bx0 = gx0 + col * (cw + gap), by0 = gy0 + row * (ch + gap);
     const key = cat + ':' + it.id, owned = save.owned.includes(key), equipped = save.eq[cat] === it.id;
-    const b = addBtn(x, y, cw, ch, () => shopTap(cat, it));
-    button(b, null, { fill: equipped ? ACCENT : PAPER });
+    const b = addBtn(bx0, by0, cw, ch, () => shopTap(cat, it));
+    const p = button(b, null, { fill: LIME, pressed: equipped }), x = bx0 + p, y = by0 + p;
     if (it.spr) {
       const s = it.spr;
-      ctx.globalAlpha = owned ? 1 : 0.45;
+      ctx.globalAlpha = owned ? 1 : 0.7;
       ctx.drawImage(s, Math.round(x + cw / 2 - s.width / 2), Math.round(y + 14 - s.height / 2));
       ctx.globalAlpha = 1;
-    } else { ctx.fillStyle = equipped ? PAPER : INK; ctx.fillRect(x + Math.round(cw / 2) - 4, y + 13, 8, 2); }
+    } else { ctx.fillStyle = INK; ctx.fillRect(x + Math.round(cw / 2) - 4, y + 13, 8, 2); }
     if (owned) { if (equipped) ctx.drawImage(ICON.check, Math.round(x + cw / 2 - 4), y + ch - 12); }
     else {
       const can = FREE_SHOP || save.coins >= it.price, pw = 10 + textW('' + it.price, 8);
@@ -926,7 +960,7 @@ function drawShop() {
   const nameIt = list.find(i => i.id === save.eq[cat]);
   const footY = gy0 + Math.ceil(list.length / cols) * (ch + gap) + 6;
   if (shopMsg && shopMsg.t > 0) { shopMsg.t -= 1 / 60; text(shopMsg.s, W / 2, footY, { size: 16, align: 'center', color: shopMsg.c, shadow: false }); }
-  else if (nameIt) text(nameIt.name, W / 2, footY, { size: 16, align: 'center', color: LIME, shadow: false });
+  else if (nameIt) text(nameIt.name, W / 2, footY, { size: 16, align: 'center', color: INK, shadow: false });
 }
 function shopTap(cat, it) {
   const key = cat + ':' + it.id;
@@ -935,18 +969,17 @@ function shopTap(cat, it) {
   } else if (FREE_SHOP || save.coins >= it.price) {
     if (!FREE_SHOP) save.coins -= it.price;
     save.owned.push(key); save.eq[cat] = it.id; persist(); sfx.buy(); vibrate(20);
-    shopMsg = { s: 'GOT ' + it.name + '!', t: 1.5, c: ACCENT };
-  } else { sfx.nope(); vibrate(30); shopMsg = { s: 'NEED ' + (it.price - save.coins) + ' MORE', t: 1.2, c: ACCENT }; }
+    shopMsg = { s: 'GOT ' + it.name + '!', t: 1.5, c: INK };
+  } else { sfx.nope(); vibrate(30); shopMsg = { s: 'NEED ' + (it.price - save.coins) + ' MORE', t: 1.2, c: INK }; }
 }
+// on: black track with a lime knob on the right; off: lime track with a black knob on the left
 function drawToggle(x, y, on) {
-  ctx.fillStyle = INK; ctx.fillRect(x + 1, y + 1, 26, 12);
-  ctx.fillStyle = INK; ctx.fillRect(x, y, 26, 12);
-  ctx.fillStyle = on ? ACCENT : GRAY; ctx.fillRect(x + 1, y + 1, 24, 10);
-  ctx.fillStyle = INK; ctx.fillRect(on ? x + 14 : x + 2, y + 2, 10, 8);
-  ctx.fillStyle = PAPER; ctx.fillRect(on ? x + 15 : x + 3, y + 3, 8, 6);
+  ctx.fillStyle = INK; ctx.fillRect(x + 1, y + 1, 26, 12); ctx.fillRect(x, y, 26, 12);
+  ctx.fillStyle = on ? INK : LIME; ctx.fillRect(x + 1, y + 1, 24, 10);
+  ctx.fillStyle = on ? LIME : INK; ctx.fillRect(on ? x + 15 : x + 2, y + 2, 9, 8);
 }
 function drawSettings() {
-  ctx.fillStyle = 'rgba(20,10,30,0.5)'; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(0, 0, W, H);
   const pw = Math.min(W - 36, 170), ph = 112, px = Math.round((W - pw) / 2), py = Math.round(H / 2 - ph / 2 - 20);
   panel(px, py, pw, ph);
   text('SETTINGS', px + 10, py + 9, { size: 8, color: INK, shadow: false });
@@ -1050,9 +1083,11 @@ function frame(now) {
     if (scene === 'play') drawHUD();
     else if (scene === 'title') drawTitle();
     else if (scene === 'dead') { drawHUD(); drawDead(); }
-    if (settingsOpen) drawSettings();
   }
   vctx.drawImage(g, 0, 0, W, H, 0, 0, W * S, H * S);
+  if (scene === 'title') drawLogo();
+  // the settings overlay goes on top of the logo, so it gets its own pixel pass
+  if (settingsOpen && scene !== 'shop') { ctx.clearRect(0, 0, W, H); drawSettings(); vctx.drawImage(g, 0, 0, W, H, 0, 0, W * S, H * S); }
 }
 addEventListener('resize', () => { if (scene === 'title' || scene === 'shop') { newGame(); } });
 document.addEventListener('visibilitychange', () => { if (document.hidden && scene === 'play') { input.touchX = null; } });
