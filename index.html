@@ -998,27 +998,14 @@ function pixelRing(cx, cy, r, col) {
     lx = x; ly = y;
   }
 }
+// tongue power: circles spread out from the frog's centre and fade as they grow (crisp pixel rings)
 function drawRadar(cx, cy) {
-  const base = ctx.globalAlpha, R = 32, end = game.tongueT < 3 ? clamp(game.tongueT / 3, 0.35, 1) : 1;
-  // pulse rings: bright outer edge, soft inner glow, fading as they grow
-  for (let i = 0; i < 3; i++) {
-    const k = (game.time * 0.8 + i / 3) % 1, r = 9 + k * (R - 9), fade = Math.pow(1 - k, 1.6) * end;
-    ctx.globalAlpha = base * fade; pixelRing(cx, cy, r, '#d8caff');
-    ctx.globalAlpha = base * 0.8 * fade; pixelRing(cx, cy, r - 1, POTION);
-    ctx.globalAlpha = base * 0.35 * fade; pixelRing(cx, cy, r - 2, POTION);
-  }
-  // rotating sweep beam with a short fading trail, like a radar screen
-  const ang = game.time * 3.2;
-  for (let t = 0; t < 7; t++) {
-    const a = ang - t * 0.09;
-    ctx.globalAlpha = base * 0.7 * (1 - t / 7) * end; ctx.fillStyle = t === 0 ? '#e4dcff' : POTION;
-    for (let r = 10; r <= R - 2; r += 2) ctx.fillRect(Math.round(cx + Math.cos(a) * r), Math.round(cy + Math.sin(a) * r), 1, 1);
-  }
-  // blips on the outer edge
-  ctx.fillStyle = '#ffffff';
+  const base = ctx.globalAlpha, R = 34, end = game.tongueT < 3 ? clamp(game.tongueT / 3, 0.35, 1) : 1;
   for (let i = 0; i < 4; i++) {
-    const a = i * 1.7 + Math.floor(game.time * 1.5) * 0.9, on = (game.time * 1.5 + i * 0.25) % 1 < 0.35;
-    if (on) { ctx.globalAlpha = base * 0.8 * end; ctx.fillRect(Math.round(cx + Math.cos(a) * (R - 3)), Math.round(cy + Math.sin(a) * (R - 3)), 1, 1); }
+    const k = (game.time * 0.7 + i / 4) % 1, r = 2 + k * (R - 2), fade = Math.pow(1 - k, 1.4) * end;
+    if (r < 3) continue;
+    ctx.globalAlpha = base * fade; pixelRing(cx, cy, r, '#d8caff');
+    ctx.globalAlpha = base * 0.75 * fade; pixelRing(cx, cy, r - 1, POTION);
   }
   ctx.globalAlpha = base;
 }
@@ -1054,6 +1041,10 @@ function drawTongue() {
   if (k >= 0.5) { const spr = T.dir > 0 ? ICON.fly1 : FLY_L[1]; ctx.drawImage(spr, tx - 5, ty - 3); } // the fly rides the tongue back into the mouth
 }
 const FLY_L = [flipSprite(ICON.fly0), flipSprite(ICON.fly1)];
+// HUD hearts, drawn at the same size as the UI coin: outline, highlight, shade and a glint
+const HEART_ROWS = ['..kkkk...kkkk..', '.khhrrk.krrrrk.', 'khhwhrrkrrrrrdk', 'khwwrrrrrrrrrdk', 'khhrrrrrrrrrrdk', 'khrrrrrrrrrrddk', '.krrrrrrrrrrdk.', '.krrrrrrrrrddk.', '..krrrrrrrddk..', '...krrrrrddk...', '....krrrddk....', '.....krddk.....', '......kdk......', '.......k.......'];
+ICON.heartBig = makeSprite(HEART_ROWS, { k: '#0a0a0c', r: '#e8323c', d: '#a8142a', h: '#ff8a8a', w: '#ffffff' });
+ICON.heartBigEmpty = makeSprite(HEART_ROWS, { k: '#0a0a0c', r: 'rgba(10,10,24,0.45)', d: 'rgba(10,10,24,0.55)', h: 'rgba(255,255,255,0.2)', w: 'rgba(255,255,255,0.3)' });
 // the same potion with a red brew, cross-faded in as the tongue power runs out
 ICON.potionRed = makeSprite(ASSETS_POTION_ROWS, Object.assign({}, P, { p: '#e8322a', a: '#ff7a6e', P: '#8f1410' }));
 function drawFly(fl) {
@@ -1151,9 +1142,10 @@ function drawHUD() {
   for (let r = 0; r < bh; r++) { fillClip.push([bx, by + r, rowW(r), 1]); emptyClip.push([bx + rowW(r), by + r, bw - rowW(r), 1]); }
   labels(INK, fillClip); labels(LIME, emptyClip);
   // hearts: the current life plus spare lives, empty outlines for the slots still to earn
-  const hy = by + bh + 5;
-  for (let i = 0; i < 1 + MAX_LIVES; i++) ctx.drawImage(i <= game.lives ? ICON.heart : ICON.heartEmpty, bx - 1 + i * 10, hy);
-  if (game.charged && blinkOn) text('SUPER JUMP!', bx + (1 + MAX_LIVES) * 10 + 4, hy, { size: 8 });
+  // hearts: same size as the coin and left-aligned with it; filled for the current + spare lives, empty for the rest
+  const hy = by + bh + 4;
+  for (let i = 0; i < 1 + MAX_LIVES; i++) hiresSprite(i <= game.lives ? ICON.heartBig : ICON.heartBigEmpty, 6 + 6 + i * 14, hy + 6, 12, 12);
+  if (game.charged && blinkOn) text('SUPER JUMP!', 6 + (1 + MAX_LIVES) * 14 + 3, hy + 2, { size: 8 });
   // right column: score, and the tongue timer under it while the potion is active
   text('' + game.score, W - 6, top + 4, { size: 16, align: 'right' });
   if (game.tongueT > 0) {
