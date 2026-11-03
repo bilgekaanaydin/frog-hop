@@ -19,7 +19,7 @@
 <canvas id="c"></canvas>
 <script>
 // Auto-generated asset data: frog animation frames (derived from Frog1.eps) and cloud sprites (from the cloud sheet eps).
-const ASSETS = {"frogPal":{"a":"#293f21","b":"#61a53f","c":"#8fd032","d":"#477238","e":"#050403","f":"#fff089","g":"#f8c53a","h":"#e6a428"},"frog":{"crouch2":["...........aaa............aaa...........",".........aabccaa........aabccaa.........","........adbccccbeaaaaaaebcccccba........",".......afffbccccbddddddbccccbfffa.......","......aeefffbcccbddddddbccccfffeea......","......afeeefbccccddddddccccbfeeefa......","......afffffdccccddddddccccbfffffa......","......afffffdccbddbbbbddcccbfffffa......",".......efffdcccccbbbbbbcccccbfffe.......","........eddbbbbbbbbbbbbbbbbcccce........","........edbgffffffffffffffffgbbe........",".......accbggffffffffffffffggbcca.......","......adcccbggffffffffffffghbcccba......",".....addcccbgggffffffffffgghbcccbca.....","....abbdcccbggggggggggggggghbcccbbca....","...acbbabccchgggggggggggggghbcccabbca...","..accbbabcccaggggggggggggggaccccabbcca..","..ecbbbabcccahgggggggggggghaccccabccce..","..ebbddabccccaggggggggggghabccccadbcce..","...adddabbcccahggggggggghhabccccaddda...",".eeaaddabddbbbehggggggghheddbdbcaddaaee.","ecceccdadccdccehhhhhhhhhheccdccbadccecce","eccbccbadcceccehhhhhhhhhhecceccbabccbcce",".eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee."],"crouch1":["...........aaa..........aaa...........",".........aabccaa......aabccaa.........","........adbccccbeaaaaebcccccba........",".......afffbccccbddddbccccbfffa.......","......aeefffbcccbddddbccccfffeea......","......aeeeefbccccddddccccbfeeeea......","......afeeefbccccddddccccbfeeefa......","......afffffdccccddddccccbfffffa......","......afffffdccbddbbddcccbfffffa......",".......efffdcccccbbbbcccccbfffe.......","........eddbbbbbbbbbbbbbbcccce........","........edbgffffffffffffffgbbe........",".......accbggffffffffffffggbcca.......","......adcccbggffffffffffghbcccba......",".....addcccbgggffffffffgghbcccbca.....","....abbdcccbggggggggggggghbcccbbca....","...acbbabccchgggggggggggghbcccabbca...","..accbbabcccaggggggggggggaccccabbcca..","..eccbbabcccaggggggggggghaccccabccce..","..ecbbbabcccahgggggggggghaccccabccce..","..ebbddabccccaggggggggghabccccadbcce..","...adddabbcccahggggggghhabccccaddda...",".eeaaddabddbbbehggggghheddbdbcaddaaee.","ecceccdadccdccehhhhhhhheccdccbadccecce","eccbccbadcceccehhhhhhhhecceccbabccbcce",".eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee."],"sit":["...........aaa..........aaa...........",".........aabccaa......aabccaa.........","........adbccccbeaaaaebcccccba........",".......afffbccccbddddbccccbfffa.......","......aeefffbcccbddddbccccfffeea......","......aeeeefbccccddddccccbfeeeea......","......afeeefbccccddddccccbfeeefa......","......afffffdccccddddccccbfffffa......","......afffffdccbddbbddcccbfffffa......",".......efffdcccccbbbbcccccbfffe.......","........eddbbbbbbbbbbbbbbcccce........","........edbgffffffffffffffgbbe........","........abggffffffffffffffggba........","........abggffffffffffffffggba........",".......accbggffffffffffffggbcca.......","......adcccbggffffffffffghbcccba......",".....addcccbgggffffffffgghbcccbca.....","....abbdcccbggggggggggggghbcccbbca....","...acbbabccchgggggggggggghbcccabbca...","..accbbabcccaggggggggggggaccccabbcca..","..eccbbabcccaggggggggggghaccccabccce..","..ecbbbabcccahgggggggggghaccccabccce..","..ebbddabccccaggggggggghabccccadbcce..","...adddabbcccahggggggghhabccccaddda...",".eeaaddabddbbbehggggghheddbdbcaddaaee.","ecceccdadccdccehhhhhhhheccdccbadccecce","eccbccbadcceccehhhhhhhhecceccbabccbcce",".eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee."],"stretch1":["...........aaa..........aaa...........",".........aabccaa......aabccaa.........","........adbccccbeaaaaebcccccba........",".......afffbccccbddddbccccbfffa.......","......aeefffbcccbddddbccccfffeea......","......aeeeefbccccddddccccbfeeeea......","......afeeefbccccddddccccbfeeefa......","......afeeefbccccddddccccbfeeefa......","......afffffdccccddddccccbfffffa......","......afffffdccbddbbddcccbfffffa......",".......efffdcccccbbbbcccccbfffe.......","........eddbbbbbbbbbbbbbbcccce........","........edbgffffffffffffffgbbe........","........abggffffffffffffffggba........","........abggffffffffffffffggba........",".......accbggffffffffffffggbcca.......","......adcccbggffffffffffghbcccba......",".....addcccbgggffffffffgghbcccbca.....","....abbdcccbggggggggggggghbcccbbca....","...acbbabccchgggggggggggghbcccabbca...","..accbbabcccaggggggggggggaccccabbcca..","..eccbbabcccaggggggggggghaccccabccce..","..ecbbbabcccahgggggggggghaccccabccce..","..ebbddabccccaggggggggghabccccadbcce..","...adddabbcccahggggggghhabccccaddda...","...addda.....behggggghhed.....addda...","...addda.....cehhhhhhhhec.....addda...",".eeaaddabddbbbehhhhhhhheddbdbcaddaaee.","ecceccdadccdcceeeeeeeeeeccdccbadccecce","eccbccbadccecc..........cceccbabccbcce",".eeeeeeeeeeeee..........eeeeeeeeeeeee."],"jump":["...........aaa..........aaa...........",".........aabccaa......aabccaa.........","........adbccccbeaaaaebcccccba........",".......afffbccccbddddbccccbfffa.......","......aeefffbcccbddddbccccfffeea......","......aeeeefbccccddddccccbfeeeea......","......afeeefbccccddddccccbfeeefa......","......afeeefbccccddddccccbfeeefa......","......afffffdccccddddccccbfffffa......","......afffffdccbddbbddcccbfffffa......",".......efffdcccccbbbbcccccbfffe.......","........eddbbbbbbbbbbbbbbcccce........","........edbgffffffffffffffgbbe........","........abggffffffffffffffggba........","........abggffffffffffffffggba........","........abggffffffffffffffggba........","........abggffffffffffffffggba........",".......accbggffffffffffffggbcca.......","......adcccbggffffffffffghbcccba......",".....addcccbgggffffffffgghbcccbca.....","....abbdcccbggggggggggggghbcccbbca....","...acbbabccchgggggggggggghbcccabbca...","..accbbabcccaggggggggggggaccccabbcca..","..eccbbabcccaggggggggggghaccccabccce..","..ecbbbabcccahgggggggggghaccccabccce..","..ebbddabccccaggggggggghabccccadbcce..","...adddabbcccahggggggghhabccccaddda...","...addda.....behggggghhed.....addda...","...addda.....cehhhhhhhhec.....addda...","...addda.....cehhhhhhhhec.....addda...","...addda.....eeeeeeeeeeee.....addda...",".eeaaddabddbbb..........ddbdbcaddaaee.","ecceccdadccdcc..........ccdccbadccecce","eccbccbadccecc..........cceccbabccbcce",".eeeeeeeeeeeee..........eeeeeeeeeeeee."],"fall1":["...........aaa..........aaa...........",".........aabccaa......aabccaa.........","........adbccccbeaaaaebcccccba........",".......afffbccccbddddbccccbfffa.......","......aeefffbcccbddddbccccfffeea......","......aeeeefbccccddddccccbfeeeea......","......afeeefbccccddddccccbfeeefa......","......afeeefbccccddddccccbfeeefa......","......afffffdccccddddccccbfffffa......","......afffffdccbddbbddcccbfffffa......",".......efffdcccccbbbbcccccbfffe.......","........eddbbbbbbbbbbbbbbcccce........","........edbgffffffffffffffgbbe........","........abggffffffffffffffggba........","........abggffffffffffffffggba........",".......accbggffffffffffffggbcca.......","......adcccbggffffffffffghbcccba......",".....addcccbgggffffffffgghbcccbca.....","....abbdcccbggggggggggggghbcccbbca....","...acbbabccchgggggggggggghbcccabbca...","..accbbabcccaggggggggggggaccccabbcca..","..eccbbabcccaggggggggggghaccccabccce..","..ecbbbabcccahgggggggggghaccccabccce..","..ebbddabccccaggggggggghabccccadbcce..","...adddabbcccahggggggghhabccccaddda...",".eeaaddabddbbbehggggghheddbdbcaddaaee.","ecceccdadccdccehhhhhhhheccdccbadccecce","eccbccbadcceccehhhhhhhhecceccbabccbcce",".eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee."],"fall2":["............aaa..........aaa............","..........aabccaa......aabccaa..........",".........adbccccbeaaaaebcccccba.........","........afffbccccbddddbccccbfffa........",".......aeefffbcccbddddbccccfffeea.......",".......aeeeefbccccddddccccbfeeeea.......",".......afeeefbccccddddccccbfeeefa.......",".......afeeefbccccddddccccbfeeefa.......",".......afffffdccccddddccccbfffffa.......",".......afffffdccbddbbddcccbfffffa.......","........efffdcccccbbbbcccccbfffe........",".........eddbbbbbbbbbbbbbbcccce.........",".........edbgffffffffffffffgbbe.........",".........abggffffffffffffffggba.........",".........abggffffffffffffffggba.........","........accbggffffffffffffggbcca........",".......adcccbggffffffffffghbcccba.......","......addcccbgggffffffffgghbcccbca......","....abbddcccbggggggggggggghbcccbbbca....","...acbbaabccchgggggggggggghbcccaabbca...","..accbbaabcccaggggggggggggaccccaabbcca..","..eccbbaabcccaggggggggggghaccccaabccce..","..ecbbbaabcccahgggggggggghaccccaabccce..","..ebbddaabccccaggggggggghabccccaadbcce..","...adddaabbcccahggggggghhabccccaaddda...",".eeaaddaabddbbbehggggghheddbdbcaaddaaee.","ecceccdaadccdccehhhhhhhheccdccbaadccecce","eccbccbaadcceccehhhhhhhhecceccbaabccbcce",".eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee."]},"cloudPal":{"a":"#ebf6ff","b":"#b5deff","c":"#8acaff","d":"#69beff"},"clouds":[{"w":27,"h":10,"rows":["............aaa............","...........bbaaa...........","..........abbbbaa..........","....aaa...bbababa..........","...aabaa.bbbbabbbaa........","...babbaaabbbbbababa.......","..cbbbcccacbbbbbbbbaaa.....","..ccbbbbccbbbbbbbbbbbaa....",".ccbcccbbcccbbbbbccbcccca..","ccccccccccccccccccccccccccc"]},{"w":15,"h":7,"rows":["...aa..........","..aabaa...aa...",".bbbbbaa.bbaa..","bbbbabcaacabaa.","cbbbbbbcccbabba",".cccbbccbbbbbcc","..cccccccccccc."]},{"w":20,"h":8,"rows":["........aaa.........",".......abaaa........","......abbbaaa.......","...aaaaababbaa......","..abbbcabbbbcaba....",".cbcbbbccbccbbbaa...","cccccbbbbccbbbbbbc..","cccccccccccccccccccc"]},{"w":24,"h":12,"rows":["................aaa.....","...............aabaa....","......aaa.....aabbbba...",".....aabaa...aabbabba...","....aabbbaa..abbbbabba..","..aabbbabaa.bbbbbbbbbaa.",".bbbbbbcbbaaabbbbbbbbaaa","bbbbbbbbcbbcaabbbbbbbbaa","bbbbbbbbbccbbbabbbbbcbb.",".cbbbbbbccbbbbbbcbbcbbc.",".ccbbbbccbbbbbbbbccbbc..",".dccccccccccccccccccc.d."]},{"w":11,"h":5,"rows":["...aa......","..abaa.....","..cbbaaa...",".cbcbbbac..","ccccccccccc"]},{"w":61,"h":13,"rows":["..................aa.........................................","...............aaaaaa................aa......................","..............aabbbbaaa............aaaaa.....................",".............bbbbbabbaaa......aa..abbbbaa....................",".........aa.abbbbbbabbaaa....abaa.abbabaad...................","........abaaabbbbbbbabbaa...abbbaaabbbabaa...................",".....aaaabbbaabbbbbbbbbbaa..abbbbaaabbbbbad....aa............","....abbbbbbbbcbbbbbbbbbbaa.abbbbbcaabbbcbaa...aabaa..........","...abbbbbbbbbbccbbbbbbbbccbbbbbbbbcbaccbbbaaaaabbbaa.........","...cbbbbcbbbbbbbcccbbbcccbbbbbbbbbcccbbbbbbbcbbbbccbad...ba..",".dccccccbbbbbbbbbbbcccbbbbbbccbbbbbccbbbbbbbbcccbbbbaadabbba.","ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc","d..d.d.d..d.d..d.d.d..d.d..d.d.d..d.d..d.d.d..d.d..d.d.d..d.d"]},{"w":35,"h":16,"rows":["..........aaaa.....................",".........abbbaaa...................","........abbbbbaaa..................","........abbabbbaa..................",".......abbbbabbbaa...aa............",".......abbbbbbbbba.daaaad..........","......dabbbbbbbba.dabbbaad..aa.....",".......dabbbbbbbaa.abbabbadaaaad...","...aaa.aabbbbbbbbbabbbbabadabbaa...","..abbbabbbbbbbbbbbbaabbbbbabbbba...","d.abbbaabbbbbbbbbbbbabbbbbbbbabbad.","dabbbbbabbbbcbbbbbbcbbbbcbbcbbbbaa.","dabbbbbbabbbbccbcccbbbbbbccbbbbbaa.",".dcbbcbbbccbbbbcbbbbbbbbbbbcbbbba.d","d.ccccbbccbbbbccccccbbcccbbcbbbccd.",".d.cccccccccccccccccccccccccccccd.d"]},{"w":30,"h":8,"rows":[".......aaa....................",".....dabbaaa..................",".....abbabbaa...aa............","..aa.abbbabbaa.abbaa..........","dabaaabbbbbbaaaababaaa........","bbbbbaabbbbbbccbbbbbbaaa......","cccbbbbbccbcccbbbbbbbcaabbbba.","dccccccccccccccccccccccccccccc"]},{"w":46,"h":12,"rows":["................aaaaaa........................","...............aabbbaaaa......................","..............babbabbbbaaa.......aaa..........","...........aaaababbaabaaaaaa...dbbaaa.........",".........dbbbaabbbbbbabcaaaabbaabbbbbad.......",".........bbbbbbbcbbbbbbbccaaccbbbbaabbaa......",".....cbaaabcbbccbbbbbbbbbbccbbbbbbbbabbbaa....","....bccbbaaaccbbbbbbbbbbbcccbbbbbbbbbbcbaccd..","...cccbcccbccbbbbbbbbbbbccbccbcbbbbbcbbccccbd.",".dcccccccccccccccccccccccccccccccccccccccccccd",".d.d..d.d..d.d.d..d.d..d.d.d..d.d..d.d.d..d.d.","dddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd"]},{"w":65,"h":28,"rows":[".............................aaa.................................",".......................aaaaaabaaaa...............................",".....................daabaabbbbaaaaa.............................",".....................aabbbbbbbbaaaaaa............................","....................daabbbbbbbabbaaaad...........................","...................daabbbbbbabbbbbaaadd..........................","..................d.aabbbbabbaabbbaaaa...........................","..................daabbbbbbbbbaabbbaaadd.........................","..................dabbbbbbbbbbaabbbbaaad.........................","...................bbbbbbbbbbbbbabbbaaa..........................",".................ddbbbbbbbbbbbbbbabbaaaa.........................","......aaaaaaaaa..dabbbbbbbbbbbbbbbbbbaaa.........................",".....daabbbaaaaa.dabbbbbbbbbbbbbbbbbaaaa.........................",".....aabbbbbaaaaadbbbbbbbbbbbbbbbabbaaad.....aaaa................","...dbabbbababbaaaddbbbbbbbbbbbbbbbbbbaad...daabbaaa..aaa.........","....bbbbbbbbbbbaaa.abbbbbbbbbbbbbbbbba.....abbbbaaaaaaaaa........","..daabbbbbbaabaaaaaaabbbbbbbbbbbbbbbbaad.dabbbbbbbaaaaaaad.......",".ddabbbbbbbbabbbaaaaaabbbbcccbbbbbbbaaaadaabbbaabbbaabbaaad......",".dbbbbbbbbbbbabbbaaaaabbcccbccbbbbbbaaaaaabbbbbaabbbaabbbad......","ddbbbbbbbbbbbbbbbbbaaabccaaabcccbbbbbbacabcbbbbbbabbbabbbaa......","dbcbbbbbbbbbbbbbbbbbaccbbbbaabcccbbbbbaaccbbbbbbbbbbbbabbaa.d....","dcccbbbbbbbbbbbbbbbbaaabbbbbbaaaccbbbbccaabbbbbbbbbbbcbbbbaadaa..",".ccccbbbbbbbbbbbbbbbbaabbbbbbbbabcccbccbbbabbbbbbbbbbbccbbaaabba.","dccccccbbbbbbbbbbbbbbbbbbbbbbbbbbcccccbbbbbbbbbbbbbbbccbbbbbabbba","ddcccccccbcbbbbcbcccbcbbbbbbbbcccbcbcccbbbbbbbbbbbcccbbbbbbcbbccc","dddcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccd","ddddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd","ddddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd"]},{"w":65,"h":25,"rows":[".........................aaaaaaaa................................","........................abbabaaaaad..............................","......................dbbbbbbbbabaaa.............................","......................dbbbbbbbbbaaaaaa...........................",".....................bbbbbbbaaababbaaaad.........................","....................bbbbbbbbbbbabbabaaad........aaaaaaaa.........","....................bbbbbbbbbbbbabbbaaaa......babbaababaa........","..................dbbbbbbbbbbbabbabbaaaadd..dbbbbbbbbbaaaad......","............aa...ddbbbbbbbbbbbbbbbbbbbaaad..bbbbbbaabbbbaadd.....","..........aaaaad.dbbbbbbbbbbbbbbbbbabbbbadd.bbbbbbbbabbbaaad.....","........daaabaaaddbbbbbbbbbbbbbbbbbbbbbbaadbbbbbbbbbbababbaad....","........bbbbbbaaabbbbbbbbbbbbbbbcbbbbbbbbaaabbbbbbbbbbbbbabaa....","......bbbbbabbbbaabbbbbbbbbbbbccbbbbbaabbaaaabbbbbbbbbbbabaaaa...","....dbbbbbbbabbcbaabbbbbbbbbbccbbbbaabaabbccaaabbbbbbbbbbbbaaadd.","...ddbbbbbbbaabccccaabbbbbcbcbbbbbbbbbbbaaaccbabbbbbbbbbbbbbab.d.","...dbbbbbbbbbbabccbccabbccccbbbbbbbbbbabbbaacabbbbbbbbbbbbbbbaad.","...bbbbbbbbbbbbbbbbbcaacbbbbbbbbbbbbbbbaabbbacbabbbbbbbbbbbbbbcdd",".d.bbbbbbbbbbbbbbbbbcccbbbbbbbbbbbbbbbbbbabbbacccbbbbbbbbbbbbc.dd",".d.ccbbbbbbbbbbbbbbbbccbbbbbbbbbbbbbbbbbbbbbbbabccbbbbbbbbbbbc.dd","..bccccbbbbbbbbbbbbbbccbcbbbbbbbbbbbbbbbbbbbbbbbbccbbbbbbcbbcc...","ddcccccccbbbbbbbbbcccbcccbccbbbbbbbbcccbbbbbbbbbbcbcccbbbbcccd...","ddcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccd...","dd.cccccccccccccccccccccccccccccccccccccccccccccccccccccccccdd...","dd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd...","dd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd..."]}]};
+const ASSETS = {"frogPal":{"a":"#293f21","b":"#61a53f","c":"#8fd032","d":"#477238","e":"#050403","f":"#fff089","g":"#f8c53a","h":"#e6a428"},"frog":{"crouch2":["...........aaa............aaa...........",".........aabccaa........aabccaa.........","........adbccccbeaaaaaaebcccccba........",".......afffbccccbddddddbccccbfffa.......","......aeefffbcccbddddddbccccfffeea......","......afeeefbccccddddddccccbfeeefa......","......afffffdccccddddddccccbfffffa......","......afffffdccbddbbbbddcccbfffffa......",".......efffdcccccbbbbbbcccccbfffe.......","........eddbbbbbbbbbbbbbbbbcccce........","........edbgffffffffffffffffgbbe........",".......accbggffffffffffffffggbcca.......","......adcccbggffffffffffffghbcccba......",".....addcccbgggffffffffffgghbcccbca.....","....abbdcccbggggggggggggggghbcccbbca....","...acbbabccchgggggggggggggghbcccabbca...","..accbbabcccaggggggggggggggaccccabbcca..","..ecbbbabcccahgggggggggggghaccccabccce..","..ebbddabccccaggggggggggghabccccadbcce..","...adddabbcccahggggggggghhabccccaddda...",".eeaaddabddbbbehggggggghheddbdbcaddaaee.","ecceccdadccdccehhhhhhhhhheccdccbadccecce","eccbccbadcceccehhhhhhhhhhecceccbabccbcce",".eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee."],"crouch1":["...........aaa..........aaa...........",".........aabccaa......aabccaa.........","........adbccccbeaaaaebcccccba........",".......afffbccccbddddbccccbfffa.......","......aeefffbcccbddddbccccfffeea......","......aeeeefbccccddddccccbfeeeea......","......afeeefbccccddddccccbfeeefa......","......afffffdccccddddccccbfffffa......","......afffffdccbddbbddcccbfffffa......",".......efffdcccccbbbbcccccbfffe.......","........eddbbbbbbbbbbbbbbcccce........","........edbgffffffffffffffgbbe........",".......accbggffffffffffffggbcca.......","......adcccbggffffffffffghbcccba......",".....addcccbgggffffffffgghbcccbca.....","....abbdcccbggggggggggggghbcccbbca....","...acbbabccchgggggggggggghbcccabbca...","..accbbabcccaggggggggggggaccccabbcca..","..eccbbabcccaggggggggggghaccccabccce..","..ecbbbabcccahgggggggggghaccccabccce..","..ebbddabccccaggggggggghabccccadbcce..","...adddabbcccahggggggghhabccccaddda...",".eeaaddabddbbbehggggghheddbdbcaddaaee.","ecceccdadccdccehhhhhhhheccdccbadccecce","eccbccbadcceccehhhhhhhhecceccbabccbcce",".eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee."],"sit":["...........aaa..........aaa...........",".........aabccaa......aabccaa.........","........adbccccbeaaaaebcccccba........",".......afffbccccbddddbccccbfffa.......","......aeefffbcccbddddbccccfffeea......","......aeeeefbccccddddccccbfeeeea......","......afeeefbccccddddccccbfeeefa......","......afffffdccccddddccccbfffffa......","......afffffdccbddbbddcccbfffffa......",".......efffdcccccbbbbcccccbfffe.......","........eddbbbbbbbbbbbbbbcccce........","........edbgffffffffffffffgbbe........","........abggffffffffffffffggba........","........abggffffffffffffffggba........",".......accbggffffffffffffggbcca.......","......adcccbggffffffffffghbcccba......",".....addcccbgggffffffffgghbcccbca.....","....abbdcccbggggggggggggghbcccbbca....","...acbbabccchgggggggggggghbcccabbca...","..accbbabcccaggggggggggggaccccabbcca..","..eccbbabcccaggggggggggghaccccabccce..","..ecbbbabcccahgggggggggghaccccabccce..","..ebbddabccccaggggggggghabccccadbcce..","...adddabbcccahggggggghhabccccaddda...",".eeaaddabddbbbehggggghheddbdbcaddaaee.","ecceccdadccdccehhhhhhhheccdccbadccecce","eccbccbadcceccehhhhhhhhecceccbabccbcce",".eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee."],"stretch1":["...........aaa..........aaa...........",".........aabccaa......aabccaa.........","........adbccccbeaaaaebcccccba........",".......afffbccccbddddbccccbfffa.......","..adddaeefffbcccbddddbccccfffeeaddda..",".ebbddaeeeefbccccddddccccbfeeeeadbcce.",".ecbbbafeeefbccccddddccccbfeeefabccce.",".eccbbafeeefbccccddddccccbfeeefabccce.",".accbbafffffdccccddddccccbfffffabbcca.","..acbbafffffdccbddbbddcccbfffffabbca..","...abbdefffdcccccbbbbcccccbfffebbca...","....add.eddbbbbbbbbbbbbbbcccce.bca....","........edbgffffffffffffffgbbe........","........abggffffffffffffffggba........","........abggffffffffffffffggba........",".......accbggffffffffffffggbcca.......","......adcccbggffffffffffghbcccba......","........cccbgggffffffffgghbccc........","........cccbggggggggggggghbccc........","........bccchgggggggggggghbccc........","........bcccaggggggggggggacccc........","........bcccaggggggggggghacccc........","........bcccahgggggggggghacccc........","........bccccaggggggggghabcccc........","........bbcccahggggggghhabcccc........","...addda.....behggggghhed.....addda...","...addda.....cehhhhhhhhec.....addda...",".eeaaddabddbbbehhhhhhhheddbdbcaddaaee.","ecceccdadccdcceeeeeeeeeeccdccbadccecce","eccbccbadccecc..........cceccbabccbcce",".eeeeeeeeeeeee..........eeeeeeeeeeeee."],"jump":["...........aaa..........aaa...........",".........aabccaa......aabccaa.........","........adbccccbeaaaaebcccccba........",".......afffbccccbddddbccccbfffa.......","..adddaeefffbcccbddddbccccfffeeaddda..",".ebbddaeeeefbccccddddccccbfeeeeadbcce.",".ecbbbafeeefbccccddddccccbfeeefabccce.",".eccbbafeeefbccccddddccccbfeeefabccce.",".accbbafffffdccccddddccccbfffffabbcca.","..acbbafffffdccbddbbddcccbfffffabbca..","...abbdefffdcccccbbbbcccccbfffebbca...","....add.eddbbbbbbbbbbbbbbcccce.bca....","........edbgffffffffffffffgbbe........","........abggffffffffffffffggba........","........abggffffffffffffffggba........","........abggffffffffffffffggba........","........abggffffffffffffffggba........",".......accbggffffffffffffggbcca.......","......adcccbggffffffffffghbcccba......","........cccbgggffffffffgghbccc........","........cccbggggggggggggghbccc........","........bccchgggggggggggghbccc........","........bcccaggggggggggggacccc........","........bcccaggggggggggghacccc........","........bcccahgggggggggghacccc........","........bccccaggggggggghabcccc........","........bbcccahggggggghhabcccc........","...addda.....behggggghhed.....addda...","...addda.....cehhhhhhhhec.....addda...","...addda.....cehhhhhhhhec.....addda...","...addda.....eeeeeeeeeeee.....addda...",".eeaaddabddbbb..........ddbdbcaddaaee.","ecceccdadccdcc..........ccdccbadccecce","eccbccbadccecc..........cceccbabccbcce",".eeeeeeeeeeeee..........eeeeeeeeeeeee."],"fall1":["...........aaa..........aaa...........",".........aabccaa......aabccaa.........","........adbccccbeaaaaebcccccba........",".......afffbccccbddddbccccbfffa.......","......aeefffbcccbddddbccccfffeea......","......aeeeefbccccddddccccbfeeeea......","......afeeefbccccddddccccbfeeefa......","......afeeefbccccddddccccbfeeefa......","......afffffdccccddddccccbfffffa......","......afffffdccbddbbddcccbfffffa......",".......efffdcccccbbbbcccccbfffe.......","........eddbbbbbbbbbbbbbbcccce........","........edbgffffffffffffffgbbe........","........abggffffffffffffffggba........","........abggffffffffffffffggba........",".......accbggffffffffffffggbcca.......","......adcccbggffffffffffghbcccba......",".....addcccbgggffffffffgghbcccbca.....","....abbdcccbggggggggggggghbcccbbca....","...acbbabccchgggggggggggghbcccabbca...","..accbbabcccaggggggggggggaccccabbcca..","..eccbbabcccaggggggggggghaccccabccce..","..ecbbbabcccahgggggggggghaccccabccce..","..ebbddabccccaggggggggghabccccadbcce..","...adddabbcccahggggggghhabccccaddda...",".eeaaddabddbbbehggggghheddbdbcaddaaee.","ecceccdadccdccehhhhhhhheccdccbadccecce","eccbccbadcceccehhhhhhhhecceccbabccbcce",".eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee."],"fall2":["............aaa..........aaa............","..........aabccaa......aabccaa..........",".........adbccccbeaaaaebcccccba.........","........afffbccccbddddbccccbfffa........",".......aeefffbcccbddddbccccfffeea.......",".......aeeeefbccccddddccccbfeeeea.......",".......afeeefbccccddddccccbfeeefa.......",".......afeeefbccccddddccccbfeeefa.......",".......afffffdccccddddccccbfffffa.......",".......afffffdccbddbbddcccbfffffa.......","........efffdcccccbbbbcccccbfffe........",".........eddbbbbbbbbbbbbbbcccce.........",".........edbgffffffffffffffgbbe.........",".........abggffffffffffffffggba.........",".........abggffffffffffffffggba.........","........accbggffffffffffffggbcca........",".......adcccbggffffffffffghbcccba.......","......addcccbgggffffffffgghbcccbca......","....abbddcccbggggggggggggghbcccbbbca....","...acbbaabccchgggggggggggghbcccaabbca...","..accbbaabcccaggggggggggggaccccaabbcca..","..eccbbaabcccaggggggggggghaccccaabccce..","..ecbbbaabcccahgggggggggghaccccaabccce..","..ebbddaabccccaggggggggghabccccaadbcce..","...adddaabbcccahggggggghhabccccaaddda...",".eeaaddaabddbbbehggggghheddbdbcaaddaaee.","ecceccdaadccdccehhhhhhhheccdccbaadccecce","eccbccbaadcceccehhhhhhhhecceccbaabccbcce",".eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee."]},"cloudPal":{"a":"#ebf6ff","b":"#b5deff","c":"#8acaff","d":"#69beff"},"clouds":[{"w":27,"h":10,"rows":["............aaa............","...........bbaaa...........","..........abbbbaa..........","....aaa...bbababa..........","...aabaa.bbbbabbbaa........","...babbaaabbbbbababa.......","..cbbbcccacbbbbbbbbaaa.....","..ccbbbbccbbbbbbbbbbbaa....",".ccbcccbbcccbbbbbccbcccca..","ccccccccccccccccccccccccccc"]},{"w":15,"h":7,"rows":["...aa..........","..aabaa...aa...",".bbbbbaa.bbaa..","bbbbabcaacabaa.","cbbbbbbcccbabba",".cccbbccbbbbbcc","..cccccccccccc."]},{"w":20,"h":8,"rows":["........aaa.........",".......abaaa........","......abbbaaa.......","...aaaaababbaa......","..abbbcabbbbcaba....",".cbcbbbccbccbbbaa...","cccccbbbbccbbbbbbc..","cccccccccccccccccccc"]},{"w":24,"h":12,"rows":["................aaa.....","...............aabaa....","......aaa.....aabbbba...",".....aabaa...aabbabba...","....aabbbaa..abbbbabba..","..aabbbabaa.bbbbbbbbbaa.",".bbbbbbcbbaaabbbbbbbbaaa","bbbbbbbbcbbcaabbbbbbbbaa","bbbbbbbbbccbbbabbbbbcbb.",".cbbbbbbccbbbbbbcbbcbbc.",".ccbbbbccbbbbbbbbccbbc..",".dccccccccccccccccccc.d."]},{"w":11,"h":5,"rows":["...aa......","..abaa.....","..cbbaaa...",".cbcbbbac..","ccccccccccc"]},{"w":61,"h":13,"rows":["..................aa.........................................","...............aaaaaa................aa......................","..............aabbbbaaa............aaaaa.....................",".............bbbbbabbaaa......aa..abbbbaa....................",".........aa.abbbbbbabbaaa....abaa.abbabaad...................","........abaaabbbbbbbabbaa...abbbaaabbbabaa...................",".....aaaabbbaabbbbbbbbbbaa..abbbbaaabbbbbad....aa............","....abbbbbbbbcbbbbbbbbbbaa.abbbbbcaabbbcbaa...aabaa..........","...abbbbbbbbbbccbbbbbbbbccbbbbbbbbcbaccbbbaaaaabbbaa.........","...cbbbbcbbbbbbbcccbbbcccbbbbbbbbbcccbbbbbbbcbbbbccbad...ba..",".dccccccbbbbbbbbbbbcccbbbbbbccbbbbbccbbbbbbbbcccbbbbaadabbba.","ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc","d..d.d.d..d.d..d.d.d..d.d..d.d.d..d.d..d.d.d..d.d..d.d.d..d.d"]},{"w":35,"h":16,"rows":["..........aaaa.....................",".........abbbaaa...................","........abbbbbaaa..................","........abbabbbaa..................",".......abbbbabbbaa...aa............",".......abbbbbbbbba.daaaad..........","......dabbbbbbbba.dabbbaad..aa.....",".......dabbbbbbbaa.abbabbadaaaad...","...aaa.aabbbbbbbbbabbbbabadabbaa...","..abbbabbbbbbbbbbbbaabbbbbabbbba...","d.abbbaabbbbbbbbbbbbabbbbbbbbabbad.","dabbbbbabbbbcbbbbbbcbbbbcbbcbbbbaa.","dabbbbbbabbbbccbcccbbbbbbccbbbbbaa.",".dcbbcbbbccbbbbcbbbbbbbbbbbcbbbba.d","d.ccccbbccbbbbccccccbbcccbbcbbbccd.",".d.cccccccccccccccccccccccccccccd.d"]},{"w":30,"h":8,"rows":[".......aaa....................",".....dabbaaa..................",".....abbabbaa...aa............","..aa.abbbabbaa.abbaa..........","dabaaabbbbbbaaaababaaa........","bbbbbaabbbbbbccbbbbbbaaa......","cccbbbbbccbcccbbbbbbbcaabbbba.","dccccccccccccccccccccccccccccc"]},{"w":46,"h":12,"rows":["................aaaaaa........................","...............aabbbaaaa......................","..............babbabbbbaaa.......aaa..........","...........aaaababbaabaaaaaa...dbbaaa.........",".........dbbbaabbbbbbabcaaaabbaabbbbbad.......",".........bbbbbbbcbbbbbbbccaaccbbbbaabbaa......",".....cbaaabcbbccbbbbbbbbbbccbbbbbbbbabbbaa....","....bccbbaaaccbbbbbbbbbbbcccbbbbbbbbbbcbaccd..","...cccbcccbccbbbbbbbbbbbccbccbcbbbbbcbbccccbd.",".dcccccccccccccccccccccccccccccccccccccccccccd",".d.d..d.d..d.d.d..d.d..d.d.d..d.d..d.d.d..d.d.","dddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd"]},{"w":65,"h":28,"rows":[".............................aaa.................................",".......................aaaaaabaaaa...............................",".....................daabaabbbbaaaaa.............................",".....................aabbbbbbbbaaaaaa............................","....................daabbbbbbbabbaaaad...........................","...................daabbbbbbabbbbbaaadd..........................","..................d.aabbbbabbaabbbaaaa...........................","..................daabbbbbbbbbaabbbaaadd.........................","..................dabbbbbbbbbbaabbbbaaad.........................","...................bbbbbbbbbbbbbabbbaaa..........................",".................ddbbbbbbbbbbbbbbabbaaaa.........................","......aaaaaaaaa..dabbbbbbbbbbbbbbbbbbaaa.........................",".....daabbbaaaaa.dabbbbbbbbbbbbbbbbbaaaa.........................",".....aabbbbbaaaaadbbbbbbbbbbbbbbbabbaaad.....aaaa................","...dbabbbababbaaaddbbbbbbbbbbbbbbbbbbaad...daabbaaa..aaa.........","....bbbbbbbbbbbaaa.abbbbbbbbbbbbbbbbba.....abbbbaaaaaaaaa........","..daabbbbbbaabaaaaaaabbbbbbbbbbbbbbbbaad.dabbbbbbbaaaaaaad.......",".ddabbbbbbbbabbbaaaaaabbbbcccbbbbbbbaaaadaabbbaabbbaabbaaad......",".dbbbbbbbbbbbabbbaaaaabbcccbccbbbbbbaaaaaabbbbbaabbbaabbbad......","ddbbbbbbbbbbbbbbbbbaaabccaaabcccbbbbbbacabcbbbbbbabbbabbbaa......","dbcbbbbbbbbbbbbbbbbbaccbbbbaabcccbbbbbaaccbbbbbbbbbbbbabbaa.d....","dcccbbbbbbbbbbbbbbbbaaabbbbbbaaaccbbbbccaabbbbbbbbbbbcbbbbaadaa..",".ccccbbbbbbbbbbbbbbbbaabbbbbbbbabcccbccbbbabbbbbbbbbbbccbbaaabba.","dccccccbbbbbbbbbbbbbbbbbbbbbbbbbbcccccbbbbbbbbbbbbbbbccbbbbbabbba","ddcccccccbcbbbbcbcccbcbbbbbbbbcccbcbcccbbbbbbbbbbbcccbbbbbbcbbccc","dddcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccd","ddddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd","ddddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd"]},{"w":65,"h":25,"rows":[".........................aaaaaaaa................................","........................abbabaaaaad..............................","......................dbbbbbbbbabaaa.............................","......................dbbbbbbbbbaaaaaa...........................",".....................bbbbbbbaaababbaaaad.........................","....................bbbbbbbbbbbabbabaaad........aaaaaaaa.........","....................bbbbbbbbbbbbabbbaaaa......babbaababaa........","..................dbbbbbbbbbbbabbabbaaaadd..dbbbbbbbbbaaaad......","............aa...ddbbbbbbbbbbbbbbbbbbbaaad..bbbbbbaabbbbaadd.....","..........aaaaad.dbbbbbbbbbbbbbbbbbabbbbadd.bbbbbbbbabbbaaad.....","........daaabaaaddbbbbbbbbbbbbbbbbbbbbbbaadbbbbbbbbbbababbaad....","........bbbbbbaaabbbbbbbbbbbbbbbcbbbbbbbbaaabbbbbbbbbbbbbabaa....","......bbbbbabbbbaabbbbbbbbbbbbccbbbbbaabbaaaabbbbbbbbbbbabaaaa...","....dbbbbbbbabbcbaabbbbbbbbbbccbbbbaabaabbccaaabbbbbbbbbbbbaaadd.","...ddbbbbbbbaabccccaabbbbbcbcbbbbbbbbbbbaaaccbabbbbbbbbbbbbbab.d.","...dbbbbbbbbbbabccbccabbccccbbbbbbbbbbabbbaacabbbbbbbbbbbbbbbaad.","...bbbbbbbbbbbbbbbbbcaacbbbbbbbbbbbbbbbaabbbacbabbbbbbbbbbbbbbcdd",".d.bbbbbbbbbbbbbbbbbcccbbbbbbbbbbbbbbbbbbabbbacccbbbbbbbbbbbbc.dd",".d.ccbbbbbbbbbbbbbbbbccbbbbbbbbbbbbbbbbbbbbbbbabccbbbbbbbbbbbc.dd","..bccccbbbbbbbbbbbbbbccbcbbbbbbbbbbbbbbbbbbbbbbbbccbbbbbbcbbcc...","ddcccccccbbbbbbbbbcccbcccbccbbbbbbbbcccbbbbbbbbbbcbcccbbbbcccd...","ddcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccd...","dd.cccccccccccccccccccccccccccccccccccccccccccccccccccccccccdd...","dd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd...","dd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd.ddddd..."]}]};
 
 </script>
 <script>
@@ -44,6 +44,7 @@ const P = {
   E: '#d9cc7e', q: '#dff6ff', v: '#8a5cc8', x: '#ff6a3d', i: '#2a2a2a', m: '#c58a4a', l: '#69beff', a: '#ff9fc4'
 };
 
+const CP = { k: '#3a2a10', Y: '#fff6b0', y: '#ffd23c', o: '#d9921e' }; // gold coin palette
 function makeSprite(rows, pal) {
   const h = rows.length, w = Math.max(...rows.map(r => r.length));
   const c = document.createElement('canvas'); c.width = w; c.height = h;
@@ -75,9 +76,9 @@ const CLOUDS = {};
 for (const k in CLOUD_PALS) CLOUDS[k] = ASSETS.clouds.map(c => makeSprite(c.rows, CLOUD_PALS[k]));
 
 const ICON = {
-  coin: makeSprite(['..kkkk..', '.kyyyyk.', 'kyYyyyok', 'kyYyyyok', 'kyyyyook', 'kyyyoook', '.kyoook.', '..kkkk..'], P),
-  coinThin: makeSprite(['..kk..', '.kyyk.', 'kyYyok', 'kyYyok', 'kyyook', 'kyyook', '.kook.', '..kk..'], P),
-  coinLine: makeSprite(['.kk.', 'kyok', 'kyok', 'kyok', 'kyok', 'kyok', 'kyok', '.kk.'], P),
+  coin: makeSprite(['..kkkkk..', '.kyYYYyk.', 'kyYYyyyok', 'kyYyykyok', 'kyyykyyok', 'kyyyyyook', 'kyyoooook', '.kooooook', '..kkkkk..'], CP),
+  coinThin: makeSprite(['..kkk..', '.kyYyk.', 'kyYyyok', 'kyYkyok', 'kyykyok', 'kyyyook', 'kyooook', '.koook.', '..kkk..'], CP),
+  coinLine: makeSprite(['.kk.', 'kyok', 'kyok', 'kyok', 'kyok', 'kyok', 'kyok', 'kyok', '.kk.'], CP),
   trophy: makeSprite(['kkkkkkkkk', 'kyyyyyyyk', 'kkyYyyykk', '.kyyyyyk.', '..kyyyk..', '...kyk...', '...kyk...', '..kyyyk..', '.kkkkkkk.'], P),
   cart: makeSprite(['kkk.........', '..kkkkkkkkkk', '..kyyyyyyyyk', '..kyyyyyyyyk', '...kyyyyyyk.', '...kkkkkkkk.', '...kwk..kwk.', '....k....k..'], P),
   gear: makeSprite(['....kk....', '.kk.kk.kk.', '.kkkkkkkk.', '..kk..kk..', 'kkkk..kkkk', 'kkkk..kkkk', '..kk..kk..', '.kkkkkkkk.', '.kk.kk.kk.', '....kk....'], P),
@@ -221,7 +222,9 @@ function glyph(ch, color) {
   const c = makeSprite(rows, { '#': color });
   glyphCache[key] = c; return c;
 }
-const INK = '#1a1a1a', PAPER = '#ffffff', ACCENT = '#ff5c5c', ACCENT_DARK = '#d94444', PINK = '#ffd2d2', PINK_DOT = '#f3a9a9', GRAY = '#9a9a9a';
+// menu palette (from the sticker-sheet reference): black, cream, orange, lime, lavender
+const INK = '#0a0a0a', PAPER = '#f2ead8', ACCENT = '#ff4a1c', LIME = '#c6ff00', LAV = '#b9b6ff', PINK = '#0a0a0a', PINK_DOT = '#2b2b2b', GRAY = '#8a8478';
+const FREE_SHOP = true; // test build: everything in the shop is free
 // size is kept for call-site compatibility: it maps to an integer pixel scale (8 -> 1x, 16 -> 2x, 24 -> 3x, 48 -> 6x)
 const textScale = size => Math.max(1, Math.round((size || 16) / 8));
 function textW(str, size = 16) { return str.length * 6 * textScale(size) - textScale(size); }
@@ -325,7 +328,7 @@ function newGame() {
   game.plats = []; game.coins = []; game.flies = []; game.items = []; game.parts = []; game.floaters = [];
   game.genY = 20; game.lastType = 'normal'; game.nextItemY = rnd(220, 320); game.shake = 0; game.time = 0; game.deadT = 0;
   game.clouds = [{ par: 0.3, genY: -200, list: [] }, { par: 0.6, genY: -200, list: [] }];
-  game.started = false; game.newBest = false;
+  game.started = false; game.newBest = false; game.introT = 0;
   genUpTo(game.camY + H + 120);
   genClouds();
 }
@@ -359,10 +362,10 @@ function addPlatformBand(y, d, gap) {
     game.plats.push({ x: x2, y: y + rndi(-6, 6), w: w2, type: 'normal', alive: true, t: rnd(0, 6), broken: false, fallV: 0, vx: 0, spring: false });
   }
   // coins on the platform
-  if (Math.random() < 0.36 && type !== 'crumble') {
-    const n = rndi(1, 3);
+  if (Math.random() < 0.16 && type !== 'crumble') {
+    const n = rndi(1, 2);
     for (let i = 0; i < n; i++) game.coins.push({ x: p.x + p.w / 2 + (i - (n - 1) / 2) * 11, y: y + 16, t: rnd(0, 6), on: type === 'moving' ? p : null, dx: (i - (n - 1) / 2) * 11, taken: false });
-  } else if (Math.random() < 0.12) { // an arc of coins in the air
+  } else if (Math.random() < 0.04) { // an arc of coins in the air (rare)
     const cx = rnd(30, W - 30);
     for (let i = 0; i < 5; i++) game.coins.push({ x: cx + (i - 2) * 12, y: y + 30 + Math.sin(i / 4 * Math.PI) * 14, t: i * 0.3, on: null, taken: false });
   }
@@ -501,8 +504,9 @@ function step(dt) {
     fl.x = fl.bx + Math.sin(fl.t * fl.sp) * fl.amp;
     fl.y = fl.by + Math.cos(fl.t * fl.sp * 1.6) * 6;
     const dx = fl.x - f.x, dy = fl.y - (f.y + 14);
-    if (game.tongueT > 0 && !game.tongue && dx * dx + dy * dy < TONGUE_RANGE * TONGUE_RANGE && fl.y - game.camY > 10) {
-      game.tongue = { fly: fl, t: 0, dur: 0.5, ate: false }; fl.targeted = true;
+    // the tongue shoots straight sideways, so only flies roughly at mouth height get caught
+    if (game.tongueT > 0 && !game.tongue && Math.abs(dx) < TONGUE_RANGE && Math.abs(dy) < 20 && Math.abs(dx) > 6 && fl.y - game.camY > 10) {
+      game.tongue = { fly: fl, t: 0, dur: 0.5, ate: false, dir: dx > 0 ? 1 : -1 }; fl.targeted = true;
     } else if (!fl.targeted && Math.abs(dx) < 12 && fl.y > f.y + 2 && fl.y < f.y + 28) {
       if (game.superT > 0 || game.tongueT > 0 || game.invuln > 0) { fl.esc = true; }
       else if (f.dizzy <= 0) {
@@ -515,7 +519,7 @@ function step(dt) {
   // --- tongue animation / eating
   if (game.tongue) {
     const T = game.tongue; T.t += dt;
-    if (T.t < T.dur * 0.5) { T.fly.x += 0; } // fly is caught on the tip at the halfway point
+    T.fly.y += ((f.y + 14) - T.fly.y) * Math.min(1, 14 * dt); // the fly gets pulled onto the tongue line
     if (!T.ate && T.t >= T.dur * 0.5) {
       T.ate = true; T.fly.dead = true; sfx.eat(); vibrate(20);
       game.runCoins += 2; addExp(EXP_FLY); addFloater(T.fly.x, T.fly.y + 8, 'YUM +2', P.p);
@@ -621,6 +625,33 @@ function drawClouds() {
   }
   ctx.globalAlpha = 1;
 }
+// icy mountain ranges on the horizon: two parallax layers with stepped pixel slopes and snow caps
+const MOUNTAINS = [
+  { par: 0.08, peaks: [[0.05, 46], [0.22, 70], [0.42, 56], [0.6, 82], [0.8, 60], [0.98, 48]], body: '#8fa9cf', shade: '#7b95bd', snow: '#eef6ff', snowShade: '#cfe1f5' },
+  { par: 0.16, peaks: [[0.12, 40], [0.33, 58], [0.52, 36], [0.72, 64], [0.92, 44]], body: '#5e7aa6', shade: '#4d6792', snow: '#dceeff', snowShade: '#b5cfe8' },
+];
+function drawMountains() {
+  const night = nightAmount(dayPhase());
+  for (const L of MOUNTAINS) {
+    const base = Math.round(H + camY0() + (game.camY - camY0()) * L.par) + 2;
+    if (base < -10) continue;
+    const body = mixHex(L.body, '#1a1838', night * 0.7), shade = mixHex(L.shade, '#14122c', night * 0.7);
+    const snow = mixHex(L.snow, '#8a86b8', night * 0.6), snowShade = mixHex(L.snowShade, '#6e6a9c', night * 0.6);
+    // fill below the ridge line so the range reads as a solid mass
+    ctx.fillStyle = body; ctx.fillRect(0, base, W, Math.max(0, H - base));
+    for (const [px, ph] of L.peaks) {
+      const cx = Math.round(px * W), top = base - ph;
+      for (let r = 0; r < ph; r++) {
+        const half = Math.floor(r * 0.9) + 1, y = top + r;
+        if (y < 0 || y > H) continue;
+        const isSnow = r < 9 + (ph % 5);
+        ctx.fillStyle = isSnow ? snow : body; ctx.fillRect(cx - half, y, half + 1, 1);
+        ctx.fillStyle = isSnow ? snowShade : shade; ctx.fillRect(cx + 1, y, half, 1);
+        if (isSnow && r > 4 && r % 3 === 0) { ctx.fillStyle = body; ctx.fillRect(cx - half, y, 2, 1); } // jagged snow edge
+      }
+    }
+  }
+}
 function drawGround() {
   const gy = sy(0);
   if (gy > H + 30) return;
@@ -719,23 +750,30 @@ function drawFrog() {
   if (game.tongueT > 0 && !game.tongue) { // ready tongue: little pink tip at the mouth
     ctx.fillStyle = P.p; ctx.fillRect(Math.round(f.x - 1), pos.y0 + 11, 3, 1);
   }
+  if (game.tongue) { // open mouth while the tongue is out
+    const mx = Math.round(f.x) - 5, my = pos.y0 + (f.anim === 'jump' ? 11 : f.anim === 'stretch1' || f.anim === 'fall1' || f.anim === 'fall2' ? 10 : 9);
+    ctx.fillStyle = P.k; ctx.fillRect(mx, my, 11, 4); ctx.fillStyle = '#7a1030'; ctx.fillRect(mx + 1, my + 1, 9, 2);
+  }
   ctx.globalAlpha = 1;
 }
 function drawTongue() {
   const T = game.tongue; if (!T) return;
   const f = game.frog, k = T.t / T.dur, ext = k < 0.5 ? Math.min(1, k * 2.4) : Math.max(0, (1 - k) * 2);
-  const mx = Math.round(f.x), my = sy(f.y) - 17; // mouth
-  const tx = Math.round(mx + (T.fly.x - f.x) * ext), ty = Math.round(my + (sy(T.fly.y) - my) * ext);
-  ctx.strokeStyle = P.k; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(mx, my); ctx.lineTo(tx, ty); ctx.stroke();
-  ctx.strokeStyle = P.p; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(mx, my); ctx.lineTo(tx, ty); ctx.stroke();
-  ctx.strokeStyle = P.a; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(mx, my - 1); ctx.lineTo(tx, ty - 1); ctx.stroke();
-  ctx.fillStyle = P.k; ctx.fillRect(tx - 4, ty - 4, 8, 8); ctx.fillStyle = P.a; ctx.fillRect(tx - 3, ty - 3, 6, 6);
-  if (k >= 0.5) { const spr = ICON.fly1; ctx.drawImage(spr, tx - 5, ty - 3); } // the fly rides the tongue back into the mouth
+  // straight horizontal shot from the mouth, like a classic side-view frog tongue
+  const my = sy(f.y) - 17, mx = Math.round(f.x + T.dir * 4);
+  const len = Math.round(Math.abs(T.fly.x - f.x) * ext), tx = mx + T.dir * len, ty = my;
+  const x0 = Math.min(mx, tx), x1 = Math.max(mx, tx);
+  ctx.fillStyle = P.k; ctx.fillRect(x0 - 1, my - 3, x1 - x0 + 2, 6);
+  ctx.fillStyle = P.p; ctx.fillRect(x0, my - 2, x1 - x0, 4);
+  ctx.fillStyle = P.a; ctx.fillRect(x0, my - 2, x1 - x0, 1);
+  ctx.fillStyle = P.k; ctx.fillRect(tx - 4, ty - 4, 8, 8); ctx.fillStyle = P.p; ctx.fillRect(tx - 3, ty - 3, 6, 6); ctx.fillStyle = P.a; ctx.fillRect(tx - 2, ty - 3, 3, 1);
+  if (k >= 0.5) { const spr = T.dir > 0 ? ICON.fly1 : FLY_L[1]; ctx.drawImage(spr, tx - 5, ty - 3); } // the fly rides the tongue back into the mouth
 }
 const FLY_L = [flipSprite(ICON.fly0), flipSprite(ICON.fly1)];
 function drawFly(fl) {
   const y = sy(fl.y), x = Math.round(fl.x);
   if (y < -10 || y > H + 10) return;
+  if (game.tongue && game.tongue.fly === fl && game.tongue.t >= game.tongue.dur * 0.5) return; // drawn on the tongue tip instead
   const fr = Math.abs(Math.floor(game.time * 24)) % 2;
   const right = fl.esc || Math.cos(fl.t * fl.sp) > 0;
   const spr = right ? [ICON.fly0, ICON.fly1][fr] : FLY_L[fr];
@@ -757,7 +795,7 @@ function drawItem(it) {
 function drawWorld() {
   ctx.save();
   if (game.shake > 0) ctx.translate(Math.round(rnd(-game.shake, game.shake)), Math.round(rnd(-game.shake, game.shake)));
-  drawSky(); drawClouds(); drawGround();
+  drawSky(); drawMountains(); drawClouds(); drawGround();
   // best-score line
   if (save.best > 0 && scene !== 'title') {
     const by = sy(save.best * 10);
@@ -785,18 +823,18 @@ function iconButton(x, y, icon, fn, o = {}) {
 function drawHUD() {
   drawCoinCounter(5, 5, game.runCoins);
   text('' + game.score, W / 2, 3, { size: 24, align: 'center' });
-  // EXP bar (green, ink outline, label inside) + level
-  const bw = 72, bh = 11, bx = Math.round(W / 2 - bw / 2), by = 27, blinkOn = Math.floor(game.time * 6) % 2 === 0;
-  const frac = clamp(game.exp / expNeeded(game.level), 0, 1);
-  ctx.fillStyle = INK; ctx.fillRect(bx - 1, by - 1, bw + 2, bh + 2);
-  ctx.fillStyle = PAPER; ctx.fillRect(bx, by, bw, bh);
-  ctx.fillStyle = '#8fd27a'; ctx.fillRect(bx, by, Math.round(bw * frac), bh);
-  ctx.fillStyle = '#b9ea9a'; ctx.fillRect(bx, by, Math.round(bw * frac), 1);
+  // EXP bar, left aligned under the coins (green fill with a stair-stepped end, like the reference sticker)
+  const bw = 58, bh = 11, bx = 5, by = 18, blinkOn = Math.floor(game.time * 6) % 2 === 0;
+  const frac = clamp(game.exp / expNeeded(game.level), 0, 1), fw = Math.round(bw * frac);
+  ctx.fillStyle = INK; ctx.fillRect(bx - 2, by - 2, bw + 4, bh + 4);
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(bx, by, bw, bh);
+  ctx.fillStyle = '#8fd27a';
+  for (let r = 0; r < bh; r++) ctx.fillRect(bx, by + r, Math.max(0, Math.min(bw, fw - Math.floor(r / 2))), 1); // stepped diagonal edge
   text('EXP', bx + 3, by + 2, { size: 8, color: INK, shadow: false });
-  text('LV' + game.level, bx + bw + 4, by + 2, { size: 8, color: PAPER });
-  if (game.charged && blinkOn) text('SUPER JUMP!', W / 2, by + bh + 3, { size: 8, align: 'center', color: P.Y });
+  text('LV' + game.level, bx + bw - 3, by + 2, { size: 8, align: 'right', color: INK, shadow: false });
+  if (game.charged && blinkOn) text('SUPER JUMP!', bx, by + bh + 5, { size: 8, color: P.Y });
   // spare lives
-  for (let i = 0; i < game.lives; i++) ctx.drawImage(ICON.heart, 5 + i * 10, 17);
+  for (let i = 0; i < game.lives; i++) ctx.drawImage(ICON.heart, bx + i * 10, by + bh + 5 + (game.charged ? 9 : 0));
   // tongue timer
   if (game.tongueT > 0) {
     const tx = W - 14, ty = 6; ctx.drawImage(ICON.tongue, tx, ty);
@@ -823,15 +861,25 @@ let buttons = [];
 function addBtn(x, y, w, h, fn) { const b = { x, y, w, h, fn }; buttons.push(b); return b; }
 
 function drawTitle() {
-  // frog idle on the ground
-  const bob = Math.round(Math.sin(game.time * 3) * 2);
-  text('FROG', W / 2, H * 0.12 + bob, { size: 48, align: 'center', color: P.y });
-  text('HOP', W / 2, H * 0.12 + 50 + bob, { size: 48, align: 'center', color: P.y });
-  const by = H * 0.12 + 104;
-  ctx.drawImage(ICON.trophy, Math.round(W / 2 - 16), by); text('' + save.best, W / 2 - 4, by + 1, { size: 8 });
-  drawCoinCounter(5, 5, save.coins);
-  iconButton(W - 23, 4, ICON.cart, () => { scene = 'shop'; shopTab = 0; });
-  iconButton(W - 23, 26, ICON.gear, () => { settingsOpen = true; });
+  // intro: the title letters drop in one by one with a little overshoot
+  const bob = Math.round(Math.sin(game.time * 3) * 2), it = game.introT;
+  const letters = [['F', 'R', 'O', 'G'], ['H', 'O', 'P']];
+  letters.forEach((word, row) => {
+    const sc = 6, adv = 6 * sc, totalW = word.length * adv - sc, x0 = Math.round(W / 2 - totalW / 2), yBase = Math.round(H * 0.12 + row * 50 + bob);
+    word.forEach((ch, i) => {
+      const t = clamp((it - 0.15 - (row * 4 + i) * 0.07) * 2.5, 0, 1);
+      const off = Math.round(-(1 - t) * (1 - t) * 90 + Math.sin(t * Math.PI) * 6);
+      text(ch, x0 + i * adv, yBase + off, { size: 48, color: LIME });
+    });
+  });
+  if (it > 1.2) {
+    const by = H * 0.12 + 104;
+    ctx.drawImage(ICON.trophy, Math.round(W / 2 - 16), by); text('' + save.best, W / 2 - 4, by + 1, { size: 8 });
+  }
+  drawCoinCounter(5, 5, FREE_SHOP ? 'FREE' : save.coins);
+  iconButton(W - 23, 4, ICON.cart, () => { scene = 'shop'; shopTab = 0; }, { fill: LIME });
+  iconButton(W - 23, 26, ICON.gear, () => { settingsOpen = true; }, { fill: LIME });
+  if (it < 1.6) return; // hints wait for the frog to arrive
   // tap hint
   if (Math.floor(game.time * 2) % 2 === 0) { const hy = sy(0) + 24; ctx.drawImage(ICON.hand, W / 2 - 22, hy + Math.round(Math.sin(game.time * 8))); text('TAP!', W / 2 - 8, hy + 2, { size: 16, color: P.Y }); }
   if (save.runs < 3) text('HOLD & DRAG TO MOVE', W / 2, sy(0) + 44, { size: 8, align: 'center', color: PAPER });
@@ -854,25 +902,25 @@ function drawDead() {
   button(rb, 'RETRY', { size: 16 });
   const half = Math.floor((pw - 26) / 2);
   const hb = addBtn(px + 10, py + ph - 24, half, 14, () => { newGame(); scene = 'title'; });
-  button(hb, null, { icon: ICON.home, fill: PAPER });
+  button(hb, null, { icon: ICON.home, fill: LAV });
   const sb = addBtn(px + 14 + half, py + ph - 24, half, 14, () => { scene = 'shop'; shopTab = 0; });
-  button(sb, null, { icon: ICON.cart, fill: PAPER });
+  button(sb, null, { icon: ICON.cart, fill: LAV });
 }
 let shopTab = 0, shopMsg = null;
 function drawShop() {
   dotBackground();
-  drawCoinCounter(6, 8, save.coins, INK, false);
-  iconButton(W - 23, 5, ICON.close, () => { scene = game.started ? 'dead' : 'title'; });
+  drawCoinCounter(6, 8, FREE_SHOP ? 'FREE' : save.coins, LIME, false);
+  iconButton(W - 23, 5, ICON.close, () => { scene = game.started ? 'dead' : 'title'; }, { fill: LAV });
   // preview panel with the frog wearing the equipped items
   const pvW = 72, pvH = 50, pvX = Math.round(W / 2 - pvW / 2), pvY = 28;
-  panel(pvX, pvY, pvW, pvH);
+  panel(pvX, pvY, pvW, pvH, LIME);
   drawFrogAt(W / 2, pvY + pvH - 7 + Math.round(Math.sin(game.time * 3)), 'sit', 0, game.frog.blink > 0, null);
   // category tabs
   const tabW = 30, tabY = pvY + pvH + 10, tabs = [ITEMS.hat[2].spr, ICON.glassesTab, ICON.heart];
   for (let i = 0; i < 3; i++) {
     const tx = Math.round(W / 2 - tabW * 1.5 - 6 + i * (tabW + 6));
     const b = addBtn(tx, tabY, tabW, 20, () => { shopTab = i; });
-    button(b, null, { fill: shopTab === i ? ACCENT : PAPER });
+    button(b, null, { fill: shopTab === i ? ACCENT : LAV });
     const ic = tabs[i]; ctx.drawImage(ic, Math.round(tx + tabW / 2 - ic.width / 2), Math.round(tabY + 10 - ic.height / 2));
   }
   // item grid
@@ -892,7 +940,7 @@ function drawShop() {
     } else { ctx.fillStyle = equipped ? PAPER : INK; ctx.fillRect(x + Math.round(cw / 2) - 4, y + 13, 8, 2); }
     if (owned) { if (equipped) ctx.drawImage(ICON.check, Math.round(x + cw / 2 - 4), y + ch - 12); }
     else {
-      const can = save.coins >= it.price, pw = 10 + textW('' + it.price, 8);
+      const can = FREE_SHOP || save.coins >= it.price, pw = 10 + textW('' + it.price, 8);
       const px = Math.round(x + cw / 2 - pw / 2);
       ctx.globalAlpha = can ? 1 : 0.5; ctx.drawImage(ICON.coin, px, y + ch - 12); ctx.globalAlpha = 1;
       text('' + it.price, px + 10, y + ch - 12, { size: 8, color: can ? INK : GRAY, shadow: false });
@@ -901,14 +949,15 @@ function drawShop() {
   const nameIt = list.find(i => i.id === save.eq[cat]);
   const footY = gy0 + Math.ceil(list.length / cols) * (ch + gap) + 6;
   if (shopMsg && shopMsg.t > 0) { shopMsg.t -= 1 / 60; text(shopMsg.s, W / 2, footY, { size: 16, align: 'center', color: shopMsg.c, shadow: false }); }
-  else if (nameIt) text(nameIt.name, W / 2, footY, { size: 16, align: 'center', color: INK, shadow: false });
+  else if (nameIt) text(nameIt.name, W / 2, footY, { size: 16, align: 'center', color: LIME, shadow: false });
 }
 function shopTap(cat, it) {
   const key = cat + ':' + it.id;
   if (save.owned.includes(key)) {
     save.eq[cat] = (save.eq[cat] === it.id && it.id !== 'none') ? 'none' : it.id; persist(); sfx.ui();
-  } else if (save.coins >= it.price) {
-    save.coins -= it.price; save.owned.push(key); save.eq[cat] = it.id; persist(); sfx.buy(); vibrate(20);
+  } else if (FREE_SHOP || save.coins >= it.price) {
+    if (!FREE_SHOP) save.coins -= it.price;
+    save.owned.push(key); save.eq[cat] = it.id; persist(); sfx.buy(); vibrate(20);
     shopMsg = { s: 'GOT ' + it.name + '!', t: 1.5, c: ACCENT };
   } else { sfx.nope(); vibrate(30); shopMsg = { s: 'NEED ' + (it.price - save.coins) + ' MORE', t: 1.2, c: ACCENT }; }
 }
@@ -1004,7 +1053,16 @@ function frame(now) {
       // the frog keeps falling out of view
       f.vy -= GRAV * dt; f.y += f.vy * dt;
     }
-    if (scene === 'title') { for (const p of game.plats) p.t += dt; for (const c of game.coins) c.t += dt; for (const it of game.items) it.t += dt; }
+    if (scene === 'title') {
+      for (const p of game.plats) p.t += dt; for (const c of game.coins) c.t += dt; for (const it of game.items) it.t += dt;
+      // intro: the frog hops in from the left edge onto the ground
+      game.introT += dt;
+      const k = clamp((game.introT - 0.2) / 1.3, 0, 1);
+      if (k < 1) {
+        f.x = lerp(-24, W / 2, k); const hop = Math.abs(Math.sin(k * Math.PI * 3));
+        f.y = hop * 22; f.anim = hop > 0.55 ? 'jump' : hop > 0.2 ? 'stretch1' : 'crouch1'; f.vx = 60;
+      } else { f.x = W / 2; f.y = 0; f.anim = 'sit'; f.vx = 0; }
+    }
   }
   // ---- render
   buttons = [];

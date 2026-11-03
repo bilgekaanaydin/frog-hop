@@ -38,7 +38,7 @@ Yazılar tarayıcı fontu yerine koddaki 5x7 bitmap fontla çizilir; bu sayede h
 - **Sinekler:** Dil gücü yokken çarpınca kurbağa sersemler ve aşağı itilir (yakalayacak platform yoksa düşer).
 - **Coin:** Platform üstlerinde ve havada kavis şeklinde. Mağazada harcanır.
 - **Gece/gündüz:** Her 320 m'de bir tam döngü. Güneş batar, yıldızlar çıkar, ay doğar; bulutlar da renk değiştirir.
-- **Mağaza:** Şapka (7), gözlük (4), aksesuar (5). Satın alınan eşya üzerine tekrar dokununca çıkarılır.
+- **Mağaza:** Şapka (7), gözlük (4), aksesuar (5). Satın alınan eşya üzerine tekrar dokununca çıkarılır. Test sürümünde `FREE_SHOP = true` olduğu için her şey bedava; yayına alırken `src/game.js` içinde `false` yap.
 - **Ayarlar:** Ses, titreşim, eğimle kontrol.
 - **Kayıt:** Coin, rekor, sahip olunan eşyalar ve ayarlar `localStorage`'da tutulur.
 
