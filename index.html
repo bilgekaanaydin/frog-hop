@@ -133,6 +133,7 @@ const ICON = {
   tilt: makeSprite(['..kkkkk....', '.kwwwwwk...', 'kkkkkkwwk..', '.kwwwwwwwk.', '..kwwwwwwwk', '...kkkkkkkk'], P),
   home: makeSprite(['....k....', '...kkk...', '..kkkkk..', '.kkkkkkk.', 'kkkkkkkkk', '.kkkkkkk.', '.kkk.kkk.', '.kkk.kkk.', '.kkk.kkk.'], P), // solid house, door cut out
   retry: makeSprite(['..kkkkk...', '.kk...kk..', 'kk.....kk.', 'kk....kkkk', 'kk.....kk.', 'kk....k.k.', '.kk..kk...', '..kkkk....'], P),
+  pause: makeSprite(['kk.kk', 'kk.kk', 'kk.kk', 'kk.kk', 'kk.kk', 'kk.kk', 'kk.kk'], P),
   heart: makeSprite(['.kk..kk.', 'krrkkrrk', 'krrrrrrk', 'krrrrrrk', '.krrrrk.', '..krrk..', '...kk...'], P),
   heartEmpty: makeSprite(['.kk..kk.', 'k..kk..k', 'k......k', 'k......k', '.k....k.', '..k..k..', '...kk...'], P),
   glassesTab: makeSprite(['kkkkk.kkkkk', 'kiiiikiiiik', 'kiwiikiwiik', '.kiik.kiik.', '..kk...kk..'], P),
@@ -254,7 +255,7 @@ function glyph(ch, color, wide = false) {
 // brand palette: the logo's lime (#d0f053) and pure black, used across the whole interface
 const INK = '#000000', LIME = '#d0f053', LIME_DOT = '#b6d63e', GRAY = '#7d8f32';
 const PAPER = LIME; // default UI text / panel colour
-const BUILD = '11.03 22:16'; // replaced with the build time by build.py, shown on the title screen
+const BUILD = '11.03 22:19'; // replaced with the build time by build.py, shown on the title screen
 const FREE_SHOP = true; // test build: everything in the shop is free
 // size keeps its old meaning: the cap height is 7 * round(size / 8) game pixels (8 -> 7px, 16 -> 14px, 24 -> 21px)
 const capOf = size => (size || 16) * 7 / 8; // cap height in game pixels (8 -> 7, 12 -> 10.5, 16 -> 14, 24 -> 21)
@@ -438,6 +439,7 @@ const jumpBoost = () => 1 + Math.min(JUMP_BOOST_MAX, JUMP_BOOST_PER_LEVEL * (gam
 const DAY_CYCLE = 3200; // px of height per full day/night cycle
 
 let scene = 'title'; // title | play | dead | shop
+let paused = false;
 let settingsOpen = false;
 const game = {};
 const input = { touchX: null, keys: {}, tiltX: 0 };
@@ -793,7 +795,7 @@ function updateSpace(dt) {
   const sp = game.space;
   sp.cometT -= dt;
   if (amt > 0.6 && sp.cometT <= 0) {
-    sp.cometT = rnd(2.2, 4.5);
+    sp.cometT = rnd(4.5, 8);
     sp.comets.push({ x: rnd(W * 0.35, W + 30), y: rnd(-20, H * 0.25), vx: -rnd(70, 110), vy: rnd(55, 90), life: 4, hue: pick([['#ffffff', '#8fd8ff', '#5a6cff'], ['#ffffff', '#c77dff', '#6a3cff'], ['#fff3c0', '#ff9a5c', '#c4403a']]) });
   }
   for (const c of sp.comets) { c.x += c.vx * dt; c.y += c.vy * dt; c.life -= dt; }
@@ -805,7 +807,7 @@ function drawSpace(amt) {
   for (const s of SPACE_STARS) {
     const x = Math.round(s.x * W), y = Math.round((((s.y * tile - game.camY * 0.1) % tile) + tile) % tile);
     if (y > H + 3) continue;
-    ctx.globalAlpha = amt * (0.55 + 0.45 * Math.sin(game.time * s.sp + s.tw));
+    ctx.globalAlpha = amt * (0.45 + 0.3 * Math.sin(game.time * s.sp + s.tw));
     starShape(x, y, s.kind, s.c);
   }
   // planets drifting by
@@ -813,19 +815,19 @@ function drawSpace(amt) {
   for (const p of game.space.list) {
     const spr = PLANETS[p.i], y = Math.round(H - (p.y - top));
     if (y < -spr.height || y > H) continue;
-    ctx.globalAlpha = amt; ctx.drawImage(spr, Math.round(p.x), y);
+    ctx.globalAlpha = amt * 0.8; ctx.drawImage(spr, Math.round(p.x), y);
   }
   // comets: bright head, tail fading along the path
   for (const c of game.space.comets) {
-    const len = 30, dx = -c.vx / Math.hypot(c.vx, c.vy), dy = -c.vy / Math.hypot(c.vx, c.vy);
+    const len = 20, dx = -c.vx / Math.hypot(c.vx, c.vy), dy = -c.vy / Math.hypot(c.vx, c.vy);
     for (let i = len; i >= 0; i--) {
       const t = i / len, px = Math.round(c.x + dx * i * 1.3), py = Math.round(c.y + dy * i * 1.3);
-      ctx.globalAlpha = amt * Math.pow(1 - t, 0.8) * clamp(c.life, 0, 1);
+      ctx.globalAlpha = 0.38 * amt * Math.pow(1 - t, 1.1) * clamp(c.life, 0, 1); // faint: background, not an object
       ctx.fillStyle = t < 0.12 ? c.hue[0] : t < 0.45 ? c.hue[1] : c.hue[2];
-      const sz = t < 0.08 ? 3 : t < 0.5 ? 2 : 1; ctx.fillRect(px - (sz >> 1), py - (sz >> 1), sz, sz);
+      const sz = t < 0.1 ? 2 : 1; ctx.fillRect(px - (sz >> 1), py - (sz >> 1), sz, sz);
       if (t > 0.15 && i % 3 === 0) { ctx.globalAlpha *= 0.6; ctx.fillRect(px + (i % 2 ? 2 : -2), py + (i % 2 ? -1 : 1), 1, 1); } // sparks
     }
-    ctx.globalAlpha = amt * clamp(c.life, 0, 1); ctx.fillStyle = '#ffffff'; ctx.fillRect(Math.round(c.x) - 1, Math.round(c.y), 3, 1); ctx.fillRect(Math.round(c.x), Math.round(c.y) - 1, 1, 3);
+    ctx.globalAlpha = 0.45 * amt * clamp(c.life, 0, 1); ctx.fillStyle = '#ffffff'; ctx.fillRect(Math.round(c.x) - 1, Math.round(c.y), 3, 1); ctx.fillRect(Math.round(c.x), Math.round(c.y) - 1, 1, 3);
   }
   ctx.globalAlpha = 1;
 }
@@ -1049,9 +1051,10 @@ const FLY_L = [flipSprite(ICON.fly0), flipSprite(ICON.fly1)];
 // HUD hearts, drawn at the same size as the UI coin: outline, highlight, shade and a glint
 const HEART_ROWS = ['..kkkk...kkkk..', '.khhrrk.krrrrk.', 'khhwhrrkrrrrrdk', 'khwwrrrrrrrrrdk', 'khhrrrrrrrrrrdk', 'khrrrrrrrrrrddk', '.krrrrrrrrrrdk.', '.krrrrrrrrrddk.', '..krrrrrrrddk..', '...krrrrrddk...', '....krrrddk....', '.....krddk.....', '......kdk......', '.......k.......'];
 ICON.heartBig = makeSprite(HEART_ROWS, { k: '#0a0a0c', r: '#e8323c', d: '#a8142a', h: '#ff8a8a', w: '#ffffff' });
-ICON.heartBigEmpty = makeSprite(HEART_ROWS, { k: '#0a0a0c', r: 'rgba(10,10,24,0.45)', d: 'rgba(10,10,24,0.55)', h: 'rgba(255,255,255,0.2)', w: 'rgba(255,255,255,0.3)' });
+ICON.heartBigEmpty = makeSprite(HEART_ROWS, { k: 'rgba(255,255,255,0.7)', r: 'rgba(10,10,24,0.35)', d: 'rgba(10,10,24,0.45)', h: 'rgba(255,255,255,0.18)', w: 'rgba(255,255,255,0.3)' }); // light outline reads on day and night skies
 // the same potion with a red brew, cross-faded in as the tongue power runs out
 ICON.potionRed = makeSprite(ASSETS_POTION_ROWS, Object.assign({}, P, { p: '#e8322a', a: '#ff7a6e', P: '#8f1410' }));
+const darkness = () => Math.max(nightAmount(dayPhase()), spaceAmt()); // 0 = day sky, 1 = night / space
 function drawFly(fl) {
   const y = sy(fl.y), x = Math.round(fl.x);
   if (y < -10 || y > H + 10) return;
@@ -1059,6 +1062,8 @@ function drawFly(fl) {
   const fr = Math.abs(Math.floor(game.time * 24)) % 2;
   const right = fl.esc || Math.cos(fl.t * fl.sp) > 0;
   const spr = right ? [ICON.fly0, ICON.fly1][fr] : FLY_L[fr];
+  const dark = darkness();
+  if (dark > 0.2) { ctx.globalAlpha = 0.35 * dark; ctx.fillStyle = '#d8ccff'; ctx.beginPath(); ctx.ellipse(x, y, 8, 6, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; }
   ctx.drawImage(spr, x - 5, y - 3);
   if (game.tongueT > 0 && !fl.esc) { ctx.fillStyle = POTION; ctx.fillRect(x - 1, y - 10, 2, 2); }
 }
@@ -1072,6 +1077,7 @@ function drawCoin(c) {
 function drawItem(it) {
   const y = sy(it.y) + Math.round(Math.sin(it.t * 3) * 2), x = Math.round(it.x);
   if (y < -16 || y > H + 16) return;
+  const dk = darkness(); if (dk > 0.2) { ctx.globalAlpha = 0.3 * dk; ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI * 2); ctx.fill(); }
   ctx.globalAlpha = 0.18 + 0.1 * Math.sin(it.t * 5); ctx.fillStyle = POTION; ctx.beginPath(); ctx.arc(x, y, 10, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
   const pt = ICON.potion; ctx.drawImage(pt, x - Math.floor(pt.width / 2), y - Math.floor(pt.height / 2));
   ctx.fillStyle = '#ffffff';
@@ -1136,6 +1142,7 @@ function drawHUD() {
   drawCoinCounter(6, top + 5, game.runCoins);
   const bw = 66, bh = 11, bx = 7, by = top + 22; // a few pixels of air between the coin, EXP bar and hearts
   const frac = clamp(game.exp / expNeeded(game.level), 0, 1), fw = Math.round(bw * frac);
+  ctx.globalAlpha = 0.55; ctx.fillStyle = LIME; ctx.fillRect(bx - 3, by - 3, bw + 6, bh + 6); ctx.globalAlpha = 1; // faint lime rim so the bar reads on dark skies
   ctx.fillStyle = INK; ctx.fillRect(bx - 2, by - 2, bw + 4, bh + 4);
   ctx.fillStyle = LIME;
   const rowW = r => Math.max(0, Math.min(bw, fw - Math.floor(r / 2))); // stepped diagonal edge
@@ -1152,9 +1159,10 @@ function drawHUD() {
   for (let i = 0; i < 1 + MAX_LIVES; i++) hiresSprite(i <= game.lives ? ICON.heartBig : ICON.heartBigEmpty, 6 + 6 + i * 14, hy + 6, 12, 12);
   if (game.charged && blinkOn) text('SUPER JUMP!', 6 + (1 + MAX_LIVES) * 14 + 3, hy + 2, { size: 8 });
   // right column: score, and the tongue timer under it while the potion is active
-  text('' + game.score, W - 6, top + 4, { size: 16, align: 'right' });
+  text('' + game.score, W - 28, top + 4, { size: 16, align: 'right' });
+  if (scene === 'play' && !paused) iconButton(W - 23, top + 3, ICON.pause, () => { paused = true; input.touchX = null; });
   if (game.tongueT > 0) {
-    const pt = ICON.potion, tx = W - pt.width - 5, ty = top + 4 + Math.ceil(textH(16)) + 5; // below the score and its shadow
+    const pt = ICON.potion, tx = W - pt.width - 5, ty = top + 30; // below the score and its shadow
     // running out: over the last 3 seconds the bar and the brew turn red, and both blink in the final second
     const warn = clamp((3 - game.tongueT) / 3, 0, 1), blinkOff = game.tongueT < 1 && Math.floor(game.time * 10) % 2 === 0;
     if (!blinkOff) {
@@ -1240,6 +1248,18 @@ function drawTitle() {
   }
   if (save.runs < 3) text('HOLD & DRAG TO MOVE', W / 2, sy(0) + 50, { size: 8, align: 'center', color: LIME });
   ctx.globalAlpha = 0.7; text('BUILD ' + BUILD, W - 4, H - 10, { size: 6, align: 'right', color: LIME }); ctx.globalAlpha = 1;
+}
+// pause overlay: dim the run, logo-style PAUSED box, resume and home buttons
+function drawPause() {
+  flush();
+  ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(0, 0, W, H);
+  const pw = 130, ph = 86, px = Math.round(W / 2 - pw / 2), py = Math.round(H / 2 - ph / 2 - 20);
+  logoPanel(px, py, pw, ph, 3);
+  text('PAUSED', W / 2, py + 10, { size: 16, align: 'center', color: INK, shadow: false, wide: true });
+  const rb = addBtn(px + 12, py + 36, pw - 24, 18, () => { paused = false; });
+  button(rb, 'RESUME', { size: 8 });
+  const hb = addBtn(px + 12, py + 60, pw - 24, 16, () => { paused = false; die(); newGame(); scene = 'title'; });
+  button(hb, null, { icon: ICON.home, fill: LIME });
 }
 function drawDead() {
   flush(); // the dim overlay goes over the HUD text too
@@ -1438,7 +1458,7 @@ function enableTilt() {
 
 // ============================================================ input
 function startGame() {
-  scene = 'play'; settingsOpen = false; game.started = true;
+  scene = 'play'; settingsOpen = false; game.started = true; paused = false;
   game.frog.vy = JUMP_V; game.frog.landT = 0; sfx.jump(); vibrate(8);
 }
 function toLogical(e) { const r = view.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * W, (e.clientY - r.top) / r.height * H]; }
@@ -1448,7 +1468,7 @@ view.addEventListener('pointerdown', e => {
   audioInit(); if (ac && ac.state === 'suspended') ac.resume(); musicStart();
   const [x, y] = toLogical(e);
   for (const b of buttons) if (hit(b, x, y)) { sfx.ui(); b.fn(x, y); if (b.drag) dragBtn = { id: e.pointerId, fn: b.fn }; return; }
-  if (settingsOpen || scene === 'shop' || scene === 'dead') return;
+  if (settingsOpen || scene === 'shop' || scene === 'dead' || paused) return;
   if (scene === 'title') startGame();
   activePointer = e.pointerId; input.touchX = x;
 }, { passive: false });
@@ -1469,6 +1489,7 @@ addEventListener('keydown', e => {
     else if (scene === 'shop') scene = game.started ? 'dead' : 'title';
   }
   if (e.code === 'Escape' && scene === 'shop') scene = game.started ? 'dead' : 'title';
+  if ((e.code === 'Escape' || e.code === 'KeyP') && scene === 'play') { paused = !paused; input.touchX = null; }
 });
 addEventListener('keyup', e => { input.keys[e.code] = false; });
 addEventListener('deviceorientation', e => { input.tiltX = e.gamma || 0; });
@@ -1485,7 +1506,8 @@ function frame(now) {
   // idle blink timer
   f.blinkT -= dt; if (f.blinkT <= 0) { f.blink = 0.14; f.blinkT = rnd(1.5, 3.5); }
   if (f.blink > 0) f.blink -= dt;
-  if (scene === 'play') {
+  if (scene === 'play' && paused) { game.time += 0; }
+  else if (scene === 'play') {
     acc += dt;
     let n = 0;
     while (acc >= DT && n++ < 8) { step(DT); acc -= DT; if (scene !== 'play') break; }
@@ -1516,7 +1538,7 @@ function frame(now) {
   if (scene === 'shop') drawShop();
   else {
     drawWorld();
-    if (scene === 'play') drawHUD();
+    if (scene === 'play') { drawHUD(); if (paused) drawPause(); }
     else if (scene === 'title') drawTitle();
     else if (scene === 'dead') { drawHUD(); drawDead(); }
   }
@@ -1527,7 +1549,7 @@ function frame(now) {
 }
 addEventListener('resize', () => { if (scene === 'title' || scene === 'shop') { newGame(); } });
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden && scene === 'play') { input.touchX = null; }
+  if (document.hidden && scene === 'play') { input.touchX = null; paused = true; } // never lose a run to a phone call
   if (ac) { if (document.hidden) ac.suspend(); else ac.resume(); } // no music in the background
 });
 
