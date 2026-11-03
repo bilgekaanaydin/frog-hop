@@ -1129,7 +1129,7 @@ function drawHUD() {
   const top = SAFE_TOP, blinkOn = Math.floor(game.time * 6) % 2 === 0;
   // left column, stacked under the safe area: coins, EXP bar, hearts (outlined so they read on any sky)
   drawCoinCounter(6, top + 5, game.runCoins);
-  const bw = 66, bh = 11, bx = 7, by = top + 18;
+  const bw = 66, bh = 11, bx = 7, by = top + 22; // a few pixels of air between the coin, EXP bar and hearts
   const frac = clamp(game.exp / expNeeded(game.level), 0, 1), fw = Math.round(bw * frac);
   ctx.fillStyle = INK; ctx.fillRect(bx - 2, by - 2, bw + 4, bh + 4);
   ctx.fillStyle = LIME;
@@ -1143,7 +1143,7 @@ function drawHUD() {
   labels(INK, fillClip); labels(LIME, emptyClip);
   // hearts: the current life plus spare lives, empty outlines for the slots still to earn
   // hearts: same size as the coin and left-aligned with it; filled for the current + spare lives, empty for the rest
-  const hy = by + bh + 4;
+  const hy = by + bh + 7;
   for (let i = 0; i < 1 + MAX_LIVES; i++) hiresSprite(i <= game.lives ? ICON.heartBig : ICON.heartBigEmpty, 6 + 6 + i * 14, hy + 6, 12, 12);
   if (game.charged && blinkOn) text('SUPER JUMP!', 6 + (1 + MAX_LIVES) * 14 + 3, hy + 2, { size: 8 });
   // right column: score, and the tongue timer under it while the potion is active
@@ -1166,22 +1166,22 @@ function drawHUD() {
   const banner = (t, dur, y0, title, sub) => {
     const k = 1 - t / dur, ease = 1 - Math.pow(1 - clamp(k / 0.18, 0, 1), 3);
     // bold expanded face for both lines
-    const border = 2, pad = 3, padX = 5, lineH = Math.round(textH(8, true));
-    const pw = Math.round(Math.max(textW(title, 8, 1, true), sub ? textW(sub, 8, 1, true) : 0) + 2 * (padX + border));
+    const BS = 6, border = 2, pad = 2, padX = 4, lineH = Math.round(textH(BS, true)); // small bold expanded text
+    const pw = Math.round(Math.max(textW(title, BS, 1, true), sub ? textW(sub, BS, 1, true) : 0) + 2 * (padX + border));
     const titleBlock = pad * 2 + lineH, subBlock = sub ? lineH + 4 : 0;
     const ph = border * 2 + titleBlock + subBlock;
     const px = Math.round(6 - (1 - ease) * (pw + 12)), py = Math.round(y0);
     ctx.globalAlpha = clamp(t * 3, 0, 1);
     logoPanel(px, py, pw, ph, 2);
-    text(title, px + pw / 2, py + border + pad, { size: 8, track: 1, align: 'center', color: INK, shadow: false, wide: true });
+    text(title, px + pw / 2, py + border + pad, { size: BS, track: 1, align: 'center', color: INK, shadow: false, wide: true });
     if (sub) {
       ctx.fillStyle = INK; ctx.fillRect(px + border, py + border + titleBlock, pw - 2 * border, subBlock);
-      text(sub, px + pw / 2, py + border + titleBlock + 2, { size: 8, track: 1, align: 'center', color: LIME, shadow: false, wide: true });
+      text(sub, px + pw / 2, py + border + titleBlock + 2, { size: BS, track: 1, align: 'center', color: LIME, shadow: false, wide: true });
     }
     ctx.globalAlpha = 1;
     return y0 + ph + 6;
   };
-  let bannerY = top + 48;
+  let bannerY = top + 60;
   if (game.levelUpT > 0) bannerY = banner(game.levelUpT, 1.4, bannerY, 'LEVEL UP', 'JUMP +' + Math.round((jumpBoost() - 1) * 100) + '%');
   if (game.oneUpT > 0) bannerY = banner(game.oneUpT, 1.6, bannerY, '+1UP', 'EXTRA LIFE');
   if (game.eatT > 0) bannerY = banner(game.eatT, 1.6, bannerY, 'EAT THE FLIES!', null);
