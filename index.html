@@ -123,6 +123,8 @@ const ICON = {
 };
 
 // ------------------------------------------------------------ shop items (pixel art anchored on the 38x28 frog grid)
+// astronaut helmet: see-through tinted glass dome with a glare streak, metal rim and collar
+const HELMET_PAL = Object.assign({}, P, { g: 'rgba(190,230,255,0.22)', h: 'rgba(255,255,255,0.8)' });
 const ITEMS = {
   hat: [
     { id: 'none', name: 'NONE', price: 0 },
@@ -133,6 +135,8 @@ const ITEMS = {
     { id: 'cowboy', name: 'COWBOY', price: 550, ox: 10, oy: -7, rows: ['.....kkkkkkk.....', '....knnnnnnnk....', '....knnNNNnnk....', 'k...knnnnnnnk...k', 'kn..knnnnnnnk..nk', 'knnnkNNNNNNNknnnk', '.knnnnnnnnnnnnnk.', '..kkkkkkkkkkkkk..'] },
     { id: 'viking', name: 'VIKING', price: 800, ox: 10, oy: -8, rows: ['k...............k', 'kt.............tk', 'ktt...kkkkkkk..ttk', '.kt..kssssssSk.tk.', '.ktkkssssssssSkkt.', '..kkssssSSSSSsskk.', '...kssSSSSSSSSsk..', '...kkkkkkkkkkkkk..'] },
     { id: 'crown', name: 'CROWN', price: 1500, ox: 12, oy: -7, rows: ['k....k...k....k', 'kk..kkk.kkk..kk', 'kykkyyykyyykkyk', 'kyyyyyyyyyyyyyk', 'kyyrryyyyyrryyk', 'kyyyyyyyyyyyyyk', 'kkkkkkkkkkkkkkk'] },
+    { id: 'antennae', name: 'ALIEN', price: 350, ox: 8, oy: -9, rows: ['.kkk..............kkk.', 'kcwck............kcwck', 'kccck............kccck', '.kkk.k..........k.kkk.', '......k........k......', '......k........k......', '.......k......k.......', '.......k......k.......', '.......k......k.......', '.......k......k.......'] },
+    { id: 'helmet', name: 'ASTRONAUT', price: 900, ox: -2, oy: -8, pal: HELMET_PAL, rows: ['..............kkkkkkkkkkkkkk..............', '...........kkkssggggggggggsskkk...........', '.........kkssggggggggggggggggsskk.........', '.......kkssgghhggggggggggggggggsskk.......', '......kssgghhhhhgggggggggggghhgggssk......', '.....ksgghhhhgggggggggggggggghhggggsk.....', '....ksgghhhgggggggggggggggggggggggggsk....', '...ksgghhhgggggggggggggggggggggggggggsk...', '..kssghhhggggggggggggggggggggggggggggssk..', '..ksghhhggggggggggggggggggggggggggggggsk..', '.ksggghggggggggggggggggggggggggggggggggsk.', '.ksggggggggggggggggggggggggggggggggggggsk.', 'kssggggggggggggggggggggggggggggggggggggssk', 'ksggggggggggggggggggggggggggggggggggggggsk', 'ksggggggggggggggggggggggggggggggggggggggsk', 'ksggggggggggggggggggggggggggggggggggggggsk', 'ksggggggggggggggggggggggggggggggggggggggsk', 'ksggggggggggggggggggggggggggggggggggggggsk', 'kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk', '..ksSSSSssssSSSSssssSSSSssssSSSSssssSSSk..', '..kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk..'] },
   ],
   glasses: [
     { id: 'none', name: 'NONE', price: 0 },
@@ -140,6 +144,7 @@ const ITEMS = {
     { id: 'sun', name: 'SHADES', price: 250, ox: 5, oy: 3, rows: ['kkkkkkkk..........kkkkkkkk', 'kiiiiiiikkkkkkkkkkkiiiiiiik', 'kiwiiiiik........kiwiiiiik', 'kiiiiiiik........kiiiiiiik', '.kiiiiik..........kiiiiik.', '..kkkkk............kkkkk..'] },
     { id: 'star', name: 'STAR', price: 400, ox: 4, oy: 1, rows: ['...kk......................kk...', '..kaak....................kaak..', 'kkkaakkk..............kkkaakkk..', 'kaaaaaakkkkkkkkkkkkkkkkaaaaaak..', '.kaaaak................kaaaak...', '.kaakaak..............kaakaak...', 'kkk..kkk..............kkk..kkk..'] },
     { id: 'mono', name: 'MONOCLE', price: 600, ox: 25, oy: 2, rows: ['..kkkk..', '.kyyyyk.', 'ky....yk', 'ky....yk', 'ky....yk', 'ky....yk', '.kyyyyk.', '..kkkk..', '.....k..', '......k.', '.....k..'] },
+    { id: 'goggles', name: 'DIVE MASK', price: 450, ox: 2, oy: 1, rows: ['BBBkkkkkkkkkkkkkkkkkkkkkkkkkkkkBBB', 'BBBkbbbbbbbbbbbbbbbbbbbbbbbbbbkBBB', '...kbhq.......bkkkkbbhq.......k...', '...kbq........bbbbbbbq........k...', '...kb.........bbbbbbb.........k...', '...kb.........bbbbbbb.........k...', '...kb........qbbbbbbb........qk...', '...kbbbbbbbbbbbkkkkbbbbbbbbbbbk...', '....kkkkkkkkkkk....kkkkkkkkkkk....'] },
   ],
   acc: [
     { id: 'none', name: 'NONE', price: 0 },
@@ -148,9 +153,10 @@ const ITEMS = {
     { id: 'flower', name: 'FLOWER', price: 300, ox: 20, oy: -5, rows: ['..kpk..', '.kpppk.', 'kppyppk', 'kpyYypk', 'kppyppk', '.kpppk.', '..kpk..', '...kgk.', '...kg..'] },
     { id: 'scarf', name: 'SCARF', price: 400, ox: 9, oy: 11, rows: ['kkkkkkkkkkkkkkkkkkkk', 'krrrrRrrrrRrrrrRrrrk', 'kRrrrrRrrrrRrrrrRrrk', 'krrrrRrrrrRrrrrRrrrk', 'kkkkkkkkkkkkkkkkkkkk', '...krrrk............', '...kRrrk............', '...krRrk............', '...kkkkk............'] },
     { id: 'chain', name: 'CHAIN', price: 500, ox: 10, oy: 11, rows: ['k................k', '.ky............yk.', '..kyy........yyk..', '...kkyyyyyyyykk...', '.....kkkyykkk.....', '.......kyyk.......', '........kk........'] },
+    { id: 'snorkel', name: 'SNORKEL', price: 300, ox: 16, oy: -8, rows: ['..................kkkk', '..................kxxk', '..................kxxk', '..................kxxk', '..................kkkk', '..................kyyk', '..................kyyk', '..................kyyk', '..................kyyk', '..................kyyk', '..................kyyk', '..................kyyk', '..................kyyk', '..................kyyk', '..................kyyk', '..................kyyk', '..................kyyk', 'kkkkkkkkkkkkkkkkkkyykk', 'kNNNNNyyyyyyyyyyyyyyyk', 'kkkkkkkkkkkkkkkkkkkkkk'] },
   ],
 };
-for (const cat in ITEMS) for (const it of ITEMS[cat]) if (it.rows) it.spr = makeSprite(it.rows, P);
+for (const cat in ITEMS) for (const it of ITEMS[cat]) if (it.rows) it.spr = makeSprite(it.rows, it.pal || P);
 const CATS = ['hat', 'glasses', 'acc'];
 
 // ============================================================ save data
