@@ -132,8 +132,6 @@ const HELMET_PAL = { k: '#0a0a0c', w: '#f4f2f8', s: '#cdd0da', S: '#6e7880', e: 
 const WIZARD_PAL = { k: '#0a0a0c', L: '#b48cff', p: '#7b2fd8', D: '#4a14a0', X: '#2a0a5a', o: '#e8b23a', y: '#ffd666', O: '#b07018', w: '#fff6d6' };
 const BARB_PAL = { k: '#0a0a0c', l: '#cedcf2', L: '#a9bde0', M: '#7d92b8', D: '#55688c', V: '#1a1e28' };
 const KNIGHT_PAL = { k: '#0a0a0c', M: '#6d7d99', N: '#5c6b87', D: '#46536c', o: '#f0ba40', O: '#b8761c', r: '#ba1c46', R: '#7a0c2a', Q: '#961236', h: '#e85476', S: '#465064', T: '#323a4a' };
-// crown: seven spikes with knobs, gold centre fading to bronze and shadow, ruby gems
-const CROWN_PAL = { k: '#0a0a0c', Y: '#fae83c', W: '#ffffff', o: '#e27a1e', n: '#703a26', N: '#282038', b: '#6a3a2a', r: '#ba2838', R: '#ec6870', Q: '#821828' };
 const ITEMS = {
   hat: [
     { id: 'none', name: 'NONE', price: 0 },
@@ -143,7 +141,7 @@ const ITEMS = {
     { id: 'tophat', name: 'TOP HAT', price: 400, ox: 11, oy: -8, rows: ['...kkkkkkkkk...', '...kiiiiiiik...', '...kiiiiiiik...', '...kiiiiiiik...', '...kiiiiiiik...', '...krrrrrrrk...', '.kkkiiiiiiikkk.', '.kiiiiiiiiiiik.', '.kkkkkkkkkkkkk.'] },
     { id: 'cowboy', name: 'COWBOY', price: 550, ox: 10, oy: -7, rows: ['.....kkkkkkk.....', '....knnnnnnnk....', '....knnNNNnnk....', 'k...knnnnnnnk...k', 'kn..knnnnnnnk..nk', 'knnnkNNNNNNNknnnk', '.knnnnnnnnnnnnnk.', '..kkkkkkkkkkkkk..'] },
     { id: 'viking', name: 'VIKING', price: 800, ox: 10, oy: -8, rows: ['k...............k', 'kt.............tk', 'ktt...kkkkkkk..ttk', '.kt..kssssssSk.tk.', '.ktkkssssssssSkkt.', '..kkssssSSSSSsskk.', '...kssSSSSSSSSsk..', '...kkkkkkkkkkkkk..'] },
-    { id: 'crown', name: 'CROWN', price: 1500, ox: 2, oy: -14, pal: CROWN_PAL, rows: ['............k...k...k............', '..k.....k..kWk.kbk.kWk..k.....k..', '.kWk...kbkkWYYkbbbkWYYkkbk...kWk.', 'kWYYk.kbbbkkYk.kbk.kYkkbbbk.kWYYk', '.kYkk..kbk.kYk.knk.kYk.kbk..kkYk.', '..konk.knkkYYoknnNkYYokknk.knok..', '..konkknnNkYYonnnNNYYoknnNkknok..', '...konknnNYYYonnnNNYYoonnNknok...', '...konnnnNYYYonnnNYYYonnnNNnok...', '...kNNNnnnonoYYYWWWYooonnnNNNk...', '...kNNRrnnRrnYYYWWWYonRrnnRrNk...', '....kNrrnnrroYYYWWWYoorrnnrrk....', '....kNrQnnrQoYYYWWWYoorQnnrQk....', '....kNNnnnoooYYYWWWYooonnnNNk....', '....knNnnNnnNnnNnnNnnNnnNnnNk....', '.....kkkkkkkkkkkkkkkkkkkkkkk.....'] },
+    { id: 'crown', name: 'CROWN', price: 1500, ox: 8, oy: -10, rows: ['..........k..........', '..k...k..kwk..k...k..', '.kwk.kwk.kwk.kwk.kwk.', '.kyk.kyk.kyk.kyk.kyk.', '.kyk.kyk.kyk.kyk.kyk.', 'kYyokYyokYyokYyokYyok', 'kYyokYyokYyokYyokYyok', 'kYYYYYYYYYYYYYYYYYYYk', 'kyyyyryyyrwryyyryyyyk', 'kyyyyRyyyRrRyyyRyyyyk', 'koooooooooooooooooook', '.kkkkkkkkkkkkkkkkkkk.'] },
     { id: 'antennae', name: 'ALIEN', price: 350, ox: 8, oy: -9, rows: ['.kkk..............kkk.', 'kcwck............kcwck', 'kccck............kccck', '.kkk.k..........k.kkk.', '......k........k......', '......k........k......', '.......k......k.......', '.......k......k.......', '.......k......k.......', '.......k......k.......'] },
     { id: 'helmet', name: 'ASTRONAUT', price: 900, ox: -4, oy: -12, pal: HELMET_PAL, rows: ['....................kkkkkk....................', '...............kkkkkwwwwwwkkkkk...............', '.............kkwwwwwwwwwwwwwwwwkk.............', '...........kkwwwwwwwwwwwwwwwwwwwwkk...........', '.........kkSSSSSSSSSSSSSSSSSSSSSSSSkk.........', '........kSSSSSSSSSSSSSSSSSSSSSSSSSSSSk........', '.......kwwwwwwwwwwwwwwwwwwwwwwwwwwwsssk.......', '......kwwwwwwwwwwwwwwVVVVwwwwwwwwwwssssk......', '.....kwwwwwwwwwwVVVVVvvvvVVVVVwwwwwsssssk.....', '.....kwwwwwwwwVVvvvvvvvvvvvvvhhhwwwsssssk.....', '.kkkkwwwwwwwVVvvvvvvvvvvvvvvvhhhVVwsssssskkkk.', '.kwwwwwwwwwVvvvvvvvvvvvvvvvvvhhhvvVssssssseek.', '.kwwwwwwwwVvvvvvvvvvvvvvvvvvvvvvvvvVsssssseek.', '.kwwwwwwwVvvvvvvvvvvvvvvvvvhhvvvvvvvVssssseek.', '.kwwwwwwwVvvvvvvvvvvvvvvvvvvvvvvvvvvVssssssek.', '.kwwwwwwVvvvvvvvvvvvvvvvvvvvvvvvvvvvvVsssseek.', '.kwwwwwwVvvvvvvvvvvvvvvvvvvvvvvvvvvvvVsssseek.', '.kwwwwwwVvvvvvvvvvvvvvvvvvvvvvvvvvvvvVsssseek.', '.kwwwwwwVvvvvvvvvvvvvvvvvvvvvvvvvvvvvVsssseek.', '.kwwwwwwwVvvvvvvvvvvvvvvvvvvvvvvvvvvVsssseeek.', '.kkkkkwwwVvvvvvvvvvvvvvvvvvvvvvvvvvvVssskkkkk.', '......kwwwVvvvvvvvvvvvvvvvvvvvvvvvvVsssk......', '.......kwwwVvvvvvvvvvvvvvvvvvvvvvvVsssk.......', '........kwwwVVvvvvvvvvvvvvvvvvvvVVwssk........', '.........kksssVVVVVVVVVVVVVVVVVVssskk.........', '...........kkswwVVVVVVVVVVVVVVwwskk...........', '.............kkwwwwwwVVVVwwwwwwkk.............', '...............kkkkkwwwwwwkkkkk...............', '....................kkkkkk....................'] },
     { id: 'wizard', name: 'WIZARD', price: 700, ox: 4, oy: -21, pal: WIZARD_PAL, rows: ['................................', '..................kkkk..........', '................kkppppkk........', '...............kppDDDDDDkk......', '...............kDDpkkkDDDDkk....', '...............kLpDXk.kkXXDDk...', '...............kLpDXk...kkXXk...', '..............kLppDDk.....kk....', '.............kLpppDDXk..........', '............kLLpppDDXk..........', '...........kLLppppDDXk..........', '..........kLLppppDDDXXk.........', '.........kLLLppppDDDXXk.........', '........kLLLpppppDDDXXk.........', '.......kLLLLpppppDDDDXXk........', '......kLLLLppppppDDDDXXk........', '......kLLLpppppppDDDDXXkk.......', '......koooowwwwwoooooooook......', '......kyyyywyyywyyyyyyyyyk......', '.kkkkkkOOOOwwwwwOOOOOOOOOkkkkkk.', 'kLLLLLLLLppppppppppppDDDDDDDDDDk', 'kLLLLLLLLppppppppppppDDDDDDDDDDk', '.kkkLLLLLppppppppppppDDDDDDDkkk.', '....kkkkkkkkkkkkkkkkkkkkkkkk....'] },
@@ -968,9 +966,15 @@ function drawFrog() {
   const f = game.frog;
   const lean = Math.abs(f.vx) > 50 ? Math.sign(f.vx) : 0;
   if (game.invuln > 0 && Math.floor(game.time * 12) % 2 === 0) ctx.globalAlpha = 0.45; // respawn flicker
-  if (game.tongueT > 0) { // tongue mode: pink glow ring so the power-up state is obvious
-    ctx.globalAlpha = 0.3 + 0.12 * Math.sin(game.time * 8); ctx.fillStyle = POTION;
-    ctx.beginPath(); ctx.arc(Math.round(f.x), sy(f.y) - 14, 24, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = game.invuln > 0 && Math.floor(game.time * 12) % 2 === 0 ? 0.45 : 1;
+  if (game.tongueT > 0) { // tongue mode: radar pulses that grow out of the frog and fade as they expand
+    const base = ctx.globalAlpha, cx = Math.round(f.x), cy = sy(f.y) - 14;
+    ctx.strokeStyle = POTION; ctx.lineWidth = 2;
+    for (let i = 0; i < 3; i++) {
+      const k = ((game.time * 0.9 + i / 3) % 1), r = 10 + k * 26;
+      ctx.globalAlpha = base * 0.7 * (1 - k) * (1 - k);
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.globalAlpha = base;
   }
   const pos = drawFrogAt(f.x, sy(f.y), f.anim, lean, f.blink > 0, null);
   if (f.x < FROG_W / 2) drawFrogAt(f.x + W + FROG_W, sy(f.y), f.anim, lean, f.blink > 0, null);
