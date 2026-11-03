@@ -1108,6 +1108,18 @@ function drawDead() {
   button(sb, null, { icon: ICON.cart, fill: LIME });
 }
 let shopTab = 0, shopMsg = null;
+const ICON_BOX_W = 30, ICON_BOX_H = 18; // every shop item is scaled to fit this box (in game pixels)
+// crops transparent margins so sprites of different canvas sizes centre and scale the same way
+const trimCache = new Map();
+function trimmed(spr) {
+  if (trimCache.has(spr)) return trimCache.get(spr);
+  const d = spr.getContext('2d').getImageData(0, 0, spr.width, spr.height).data;
+  let x0 = spr.width, y0 = spr.height, x1 = -1, y1 = -1;
+  for (let y = 0; y < spr.height; y++) for (let x = 0; x < spr.width; x++) if (d[(y * spr.width + x) * 4 + 3] > 0) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  let out = spr;
+  if (x1 >= 0) { out = document.createElement('canvas'); out.width = x1 - x0 + 1; out.height = y1 - y0 + 1; out.getContext('2d').drawImage(spr, -x0, -y0); }
+  trimCache.set(spr, out); return out;
+}
 function drawShop() {
   dotBackground();
   drawCoinCounter(6, SAFE_TOP + 8, FREE_SHOP ? 'FREE' : save.coins, INK, false);
@@ -1122,7 +1134,7 @@ function drawShop() {
     const tx = Math.round(W / 2 - tabW * 1.5 - 6 + i * (tabW + 6));
     const b = addBtn(tx, tabY, tabW, 20, () => { shopTab = i; });
     const p = button(b, null, { fill: LIME, pressed: shopTab === i });
-    hiresSprite(tabs[i], tx + p + tabW / 2, tabY + p + 10, tabW - 6, 14, 1.75);
+    hiresSprite(trimmed(tabs[i]), tx + p + tabW / 2, tabY + p + 10, tabW - 10, 11, 9);
   }
   // item grid
   const cat = CATS[shopTab], list = ITEMS[cat];
@@ -1134,10 +1146,11 @@ function drawShop() {
     const b = addBtn(bx0, by0, cw, ch, () => shopTap(cat, it));
     const p = button(b, null, { fill: LIME, pressed: equipped }), x = bx0 + p, y = by0 + p;
     // the item is centred in the card (in the space above the price / check mark) and drawn larger
-    const iconCy = y + (ch - 12) / 2 + 1;
+    // every item is trimmed and fitted to the same box, centred in the card (above the price / check mark if shown)
+    const footer = !owned || equipped ? 12 : 0, iconCy = y + 1 + (ch - 2 - footer) / 2;
     if (it.spr) {
       ctx.globalAlpha = owned ? 1 : 0.7;
-      hiresSprite(it.spr, x + cw / 2, iconCy, cw - 6, ch - 18, 1.75);
+      hiresSprite(trimmed(it.spr), x + cw / 2, iconCy, ICON_BOX_W, ICON_BOX_H, 9);
       ctx.globalAlpha = 1;
     } else { ctx.fillStyle = INK; ctx.fillRect(x + Math.round(cw / 2) - 5, Math.round(iconCy) - 1, 10, 2); }
     if (owned) { if (equipped) ctx.drawImage(ICON.check, Math.round(x + cw / 2 - 4), y + ch - 12); }
