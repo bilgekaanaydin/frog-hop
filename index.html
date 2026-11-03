@@ -63,8 +63,35 @@ function flipSprite(c) {
 function tintPal(pal, fn) { const o = {}; for (const k in pal) o[k] = fn(pal[k]); return o; }
 
 // ============================================================ assets
-const FROG = {}; // name -> canvas
-for (const k in ASSETS.frog) FROG[k] = makeSprite(ASSETS.frog[k], ASSETS.frogPal);
+// frog colour skins: the greens (a dark, d deep, b mid, c light) and the belly (g, h) are remapped per skin.
+// Patterned skins add spots or stripes on top of the skin. The eyes and outline stay the same.
+const SKINS = {
+  green: {},
+  yellow: { a: '#5a4a10', d: '#b8901c', b: '#e8c22c', c: '#fff05a', g: '#fff3cf', h: '#f0d49a' },
+  blue: { a: '#14284f', d: '#2f5aa8', b: '#3f7fe0', c: '#7fb8ff', g: '#e2f3ff', h: '#b4d6f0' },
+  magenta: { a: '#4a1040', d: '#a0287e', b: '#d83aa8', c: '#ff7ad6', g: '#ffe2f5', h: '#f0b6dc' },
+  white: { a: '#5a6070', d: '#b4bcca', b: '#dde2ec', c: '#ffffff', g: '#fff3c8', h: '#f0d898' },
+  dart: { a: '#0c1c4a', d: '#1f4fc4', b: '#2f78f0', c: '#5ec8ff', g: '#9ee6ff', h: '#5ec0f0', spots: '#0a0a14' },        // poison dart frog: blue with black spots
+  tiger: { a: '#4a2008', d: '#c4561a', b: '#f07a22', c: '#ffb04a', g: '#fff0d8', h: '#f0d0a8', stripes: '#2a1206' },     // orange with dark stripes
+};
+const SKIN_IDS = Object.keys(SKINS);
+const skinPal = id => Object.assign({}, ASSETS.frogPal, SKINS[id] || {});
+const FROG_SKINS = {};
+function frogFrames(id) {
+  if (FROG_SKINS[id]) return FROG_SKINS[id];
+  const sk = SKINS[id] || {}, pal = skinPal(id), out = {};
+  for (const k in ASSETS.frog) {
+    const rows = ASSETS.frog[k].map((r, y) => r.split('').map((ch, x) => {
+      if (!'bcd'.includes(ch)) return ch;
+      if (sk.spots) { const v = Math.sin((x * 0.9 + 3) * 12.9898 + (y * 1.1 + 5) * 78.233) * 43758.5; if (v - Math.floor(v) < 0.2 && y > 1) return 'S'; }
+      if (sk.stripes && (x + Math.floor(y / 2)) % 6 === 0 && y > 1) return 'S';
+      return ch;
+    }).join(''));
+    out[k] = makeSprite(rows, Object.assign({}, pal, { S: sk.spots || sk.stripes || pal.a }));
+  }
+  return (FROG_SKINS[id] = out);
+}
+const FROG = frogFrames('green');
 const FROG_W = FROG.sit.width; // 38
 
 const CLOUD_PALS = {
@@ -167,12 +194,20 @@ const ITEMS = {
   ],
 };
 for (const cat in ITEMS) for (const it of ITEMS[cat]) if (it.rows) it.spr = makeSprite(it.rows, it.pal || P);
-const CATS = ['hat', 'glasses', 'acc'];
+const CATS = ['skin', 'hat', 'glasses', 'acc'];
+ITEMS.skin = [
+  { id: 'green', name: 'GREEN', price: 0 }, { id: 'yellow', name: 'YELLOW', price: 200 }, { id: 'blue', name: 'BLUE', price: 200 },
+  { id: 'magenta', name: 'MAGENTA', price: 250 }, { id: 'white', name: 'WHITE', price: 300 }, { id: 'dart', name: 'DART FROG', price: 600 },
+  { id: 'tiger', name: 'TIGER', price: 600 },
+];
+for (const it of ITEMS.skin) it.spr = frogFrames(it.id).sit;
 
 // ============================================================ save data
 const SAVE_KEY = 'froghop_save_v1';
 let save = { coins: 0, best: 0, owned: ['hat:none', 'glasses:none', 'acc:none'], eq: { hat: 'none', glasses: 'none', acc: 'none' }, sound: true, music: true, musicVol: 0.6, vib: true, tilt: false, runs: 0 };
 try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s) save = Object.assign(save, s); } catch (e) { }
+if (!save.eq.skin) save.eq.skin = 'green'; // saves from before skins existed
+if (!save.owned.includes('skin:green')) save.owned.push('skin:green');
 function persist() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) { } }
 
 // ============================================================ canvas / scaling
@@ -937,15 +972,16 @@ function drawPlat(p) {
   if (p.spring) { const sp = ICON.spring, sx = Math.round(x + w / 2 - sp.width / 2); const comp = p.springT > 0 ? 2 : 0; ctx.drawImage(sp, 0, 0, sp.width, sp.height, sx, y - sp.height + 1 + comp, sp.width, sp.height - comp); }
 }
 function drawFrogAt(cx, feetY, anim, lean, blink, eq) {
-  const spr = FROG[anim] || FROG.sit;
+  const eqs = eq || save.eq, frames = frogFrames(eqs.skin || 'green'), pal = skinPal(eqs.skin || 'green');
+  const spr = frames[anim] || frames.sit;
   const x0 = Math.round(cx - spr.width / 2), y0 = Math.round(feetY - spr.height);
   const wo = (spr.width - FROG_W) / 2; // wider squash/spread frames keep accessories centred
   if (lean) { const half = Math.floor(spr.height / 2); ctx.drawImage(spr, 0, 0, spr.width, half, x0 + lean, y0, spr.width, half); ctx.drawImage(spr, 0, half, spr.width, spr.height - half, x0, y0 + half, spr.width, spr.height - half); }
   else ctx.drawImage(spr, x0, y0);
   if (blink) { // eyelids: the eyes sit at the same rows in every frame (top-anchored)
     const ex = x0 + wo, ey = y0 + (anim === 'crouch2' ? 3 : 4);
-    ctx.fillStyle = '#61a53f'; ctx.fillRect(ex + 7, ey, 5, 4); ctx.fillRect(ex + 26, ey, 5, 4);
-    ctx.fillStyle = '#293f21'; ctx.fillRect(ex + 7, ey + 3, 5, 1); ctx.fillRect(ex + 26, ey + 3, 5, 1);
+    ctx.fillStyle = pal.b; ctx.fillRect(ex + 7, ey, 5, 4); ctx.fillRect(ex + 26, ey, 5, 4);
+    ctx.fillStyle = pal.a; ctx.fillRect(ex + 7, ey + 3, 5, 1); ctx.fillRect(ex + 26, ey + 3, 5, 1);
   }
   for (const cat of ['glasses', 'acc', 'hat']) {
     const it = ITEMS[cat].find(i => i.id === (eq || save.eq)[cat]);
@@ -1213,9 +1249,9 @@ function drawShop() {
   panel(pvX, pvY, pvW, pvH, INK);
   drawFrogAt(W / 2, pvY + pvH - 7 + Math.round(Math.sin(game.time * 3)), 'sit', 0, game.frog.blink > 0, null);
   // category tabs (the selected one is pressed in)
-  const tabW = 30, tabY = pvY + pvH + 10, tabs = [ITEMS.hat[2].spr, ICON.glassesTab, ICON.heart];
-  for (let i = 0; i < 3; i++) {
-    const tx = Math.round(W / 2 - tabW * 1.5 - 6 + i * (tabW + 6));
+  const tabW = 30, tabY = pvY + pvH + 10, tabs = [frogFrames(save.eq.skin).sit, ITEMS.hat[2].spr, ICON.glassesTab, ICON.heart];
+  for (let i = 0; i < tabs.length; i++) {
+    const tx = Math.round(W / 2 - (tabs.length * tabW + (tabs.length - 1) * 6) / 2 + i * (tabW + 6));
     const b = addBtn(tx, tabY, tabW, 20, () => { shopTab = i; });
     const p = button(b, null, { fill: LIME, pressed: shopTab === i });
     hiresSprite(trimmed(tabs[i]), tx + p + tabW / 2, tabY + p + 10, tabW - 10, 11, 9);
@@ -1253,7 +1289,7 @@ function drawShop() {
 function shopTap(cat, it) {
   const key = cat + ':' + it.id;
   if (save.owned.includes(key)) {
-    save.eq[cat] = (save.eq[cat] === it.id && it.id !== 'none') ? 'none' : it.id; persist(); sfx.ui();
+    save.eq[cat] = (cat !== 'skin' && save.eq[cat] === it.id && it.id !== 'none') ? 'none' : it.id; persist(); sfx.ui();
   } else if (FREE_SHOP || save.coins >= it.price) {
     if (!FREE_SHOP) save.coins -= it.price;
     save.owned.push(key); save.eq[cat] = it.id; persist(); sfx.buy(); vibrate(20);
