@@ -925,8 +925,12 @@ function drawLogo() {
 function drawTitle() {
   const it = game.introT, lr = logoRect(); // the logo itself is drawn later on the full-resolution canvas
   if (it > 1.2) {
-    const by = lr.restY + lr.h + 6, bw = 13 + textW('' + save.best, 8);
-    hiresSprite(ICON.trophy, W / 2 - bw / 2 + 5, by + 3.5, 11, 11); text('' + save.best, W / 2 - bw / 2 + 13, by, { size: 8 });
+    // best score in a small box: lime face, black outline and hard shadow, trophy + bold number centred inside
+    const bw = 13 + textW('' + save.best, 8), boxW = Math.round(bw + 14), boxH = 17;
+    const bx = Math.round(W / 2 - boxW / 2), by = Math.round(lr.restY + lr.h + 6), ty = by + (boxH - textH(8, true)) / 2;
+    panel(bx, by, boxW, boxH);
+    hiresSprite(ICON.trophy, W / 2 - bw / 2 + 5, by + boxH / 2, 11, 11);
+    text('' + save.best, W / 2 - bw / 2 + 13, ty, { size: 8, color: INK, shadow: false });
   }
   drawCoinCounter(5, SAFE_TOP + 5, FREE_SHOP ? 'FREE' : save.coins);
   iconButton(W - 23, SAFE_TOP + 4, ICON.cart, () => { scene = 'shop'; shopTab = 0; });
