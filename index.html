@@ -255,7 +255,7 @@ function glyph(ch, color, wide = false) {
 // brand palette: the logo's lime (#d0f053) and pure black, used across the whole interface
 const INK = '#000000', LIME = '#d0f053', LIME_DOT = '#b6d63e', GRAY = '#7d8f32';
 const PAPER = LIME; // default UI text / panel colour
-const BUILD = '11.03 22:24'; // replaced with the build time by build.py (kept in the bundle for debugging, not shown)
+const BUILD = '11.03 22:27'; // replaced with the build time by build.py (kept in the bundle for debugging, not shown)
 const FREE_SHOP = true; // test build: everything in the shop is free
 // size keeps its old meaning: the cap height is 7 * round(size / 8) game pixels (8 -> 7px, 16 -> 14px, 24 -> 21px)
 const capOf = size => (size || 16) * 7 / 8; // cap height in game pixels (8 -> 7, 12 -> 10.5, 16 -> 14, 24 -> 21)
@@ -526,13 +526,15 @@ function burst(x, y, n, colors, spd = 60, life = 0.5, gravity = 300) {
 }
 
 // ------------------------------------------------------------ landing / bouncing
+const SPRING_H = 11, SPRING_HALF = 9; // plank height above the platform, half-width of the area that launches
+const onSpring = (p, x) => p && p.spring && Math.abs(x - (p.x + p.w / 2)) <= SPRING_HALF;
 function land(p) {
-  const f = game.frog;
-  f.y = p ? p.y : 0; f.prevY = f.y;
+  const f = game.frog, sp = onSpring(p, f.x);
+  f.y = p ? p.y + (sp ? SPRING_H : 0) : 0; f.prevY = f.y;
   const boost = jumpBoost(); // every level makes the frog jump a little higher
   let v = JUMP_V * boost, kind = 'jump';
   if (game.charged) { v = SUPER_V * boost; kind = 'super'; game.charged = false; game.superT = 0.7; game.shake = 4; addFloater(f.x, f.y + 40, 'SUPER!', P.Y); }
-  else if (p && p.spring) { v = SPRING_V * boost; kind = 'spring'; p.springT = 0.3; }
+  else if (sp) { v = SPRING_V * boost; kind = 'spring'; p.springT = 0.55; }
   else if (p && p.type === 'swamp') { v = JUMP_V * boost * 0.8; kind = 'swamp'; p.splashT = 0.4; }
   f.vy = v; f.landT = 0; // restarts the squash -> stretch animation
   if (p) {
@@ -582,7 +584,8 @@ function step(dt) {
     let landed = null;
     for (const p of game.plats) {
       if (!p.alive) continue;
-      if (f.prevY >= p.y && f.y <= p.y && Math.abs(f.x - (p.x + p.w / 2)) < p.w / 2 + 8) { landed = p; break; }
+      const top = p.y + (onSpring(p, f.x) ? SPRING_H : 0); // the spring's plank sits above the platform
+      if (f.prevY >= top && f.y <= top && Math.abs(f.x - (p.x + p.w / 2)) < p.w / 2 + 8) { landed = p; break; }
     }
     if (landed) land(landed);
     else if (f.prevY >= 0 && f.y <= 0 && game.maxY < 200) land(null);
@@ -956,6 +959,37 @@ const PLAT_COLS = {
   crumble: { earth: ['#bfefff', '#ffffff', '#7fcbe8'], space: ['#9fe8ff', '#ffffff', '#4fb6e8'] },
 };
 const platCol = (type, i, amt) => { const c = PLAT_COLS[type]; return amt <= 0 ? c.earth[i] : amt >= 1 ? c.space[i] : mixHex(c.earth[i], c.space[i], amt); };
+// coiled launch spring with a wooden plank: idle it is loaded (tight coils); on a hit it squashes,
+// fires up to full stretch and then wobbles back
+function drawSpring(cx, baseY, t) {
+  const k = t > 0 ? 1 - t / 0.55 : 1;                  // 0 -> 1 over the launch
+  let ext;
+  if (t <= 0) ext = 0;
+  else if (k < 0.12) ext = -0.4 * (k / 0.12);          // squash
+  else if (k < 0.35) ext = -0.4 + 1.6 * ((k - 0.12) / 0.23);   // fire
+  else ext = 1.2 * Math.exp(-(k - 0.35) * 6) * Math.cos((k - 0.35) * 22); // wobble back
+  const coilH = Math.max(3, Math.round(SPRING_H - 4 + ext * 7)), topY = baseY - coilH - 3;
+  // base plate
+  ctx.fillStyle = INK; ctx.fillRect(cx - 6, baseY - 2, 12, 2);
+  ctx.fillStyle = '#5c6474'; ctx.fillRect(cx - 5, baseY - 2, 10, 1);
+  // coil: bright front wires with see-through gaps between the loops (only the sides of the back wire show)
+  for (let i = 0; i < coilH; i++) {
+    const yy = baseY - 3 - i, x0 = cx - 4;
+    if (i % 2 === 0) {
+      ctx.fillStyle = INK; ctx.fillRect(x0 - 1, yy, 10, 1);
+      ctx.fillStyle = '#e6ebf3'; ctx.fillRect(x0, yy, 6, 1);
+      ctx.fillStyle = '#9aa4b6'; ctx.fillRect(x0 + 6, yy, 2, 1);
+    } else {
+      ctx.fillStyle = INK; ctx.fillRect(x0 - 1, yy, 2, 1); ctx.fillRect(x0 + 7, yy, 2, 1);
+      ctx.fillStyle = '#5c6474'; ctx.fillRect(x0, yy, 1, 1); ctx.fillRect(x0 + 7, yy, 1, 1);
+    }
+  }
+  // wooden plank on top
+  ctx.fillStyle = INK; ctx.fillRect(cx - 8, topY - 1, 16, 5);
+  ctx.fillStyle = '#c08a4a'; ctx.fillRect(cx - 7, topY, 14, 3);
+  ctx.fillStyle = '#e8b878'; ctx.fillRect(cx - 7, topY, 14, 1);
+  ctx.fillStyle = '#7a4e22'; ctx.fillRect(cx - 7, topY + 2, 14, 1); ctx.fillRect(cx - 3, topY + 1, 1, 1); ctx.fillRect(cx + 3, topY + 1, 1, 1);
+}
 function drawPlat(p) {
   const x = Math.round(p.x), y = sy(p.y), w = p.w, h = PLAT_H + 1;
   if (y < -10 || y > H + 10) return;
@@ -975,7 +1009,7 @@ function drawPlat(p) {
     for (let i = 5; i < w - 5; i += 9) { ctx.fillRect(x + i, y + 2, 1, 1); ctx.fillRect(x + i + 1, y + 3, 1, 1); ctx.fillRect(x + i + 2, y + 4, 1, 1); ctx.fillRect(x + i + 1, y + 1, 1, 1); }
     ctx.fillStyle = '#ffffff'; ctx.fillRect(x + w - 10, y + 3, 4, 1);
   }
-  if (p.spring) { const sp = ICON.spring, sx = Math.round(x + w / 2 - sp.width / 2); const comp = p.springT > 0 ? 2 : 0; ctx.drawImage(sp, 0, 0, sp.width, sp.height, sx, y - sp.height + 1 + comp, sp.width, sp.height - comp); }
+  if (p.spring) drawSpring(Math.round(x + w / 2), y, p.springT || 0);
 }
 function drawFrogAt(cx, feetY, anim, lean, blink, eq) {
   const eqs = eq || save.eq, frames = frogFrames(eqs.skin || 'green'), pal = skinPal(eqs.skin || 'green');
