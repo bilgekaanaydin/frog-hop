@@ -75,6 +75,20 @@ const CLOUD_PALS = {
 const CLOUDS = {};
 for (const k in CLOUD_PALS) CLOUDS[k] = ASSETS.clouds.map(c => makeSprite(c.rows, CLOUD_PALS[k]));
 
+const ASSETS_POTION_ROWS = ['....kkkkk....',
+    '....kmmmk....',
+    '....knnnk....',
+    '....kqwqk....',
+    '...kkqwqkk...',
+    '..kqqqqqqqk..',
+    '.kqppppppPqk.',
+    'kwpaappppppPk',
+    'kwpawppppppPk',
+    'kwpappppwpPPk',
+    'kwppppppppPPk',
+    '.kwpppppPPPk.',
+    '..kkPPPPPkk..',
+    '....kkkkk....'];
 const ICON = {
   coin: makeSprite(['...kkkkk...', '..kyYYYyk..', '.kyYYyyyyk.', 'kyYYyyyyyok', 'kyYyyykyyok', 'kyyyykyyyok', 'kyyykyyyook', 'kyyyyyyoook', '.kyyyooook.', '..koooook..', '...kkkkk...'], CP),
   coinThin: makeSprite(['..kkk..', '.kyYyk.', 'kyYyyok', 'kyYyyok', 'kyYkyok', 'kyykyok', 'kyyyyok', 'kyyyook', 'kyooook', '.koook.', '..kkk..'], CP),
@@ -95,21 +109,7 @@ const ICON = {
   glassesTab: makeSprite(['kkkkk.kkkkk', 'kiiiikiiiik', 'kiwiikiwiik', '.kiik.kiik.', '..kk...kk..'], P),
   bolt: makeSprite(['...kk', '..kyk', '.kyyk', 'kyyyk', 'kkkyk', '..kyk', '..kk.'], P),
   star: makeSprite(['..y..', '.yyy.', 'yyyyy', '.yyy.', '..y..'], P),
-  potion: makeSprite([ // corked potion bottle with pink "tongue" brew
-    '....kkkkk....',
-    '....kmmmk....',
-    '....knnnk....',
-    '....kqwqk....',
-    '...kkqwqkk...',
-    '..kqqqqqqqk..',
-    '.kqppppppPqk.',
-    'kwpaappppppPk',
-    'kwpawppppppPk',
-    'kwpappppwpPPk',
-    'kwppppppppPPk',
-    '.kwpppppPPPk.',
-    '..kkPPPPPkk..',
-    '....kkkkk....'], P),
+  potion: makeSprite(ASSETS_POTION_ROWS, P), // corked potion bottle with pink "tongue" brew
   tongue: makeSprite(['..kkkkkk..', '.k......k.', 'k...kk...k', 'k..kppk..k', 'k..kppk..k', 'k..kppk..k', 'k.kppppk.k', 'k.kppppk.k', '.k.kkkk.k.', '..kkkkkk..'], P),
   spring: makeSprite(['kkkkkkkkkk', 'ksSsSsSsSk', 'kSsSsSsSsk', '.kkkkkkkk.'], P),
   fly0: makeSprite(['.qqq...qqq.', 'qkqqq.qqqkq', '.qqkkkkkqq.', '..kkikikk..', '..kkkkkkk..', '...kkkkk...'], P),
@@ -775,6 +775,8 @@ function drawTongue() {
   if (k >= 0.5) { const spr = T.dir > 0 ? ICON.fly1 : FLY_L[1]; ctx.drawImage(spr, tx - 5, ty - 3); } // the fly rides the tongue back into the mouth
 }
 const FLY_L = [flipSprite(ICON.fly0), flipSprite(ICON.fly1)];
+// the same potion with a red brew, cross-faded in as the tongue power runs out
+ICON.potionRed = makeSprite(ASSETS_POTION_ROWS, Object.assign({}, P, { p: '#e8322a', a: '#ff7a6e', P: '#8f1410' }));
 function drawFly(fl) {
   const y = sy(fl.y), x = Math.round(fl.x);
   if (y < -10 || y > H + 10) return;
@@ -874,10 +876,15 @@ function drawHUD() {
   // right column: score, and the tongue timer under it while the potion is active
   text('' + game.score, W - 6, top + 4, { size: 24, align: 'right' });
   if (game.tongueT > 0) {
-    const pt = ICON.potion, tx = W - pt.width - 5, ty = top + 29;
-    ctx.drawImage(pt, tx, ty - 2);
+    const pt = ICON.potion, tx = W - pt.width - 5, ty = top + 4 + Math.ceil(textH(24)) + 6; // below the score and its shadow
+    // running out: over the last 3 seconds the bar and the brew turn red, and both blink in the final second
+    const warn = clamp((3 - game.tongueT) / 3, 0, 1), blinkOff = game.tongueT < 1 && Math.floor(game.time * 10) % 2 === 0;
+    if (!blinkOff) {
+      ctx.drawImage(pt, tx, ty - 2);
+      if (warn > 0) { ctx.globalAlpha = warn; ctx.drawImage(ICON.potionRed, tx, ty - 2); ctx.globalAlpha = 1; }
+    }
     ctx.fillStyle = INK; ctx.fillRect(tx - 37, ty + 3, 33, 7);
-    ctx.fillStyle = LIME; ctx.fillRect(tx - 36, ty + 4, Math.round(31 * game.tongueT / TONGUE_TIME), 5);
+    ctx.fillStyle = blinkOff ? INK : mixHex(LIME, '#ff3b30', warn); ctx.fillRect(tx - 36, ty + 4, Math.round(31 * game.tongueT / TONGUE_TIME), 5);
   }
   // level-up / 1UP banners
   // banners drop in from the top, hold, then fade out
