@@ -100,6 +100,7 @@ const ICON = {
   gear: makeSprite(['....kk....', '.kk.kk.kk.', '.kkkkkkkk.', '..kk..kk..', 'kkkk..kkkk', 'kkkk..kkkk', '..kk..kk..', '.kkkkkkkk.', '.kk.kk.kk.', '....kk....'], P),
   close: makeSprite(['kk...kk', '.kk.kk.', '..kkk..', '..kkk..', '.kk.kk.', 'kk...kk'], P),
   hand: makeSprite(['..kk.......', '.kwwk......', '.kwwk......', '.kwwk......', '.kwwkkkkk..', '.kwwkwwkwwk', 'kkwwwwwwwwk', 'kwkwwwwwwwk', 'kwwwwwwwwwk', 'kwwwwwwwwwk', '.kwwwwwwwwk', '..kwwwwwwk.', '..kkkkkkkk.'], P), // pointing hand
+  note: makeSprite(['...kkkk', '...kkkk', '...k..k', '...k..k', '...k..k', '.kkk.kk', 'kkkkkkk', '.kk.kk.'], P),
   speaker: makeSprite(['....k....', '...kk..k.', '..kwk.k.k', 'kkkwk..kk', 'kwwwk.k.k', 'kkkwk..kk', '..kwk.k.k', '...kk..k.', '....k....'], P),
   vibrate: makeSprite(['k..kkkkk..k', '.k.kwwwk.k.', 'k.kkwwwk.k.', '.k.kwwwk.k.', 'k..kwwwk..k', '.k.kwwwk.k.', 'k..kkkkk..k'], P),
   tilt: makeSprite(['..kkkkk....', '.kwwwwwk...', 'kkkkkkwwk..', '.kwwwwwwwk.', '..kwwwwwwwk', '...kkkkkkkk'], P),
@@ -170,7 +171,7 @@ const CATS = ['hat', 'glasses', 'acc'];
 
 // ============================================================ save data
 const SAVE_KEY = 'froghop_save_v1';
-let save = { coins: 0, best: 0, owned: ['hat:none', 'glasses:none', 'acc:none'], eq: { hat: 'none', glasses: 'none', acc: 'none' }, sound: true, vib: true, tilt: false, runs: 0 };
+let save = { coins: 0, best: 0, owned: ['hat:none', 'glasses:none', 'acc:none'], eq: { hat: 'none', glasses: 'none', acc: 'none' }, sound: true, music: true, musicVol: 0.6, vib: true, tilt: false, runs: 0 };
 try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s) save = Object.assign(save, s); } catch (e) { }
 function persist() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) { } }
 
@@ -333,6 +334,64 @@ const sfx = {
   buzz: () => tone(180, 160, 0.15, 'sawtooth', 0.03),
 };
 function vibrate(ms) { if (save.vib && navigator.vibrate) { try { navigator.vibrate(ms); } catch (e) { } } }
+
+
+// ============================================================ music: "Frohg Hop", a looping 8-bit frog song
+// Sequenced live with Web Audio: square-wave lead with frog-like octave hops, triangle bass, noise drums,
+// and a little "ribbit" croak at the end of phrases. Toggle and volume live in the settings panel.
+const BPM = 138, STEP = 60 / BPM / 2;                 // one step = an eighth note
+const NOTE = n => { const m = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }; return 12 * (+n.slice(-1) + 1) + m[n[0]] + (n[1] === '#' ? 1 : 0); };
+const hz = midi => 440 * Math.pow(2, (midi - 69) / 12);
+// melody: 8 steps per bar, '.' = hold/rest, 'R' = ribbit croak
+const SONG_LEAD = [
+  'E5 . G5 E5 C5 . G4 .', 'A4 . C5 E5 A5 . G5 .', 'F5 . A5 F5 C5 . A4 C5', 'D5 . B4 D5 G5 . R .',
+  'E5 G5 C6 . G5 E5 C5 .', 'A5 G5 E5 . C5 E5 A5 .', 'F5 . E5 . D5 . C5 .', 'B4 . D5 . C5 . R .',
+  'A5 . A5 G5 F5 . C5 .', 'B5 . B5 A5 G5 . D5 .', 'G5 . E5 . B4 . E5 .', 'C6 . B5 A5 E5 . . .',
+  'F5 A5 C6 A5 F5 A5 C6 .', 'G5 B5 D6 B5 G5 B5 D6 .', 'E6 . D6 C6 G5 . E5 .', 'D5 . G5 . R . R .',
+].map(b => b.split(' '));
+const SONG_BASS = ['C3', 'A2', 'F2', 'G2', 'C3', 'A2', 'F2', 'G2', 'F2', 'G2', 'E2', 'A2', 'F2', 'G2', 'C3', 'G2'];
+const BASS_PAT = [0, null, 12, null, 0, 0, 12, 7];   // oom-pah with octave hops
+const music = { gain: null, step: 0, next: 0, timer: null, noise: null };
+function musicLevel() { return save.music ? save.musicVol * 0.3 : 0; }
+function musicApplyVolume() { if (music.gain && ac) music.gain.gain.setTargetAtTime(musicLevel(), ac.currentTime, 0.05); }
+function mNote(type, f, t, dur, vol, slideTo) {
+  const o = ac.createOscillator(), gn = ac.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, t); if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+  gn.gain.setValueAtTime(0.0001, t); gn.gain.linearRampToValueAtTime(vol, t + 0.005);
+  gn.gain.setValueAtTime(vol, t + dur * 0.7); gn.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(gn); gn.connect(music.gain); o.start(t); o.stop(t + dur + 0.02);
+}
+function mNoise(t, dur, vol, hp) {
+  const src = ac.createBufferSource(), f = ac.createBiquadFilter(), gn = ac.createGain();
+  src.buffer = music.noise; f.type = 'highpass'; f.frequency.value = hp;
+  gn.gain.setValueAtTime(vol, t); gn.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  src.connect(f); f.connect(gn); gn.connect(music.gain); src.start(t); src.stop(t + dur + 0.02);
+}
+function ribbit(t) { mNote('sawtooth', 420, t, 0.07, 0.11, 160); mNote('sawtooth', 360, t + 0.1, 0.09, 0.11, 130); }
+function scheduleStep(n, t) {
+  const bar = Math.floor(n / 8) % SONG_LEAD.length, k = n % 8, cell = SONG_LEAD[bar][k];
+  // lead: hold until the next note
+  if (cell === 'R') ribbit(t);
+  else if (cell !== '.') { let len = 1; while (k + len < 8 && SONG_LEAD[bar][k + len] === '.') len++; mNote('square', hz(NOTE(cell)), t, STEP * len * 0.92, 0.075); }
+  // bass
+  const bp = BASS_PAT[k]; if (bp !== null) mNote('triangle', hz(NOTE(SONG_BASS[bar]) + bp), t, STEP * 0.9, 0.22);
+  // drums: kick on 1 and 3, snare on 2 and 4, soft hats on the off-beats
+  if (k === 0 || k === 4) mNote('sine', 140, t, 0.12, 0.35, 45);
+  if (k === 2 || k === 6) mNoise(t, 0.09, 0.16, 1800);
+  if (k % 2 === 1) mNoise(t, 0.03, 0.05, 7000);
+}
+function musicTick() {
+  if (!ac || !music.gain) return;
+  while (music.next < ac.currentTime + 0.15) { scheduleStep(music.step, music.next); music.step++; music.next += STEP; }
+}
+function musicStart() {
+  if (!ac || music.timer) return;
+  music.gain = ac.createGain(); music.gain.gain.value = musicLevel(); music.gain.connect(ac.destination);
+  const len = ac.sampleRate * 0.5; music.noise = ac.createBuffer(1, len, ac.sampleRate);
+  const d = music.noise.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  music.step = 0; music.next = ac.currentTime + 0.1;
+  music.timer = setInterval(musicTick, 25);
+}
 
 // ============================================================ game constants
 const GRAV = 1000, JUMP_V = 420, SPRING_V = 640, SUPER_V = 840, MOVE_SPEED = 150, PLAT_H = 6;
@@ -1209,20 +1268,30 @@ function drawToggle(x, y, on) {
 }
 function drawSettings() {
   ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(0, 0, W, H);
-  const pw = Math.min(W - 36, 170), ph = 112, px = Math.round((W - pw) / 2), py = Math.round(H / 2 - ph / 2 - 20);
+  const pw = Math.min(W - 36, 170), ph = 160, px = Math.round((W - pw) / 2), py = Math.round(H / 2 - ph / 2 - 20);
   panel(px, py, pw, ph);
   text('SETTINGS', px + 10, py + 9, { size: 8, color: INK, shadow: false });
   iconButton(px + pw - 24, py + 5, ICON.close, () => { settingsOpen = false; });
-  const rows = [['speaker', 'sound', 'SOUND'], ['vibrate', 'vib', 'BUZZ'], ['tilt', 'tilt', 'TILT']];
+  const rows = [['note', 'music', 'MUSIC'], ['speaker', 'sound', 'SOUND'], ['vibrate', 'vib', 'BUZZ'], ['tilt', 'tilt', 'TILT']];
   rows.forEach((r, i) => {
-    const y = py + 36 + i * 24;
+    const y = py + 36 + (i === 0 ? 0 : i * 24 + 22);
     ctx.drawImage(ICON[r[0]], px + 12, y);
     text(r[2], px + 28, y + 1, { size: 8, color: INK, shadow: false });
     const b = addBtn(px + pw - 40, y - 4, 32, 18, () => {
       if (r[1] === 'tilt' && !save.tilt) enableTilt(); else { save[r[1]] = !save[r[1]]; persist(); }
+      if (r[1] === 'music') musicApplyVolume();
     });
     drawToggle(b.x + 3, b.y + 3, save[r[1]]);
   });
+  // music volume slider (tap or drag)
+  const sy0 = py + 36 + 22, sx0 = px + 28, sw = pw - 28 - 14;
+  text('VOL', px + 12 - 1, sy0 - 1, { size: 8, color: INK, shadow: false, wide: true });
+  const tx0 = sx0 + 14, tw = sw - 14, kx = Math.round(tx0 + save.musicVol * tw);
+  ctx.fillStyle = INK; ctx.fillRect(tx0, sy0 + 2, tw, 4);
+  ctx.fillStyle = save.music ? INK : GRAY; ctx.fillRect(tx0, sy0 + 1, kx - tx0, 6);
+  ctx.fillStyle = INK; ctx.fillRect(kx - 3, sy0 - 2, 7, 12); ctx.fillStyle = LIME; ctx.fillRect(kx - 2, sy0 - 1, 5, 10);
+  const sb = addBtn(tx0 - 6, sy0 - 6, tw + 12, 20, (x) => { save.musicVol = clamp((x - tx0) / tw, 0, 1); if (save.musicVol > 0 && !save.music) save.music = true; musicApplyVolume(); persist(); });
+  sb.drag = true;
 }
 function enableTilt() {
   const done = () => { save.tilt = true; persist(); };
@@ -1237,24 +1306,26 @@ function startGame() {
   game.frog.vy = JUMP_V; game.frog.landT = 0; sfx.jump(); vibrate(8);
 }
 function toLogical(e) { const r = view.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * W, (e.clientY - r.top) / r.height * H]; }
-let activePointer = null;
+let activePointer = null, dragBtn = null;
 view.addEventListener('pointerdown', e => {
   e.preventDefault();
-  audioInit(); if (ac && ac.state === 'suspended') ac.resume();
+  audioInit(); if (ac && ac.state === 'suspended') ac.resume(); musicStart();
   const [x, y] = toLogical(e);
-  for (const b of buttons) if (hit(b, x, y)) { sfx.ui(); b.fn(); return; }
+  for (const b of buttons) if (hit(b, x, y)) { sfx.ui(); b.fn(x, y); if (b.drag) dragBtn = { id: e.pointerId, fn: b.fn }; return; }
   if (settingsOpen || scene === 'shop' || scene === 'dead') return;
   if (scene === 'title') startGame();
   activePointer = e.pointerId; input.touchX = x;
 }, { passive: false });
 view.addEventListener('pointermove', e => {
+  if (dragBtn && dragBtn.id === e.pointerId) { const [x, y] = toLogical(e); dragBtn.fn(x, y); return; }
   if (activePointer !== e.pointerId) return;
   input.touchX = toLogical(e)[0];
 });
-const endPointer = e => { if (activePointer === e.pointerId) { activePointer = null; input.touchX = null; } };
+const endPointer = e => { if (dragBtn && dragBtn.id === e.pointerId) { dragBtn = null; persist(); } if (activePointer === e.pointerId) { activePointer = null; input.touchX = null; } };
 view.addEventListener('pointerup', endPointer); view.addEventListener('pointercancel', endPointer);
 addEventListener('keydown', e => {
   input.keys[e.code] = true;
+  audioInit(); if (ac && ac.state === 'suspended') ac.resume(); musicStart();
   if (e.code === 'Space' || e.code === 'Enter') {
     if (settingsOpen) settingsOpen = false;
     else if (scene === 'title') startGame();
@@ -1319,7 +1390,10 @@ function frame(now) {
   if (settingsOpen && scene !== 'shop') { drawSettings(); flush(); }
 }
 addEventListener('resize', () => { if (scene === 'title' || scene === 'shop') { newGame(); } });
-document.addEventListener('visibilitychange', () => { if (document.hidden && scene === 'play') { input.touchX = null; } });
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && scene === 'play') { input.touchX = null; }
+  if (ac) { if (document.hidden) ac.suspend(); else ac.resume(); } // no music in the background
+});
 
 // ---- boot
 newGame();
