@@ -1252,61 +1252,124 @@ function trimmed(spr) {
   if (x1 >= 0) { out = document.createElement('canvas'); out.width = x1 - x0 + 1; out.height = y1 - y0 + 1; out.getContext('2d').drawImage(spr, -x0, -y0); }
   trimCache.set(spr, out); return out;
 }
+// ---- shop, laid out like a character-select screen: name ribbon, framed portrait with arrows, action button,
+// category tabs and a grid of double-framed item cards (lock badge when not owned, check badge when equipped)
+let shopSel = null;                                         // id of the item previewed in the current tab
+const portrait = document.createElement('canvas'); portrait.width = 64; portrait.height = 60;
+const pctx = portrait.getContext('2d'); pctx.imageSmoothingEnabled = false;
+ICON.lock = makeSprite(['.kkk.', 'k...k', 'k...k', 'kkkkk', 'kyyyk', 'kyoyk', 'kyyyk', 'kkkkk'], P);
+ICON.badge = makeSprite(['kkkkkkk', 'kkkkkck', 'kkkkcck', 'kckcckk', 'kccckkk', 'kkckkkk', 'kkkkkkk'], { k: INK, c: LIME }); // equipped tick
+const shopList = () => ITEMS[CATS[shopTab]];
+const isOwned = (cat, it) => save.owned.includes(cat + ':' + it.id);
+function selItem() { const l = shopList(); return l.find(i => i.id === shopSel) || l.find(i => i.id === save.eq[CATS[shopTab]]) || l[0]; }
+function shopSelect(cat, it) {                              // preview; owned items are equipped right away
+  shopSel = it.id;
+  if (isOwned(cat, it)) { save.eq[cat] = it.id; persist(); }
+  sfx.ui();
+}
+function shopBuy(cat, it) {
+  if (isOwned(cat, it)) { save.eq[cat] = it.id; persist(); sfx.ui(); return; }
+  if (FREE_SHOP || save.coins >= it.price) {
+    if (!FREE_SHOP) save.coins -= it.price;
+    save.owned.push(cat + ':' + it.id); save.eq[cat] = it.id; persist(); sfx.buy(); vibrate(20);
+    shopMsg = { s: 'GOT IT!', t: 1.2 };
+  } else { sfx.nope(); vibrate(30); shopMsg = { s: 'NEED ' + (it.price - save.coins), t: 1.2 }; }
+}
+function shopTap(cat, it) { shopSelect(cat, it); if (!isOwned(cat, it)) shopBuy(cat, it); }
+// swallow-tail name ribbon with little diamonds, like a nameplate
+function ribbon(cx, y, label) {
+  const tw = textW(label, 8, 1, true), w = Math.round(tw + 26), x = Math.round(cx - w / 2), h = 13;
+  ctx.fillStyle = INK; ctx.fillRect(x + 2, y + 2, w, h);
+  for (let i = 0; i < 4; i++) { ctx.fillRect(x - 6 + i, y + 2 + i, 6 - i, h - 4 - 2 * i); ctx.fillRect(x + w, y + 2 + i, 6 - i, h - 4 - 2 * i); }
+  ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = LIME; ctx.fillRect(x + 1, y + 1, w - 2, 1); ctx.fillRect(x + 1, y + h - 2, w - 2, 1);
+  for (const dx of [5, w - 6]) { ctx.fillRect(x + dx, y + 5, 1, 3); ctx.fillRect(x + dx - 1, y + 6, 3, 1); }
+  text(label, cx, y + (h - textH(8, true)) / 2, { size: 8, track: 1, align: 'center', color: LIME, shadow: false, wide: true });
+}
+// pixel arrow button (pointing left or right): black triangle with a lime inner triangle and a hard shadow
+function arrowBtn(x, y, dir, fn) {
+  const b = addBtn(x - 3, y - 3, 16, 22, fn), w = 10, h = 16;
+  const tri = (ox, oy, tw, th, c) => {
+    ctx.fillStyle = c;
+    const mid = (th - 1) / 2;
+    for (let r = 0; r < th; r++) {
+      const len = Math.max(1, Math.round((mid - Math.abs(r - mid) + 1) / (mid + 1) * tw));
+      ctx.fillRect(dir < 0 ? ox + tw - len : ox, oy + r, len, 1);
+    }
+  };
+  tri(x + 2, y + 2, w, h, INK); tri(x, y, w, h, INK);
+  tri(dir < 0 ? x + 2 : x + 1, y + 2, w - 3, h - 4, '#ffffff');
+  return b;
+}
+// double-framed card: black, lime, black, then a light inner panel
+function card(x, y, w, h, sel) {
+  if (!sel) { ctx.fillStyle = INK; ctx.fillRect(x + 2, y + 2, w, h); }
+  ctx.fillStyle = INK; ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = sel ? '#ffffff' : LIME; ctx.fillRect(x + 1, y + 1, w - 2, h - 2);
+  ctx.fillStyle = INK; ctx.fillRect(x + 2, y + 2, w - 4, h - 4);
+  ctx.fillStyle = sel ? '#ffffff' : '#eef9c8'; ctx.fillRect(x + 3, y + 3, w - 6, h - 6);
+}
 function drawShop() {
   dotBackground();
-  drawCoinCounter(6, SAFE_TOP + 8, FREE_SHOP ? 'FREE' : save.coins, INK, false);
-  iconButton(W - 23, SAFE_TOP + 5, ICON.close, () => { scene = game.started ? 'dead' : 'title'; });
-  // preview panel with the frog wearing the equipped items
-  const pvW = 72, pvH = 50, pvX = Math.round(W / 2 - pvW / 2), pvY = SAFE_TOP + 28;
-  panel(pvX, pvY, pvW, pvH, INK);
-  drawFrogAt(W / 2, pvY + pvH - 7 + Math.round(Math.sin(game.time * 3)), 'sit', 0, game.frog.blink > 0, null);
-  // category tabs (the selected one is pressed in)
-  const tabW = 30, tabY = pvY + pvH + 10, tabs = [frogFrames(save.eq.skin).sit, ITEMS.hat[2].spr, ICON.glassesTab, ICON.heart];
+  const top = SAFE_TOP, cat = CATS[shopTab], list = shopList(), sel = selItem();
+  drawCoinCounter(6, top + 8, FREE_SHOP ? 'FREE' : save.coins, INK, false);
+  iconButton(W - 25, top + 5, ICON.close, () => { scene = game.started ? 'dead' : 'title'; });
+  // portrait: the frog wearing everything equipped, with the previewed item swapped in, drawn 1.5x
+  const fw = 104, fh = 94, fx = Math.round(W / 2 - fw / 2), fy = top + 36;
+  ctx.fillStyle = INK; ctx.fillRect(fx + 3, fy + 3, fw, fh);
+  ctx.fillRect(fx, fy, fw, fh);
+  ctx.fillStyle = LIME; ctx.fillRect(fx + 2, fy + 2, fw - 4, fh - 4);
+  ctx.fillStyle = INK; ctx.fillRect(fx + 4, fy + 4, fw - 8, fh - 8);
+  ctx.fillStyle = '#1b2410'; for (let yy = fy + 6; yy < fy + fh - 6; yy += 4) for (let xx = fx + 6 + ((yy >> 2) % 2) * 2; xx < fx + fw - 6; xx += 4) ctx.fillRect(xx, yy, 1, 1);
+  ctx.fillStyle = '#2c3a16'; ctx.fillRect(fx + 14, fy + fh - 14, fw - 28, 2);                       // little stage
+  const eqv = Object.assign({}, save.eq, { [cat]: sel.id });
+  ctx = pctx; pctx.clearRect(0, 0, portrait.width, portrait.height);
+  drawFrogAt(32, 58, 'sit', 0, game.frog.blink > 0, eqv);
+  ctx = mainCtx;
+  hiresSprite(portrait, W / 2, fy + fh - 14 - 43, 200, 200, 1.5);
+  // name ribbon over the top edge of the frame (shows "GOT IT!" for a moment after buying)
+  let label = sel.name;
+  if (shopMsg && shopMsg.t > 0) { shopMsg.t -= 1 / 60; label = shopMsg.s; }
+  ribbon(W / 2, fy - 7, label);
+  // arrows step through the current category
+  const step = d => { const i = list.indexOf(sel); shopSelect(cat, list[(i + d + list.length) % list.length]); };
+  arrowBtn(fx - 16, fy + fh / 2 - 8, -1, () => step(-1));
+  arrowBtn(fx + fw + 6, fy + fh / 2 - 8, 1, () => step(1));
+  // action button: EQUIPPED / BUY + price
+  const owned = isOwned(cat, sel), equipped = save.eq[cat] === sel.id;
+  const ab = addBtn(fx + 6, fy + fh + 7, fw - 12, 18, () => shopBuy(cat, sel));
+  if (owned) button(ab, equipped ? 'EQUIPPED' : 'EQUIP', { size: 8, fill: LIME, pressed: equipped });
+  else {
+    button(ab, null, { fill: INK });
+    const ly = ab.y + (ab.h - textH(8, true)) / 2;
+    if (FREE_SHOP) text('GET FREE', W / 2, ly, { size: 8, track: 1, align: 'center', color: LIME, shadow: false, wide: true });
+    else {
+      const w1 = textW('BUY', 8, 1, true), w2 = textW('' + sel.price, 8, 1, true), lw = w1 + 4 + 10 + w2, lx = W / 2 - lw / 2;
+      text('BUY', lx, ly, { size: 8, track: 1, color: LIME, shadow: false, wide: true });
+      uiCoin(lx + w1 + 4, ly - 0.5, 9);
+      text('' + sel.price, lx + w1 + 14, ly, { size: 8, track: 1, color: LIME, shadow: false, wide: true });
+    }
+  }
+  // category tabs
+  const tabW = 30, tabY = ab.y + ab.h + 10, tabs = [frogFrames(save.eq.skin).sit, ITEMS.hat[2].spr, ICON.glassesTab, ICON.heart];
   for (let i = 0; i < tabs.length; i++) {
     const tx = Math.round(W / 2 - (tabs.length * tabW + (tabs.length - 1) * 6) / 2 + i * (tabW + 6));
-    const b = addBtn(tx, tabY, tabW, 20, () => { shopTab = i; });
+    const b = addBtn(tx, tabY, tabW, 18, () => { shopTab = i; shopSel = null; });
     const p = button(b, null, { fill: LIME, pressed: shopTab === i });
-    hiresSprite(trimmed(tabs[i]), tx + p + tabW / 2, tabY + p + 10, tabW - 10, 11, 9);
+    hiresSprite(trimmed(tabs[i]), tx + p + tabW / 2, tabY + p + 9, tabW - 10, 10, 9);
   }
-  // item grid
-  const cat = CATS[shopTab], list = ITEMS[cat];
-  const cols = 3, gap = 7, cw = Math.floor((W - 16 - gap * (cols - 1)) / cols), ch = 42, gx0 = Math.round((W - (cw * cols + gap * (cols - 1))) / 2), gy0 = tabY + 32;
+  // item cards
+  const cols = 4, gap = 5, cw = Math.floor((W - 14 - gap * (cols - 1)) / cols), ch = 36, gx0 = Math.round((W - (cw * cols + gap * (cols - 1))) / 2), gy0 = tabY + 26;
   list.forEach((it, idx) => {
-    const col = idx % cols, row = Math.floor(idx / cols);
-    const bx0 = gx0 + col * (cw + gap), by0 = gy0 + row * (ch + gap);
-    const key = cat + ':' + it.id, owned = save.owned.includes(key), equipped = save.eq[cat] === it.id;
-    const b = addBtn(bx0, by0, cw, ch, () => shopTap(cat, it));
-    const p = button(b, null, { fill: LIME, pressed: equipped }), x = bx0 + p, y = by0 + p;
-    // the item is centred in the card (in the space above the price / check mark) and drawn larger
-    // every item is trimmed and fitted to the same box, centred in the card (above the price / check mark if shown)
-    const footer = !owned || equipped ? 12 : 0, iconCy = y + 1 + (ch - 2 - footer) / 2;
-    if (it.spr) {
-      ctx.globalAlpha = owned ? 1 : 0.7;
-      hiresSprite(trimmed(it.spr), x + cw / 2, iconCy, ICON_BOX_W, ICON_BOX_H, 9);
-      ctx.globalAlpha = 1;
-    } else { ctx.fillStyle = INK; ctx.fillRect(x + Math.round(cw / 2) - 5, Math.round(iconCy) - 1, 10, 2); }
-    if (owned) { if (equipped) ctx.drawImage(ICON.check, Math.round(x + cw / 2 - 4), y + ch - 12); }
-    else {
-      const can = FREE_SHOP || save.coins >= it.price, pw = 10 + textW('' + it.price, 8);
-      const px = Math.round(x + cw / 2 - pw / 2);
-      ctx.globalAlpha = can ? 1 : 0.5; uiCoin(px, y + ch - 12); ctx.globalAlpha = 1;
-      text('' + it.price, px + 10, y + ch - 12, { size: 8, color: can ? INK : GRAY, shadow: false });
-    }
+    const isSel = it === sel, x = gx0 + (idx % cols) * (cw + gap), y = gy0 + Math.floor(idx / cols) * (ch + gap) - (isSel ? 1 : 0);
+    const own = isOwned(cat, it), eqd = save.eq[cat] === it.id;
+    addBtn(x, y, cw, ch, () => shopSelect(cat, it));
+    card(x, y, cw, ch, isSel);
+    if (it.spr) { ctx.globalAlpha = own ? 1 : 0.55; hiresSprite(trimmed(it.spr), x + cw / 2, y + ch / 2, cw - 12, ch - 14, 9); ctx.globalAlpha = 1; }
+    else { ctx.fillStyle = INK; ctx.fillRect(x + Math.round(cw / 2) - 5, y + Math.round(ch / 2) - 1, 10, 2); }
+    if (eqd) ctx.drawImage(ICON.badge, x + cw - 9, y + 2);
+    if (!own) ctx.drawImage(ICON.lock, x + cw - 9, y + ch - 12);
   });
-  const nameIt = list.find(i => i.id === save.eq[cat]);
-  const footY = gy0 + Math.ceil(list.length / cols) * (ch + gap) + 6;
-  if (shopMsg && shopMsg.t > 0) { shopMsg.t -= 1 / 60; text(shopMsg.s, W / 2, footY, { size: 16, align: 'center', color: shopMsg.c, shadow: false }); }
-  else if (nameIt) text(nameIt.name, W / 2, footY, { size: 16, align: 'center', color: INK, shadow: false });
-}
-function shopTap(cat, it) {
-  const key = cat + ':' + it.id;
-  if (save.owned.includes(key)) {
-    save.eq[cat] = (cat !== 'skin' && save.eq[cat] === it.id && it.id !== 'none') ? 'none' : it.id; persist(); sfx.ui();
-  } else if (FREE_SHOP || save.coins >= it.price) {
-    if (!FREE_SHOP) save.coins -= it.price;
-    save.owned.push(key); save.eq[cat] = it.id; persist(); sfx.buy(); vibrate(20);
-    shopMsg = { s: 'GOT ' + it.name + '!', t: 1.5, c: INK };
-  } else { sfx.nope(); vibrate(30); shopMsg = { s: 'NEED ' + (it.price - save.coins) + ' MORE', t: 1.2, c: INK }; }
 }
 // on: black track with a lime knob on the right; off: lime track with a black knob on the left
 function drawToggle(x, y, on) {
