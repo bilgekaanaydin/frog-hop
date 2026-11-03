@@ -41,7 +41,8 @@ Arayüz yalnızca iki renk kullanır: lime `#d0f053` ve siyah `#000000`. Başlı
 - **Dil gücü (TONGUE):** Yolda çıkan pembe iksir şişesini alınca 10 saniye boyunca kurbağanın etrafında pembe bir hale belirir ve menzile giren sinekler dille yakalanıp yenir. Her sinek +2 coin ve EXP.
 - **Sinekler:** Dil gücü yokken çarpınca kurbağa sersemler ve aşağı itilir (yakalayacak platform yoksa düşer).
 - **Coin:** Platform üstlerinde ve havada kavis şeklinde. Mağazada harcanır.
-- **Gece/gündüz:** Her 320 m'de bir tam döngü. Güneş batar, yıldızlar çıkar, ay doğar; bulutlar da renk değiştirir.
+- **Gece/gündüz:** Her 320 m'de bir tam döngü. Güneş sağ üstte batıp sönerken ay aynı yerde doğar; bulutlar da renk değiştirir.
+- **Uzay:** 1800 skordan sonra gökyüzü kararır, 2000'de tamamen uzaydasın: renkli parıldayan yıldızlar, kayan pixel gezegenler (halkalı, gaz devi, dünya benzeri, Mars, Neptün...) ve kuyruklu yıldızlar.
 - **Mağaza:** Şapka (7), gözlük (4), aksesuar (5). Satın alınan eşya üzerine tekrar dokununca çıkarılır. Test sürümünde `FREE_SHOP = true` olduğu için her şey bedava; yayına alırken `src/game.js` içinde `false` yap.
 - **Ayarlar:** Ses, titreşim, eğimle kontrol.
 - **Kayıt:** Coin, rekor, sahip olunan eşyalar ve ayarlar `localStorage`'da tutulur.

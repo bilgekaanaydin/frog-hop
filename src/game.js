@@ -317,6 +317,7 @@ function newGame() {
   game.plats = []; game.coins = []; game.flies = []; game.items = []; game.parts = []; game.floaters = [];
   game.genY = 20; game.lastType = 'normal'; game.nextItemY = rnd(220, 320); game.shake = 0; game.time = 0; game.deadT = 0;
   game.clouds = [{ par: 0.3, genY: -200, list: [] }, { par: 0.6, genY: -200, list: [] }];
+  game.space = { genY: -1e9, list: [], comets: [], cometT: 1.5, order: null };
   game.started = false; game.newBest = false; game.introT = 0;
   genUpTo(game.camY + H + 120);
   genClouds();
@@ -528,6 +529,7 @@ function step(dt) {
   if (target > game.camY) game.camY = target;
   genUpTo(game.camY + H + 120);
   genClouds();
+  updateSpace(dt);
   // cleanup
   const cut = game.camY - 80;
   game.plats = game.plats.filter(p => p.y > cut);
@@ -580,32 +582,147 @@ function cloudBlend(ph) {
 }
 const STARS = []; for (let i = 0; i < 70; i++) STARS.push({ x: Math.random(), y: Math.random(), tw: rnd(0, 6), big: Math.random() < 0.2 });
 
+// ------------------------------------------------------------ outer space (score 1800 -> 2000)
+const SPACE_FROM = 1800, SPACE_TO = 2000;
+const spaceAmt = () => clamp((game.camY / 10 - SPACE_FROM) / (SPACE_TO - SPACE_FROM), 0, 1);
+const hash2 = (x, y) => { const v = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453; return v - Math.floor(v); };
+// pixel planet: banded / spotted sphere lit from the top-left, dark 1px rim, optional flat ring
+function makePlanet(r, opt) {
+  const ring = opt.ring ? Math.round(r * 1.9) : 0, pad = 1;
+  const w = 2 * Math.max(r, ring) + 1 + pad * 2, h = 2 * r + 1 + pad * 2;
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const x = c.getContext('2d'), cx = (w - 1) / 2, cy = (h - 1) / 2;
+  const inside = (px, py) => (px - cx) ** 2 + (py - cy) ** 2 <= (r + 0.35) ** 2;
+  const ringPx = (front) => {
+    if (!opt.ring) return;
+    for (let py = 0; py < h; py++) for (let px = 0; px < w; px++) {
+      const e = ((px - cx) / ring) ** 2 + ((py - cy) / (r * 0.42)) ** 2;
+      if (e > 0.78 && e < 1.05 && ((py >= cy) === front) && !(front === false && inside(px, py))) {
+        x.fillStyle = e < 0.9 ? opt.ring[0] : opt.ring[1]; x.fillRect(px, py, 1, 1);
+      }
+    }
+  };
+  ringPx(false);
+  for (let py = 0; py < h; py++) for (let px = 0; px < w; px++) {
+    if (!inside(px, py)) continue;
+    const nx = (px - cx) / r, ny = (py - cy) / r;
+    const edge = !inside(px + 1, py) || !inside(px - 1, py) || !inside(px, py + 1) || !inside(px, py - 1);
+    let col;
+    if (opt.land) col = hash2(Math.floor(px / 2) + opt.seed, Math.floor(py / 2)) > 0.62 ? opt.land : opt.bands[0];
+    else col = opt.bands[Math.floor((ny + 1) / 2 * opt.bands.length * 1.5 + hash2(py, opt.seed) * 0.6) % opt.bands.length];
+    if (opt.spot && Math.abs(nx - opt.spot[0]) < 0.28 && Math.abs(ny - opt.spot[1]) < 0.16) col = opt.spot[2];
+    const light = nx * 0.55 + ny * 0.55;
+    if (light > 0.45) col = mixHex(col, '#0b0820', 0.45); else if (light > 0.15) col = mixHex(col, '#0b0820', 0.2);
+    else if (light < -0.6) col = mixHex(col, '#ffffff', 0.35);
+    if (edge) col = mixHex(col, '#0b0820', 0.55);
+    x.fillStyle = col; x.fillRect(px, py, 1, 1);
+  }
+  ringPx(true);
+  return c;
+}
+const PLANETS = [
+  makePlanet(9, { bands: ['#e9c98f', '#d6a865', '#f2dcae', '#c99556'], ring: ['#f0d9a8', '#b98f55'], seed: 1 }),                // ringed (Saturn)
+  makePlanet(13, { bands: ['#ead6b6', '#c79a6b', '#f3e4cc', '#b9825a', '#dcbc94'], spot: [0.25, 0.35, '#c4563a'], seed: 2 }),   // gas giant (Jupiter)
+  makePlanet(7, { bands: ['#2f7fe0'], land: '#46c25a', seed: 3 }),                                                               // earth-like
+  makePlanet(6, { bands: ['#e2643c', '#c94a2c', '#e87a4c'], spot: [-0.2, 0.1, '#7a2a1a'], seed: 4 }),                           // Mars
+  makePlanet(8, { bands: ['#3d6fe0', '#2f58c4', '#4a86f2'], ring: ['#bcd2ff', '#6f8fd8'], seed: 5 }),                            // Neptune with a thin ring
+  makePlanet(4, { bands: ['#9a98a6', '#7d7b8a', '#b4b2c0'], seed: 6 }),                                                          // little grey moon
+  makePlanet(10, { bands: ['#a64dd8', '#7d2fb0', '#c271ea'], seed: 7 }),                                                         // violet planet
+  makePlanet(5, { bands: ['#2fc4b2', '#1f9c8e', '#5ee0cf'], seed: 8 }),                                                          // teal moon
+];
+const SPACE_STAR_COLS = ['#ffffff', '#8fd8ff', '#b9a6ff', '#c77dff', '#ff8a5c', '#5ac8ff'];
+const SPACE_STARS = []; for (let i = 0; i < 110; i++) { const r = Math.random(); SPACE_STARS.push({ x: Math.random(), y: Math.random(), tw: rnd(0, 6), sp: rnd(1.5, 4), kind: r < 0.6 ? 0 : r < 0.85 ? 1 : r < 0.96 ? 2 : 3, c: pick(SPACE_STAR_COLS) }); }
+function starShape(x, y, kind, col) {
+  ctx.fillStyle = col; ctx.fillRect(x, y, 1, 1);
+  if (kind >= 1) { ctx.fillRect(x - 1, y, 3, 1); ctx.fillRect(x, y - 1, 1, 3); }
+  if (kind >= 2) { ctx.globalAlpha *= 0.6; ctx.fillRect(x - 2, y, 1, 1); ctx.fillRect(x + 2, y, 1, 1); ctx.fillRect(x, y - 2, 1, 1); ctx.fillRect(x, y + 2, 1, 1); }
+  if (kind >= 3) { ctx.fillRect(x - 3, y, 1, 1); ctx.fillRect(x + 3, y, 1, 1); ctx.fillRect(x, y - 3, 1, 1); ctx.fillRect(x, y + 3, 1, 1); ctx.fillStyle = '#ffffff'; ctx.fillRect(x, y, 1, 1); }
+}
+const PLANET_PAR = 0.22;
+function genSpace() {
+  const sp = game.space, top = game.camY * PLANET_PAR;
+  if (spaceAmt() <= 0) return;
+  if (sp.genY < top) sp.genY = top + H * 0.55;
+  while (sp.genY < top + H + 60) {
+    sp.genY += rnd(95, 160);
+    sp.order = sp.order && sp.order.length ? sp.order : PLANETS.map((_, i) => i).sort(() => Math.random() - 0.5);
+    sp.list.push({ i: sp.order.pop(), x: rnd(-6, W - 20), y: sp.genY });
+  }
+  sp.list = sp.list.filter(p => H - (p.y - top) < H + 60);
+}
+function updateSpace(dt) {
+  const amt = spaceAmt();
+  genSpace();
+  const sp = game.space;
+  sp.cometT -= dt;
+  if (amt > 0.6 && sp.cometT <= 0) {
+    sp.cometT = rnd(2.2, 4.5);
+    sp.comets.push({ x: rnd(W * 0.35, W + 30), y: rnd(-20, H * 0.25), vx: -rnd(70, 110), vy: rnd(55, 90), life: 4, hue: pick([['#ffffff', '#8fd8ff', '#5a6cff'], ['#ffffff', '#c77dff', '#6a3cff'], ['#fff3c0', '#ff9a5c', '#c4403a']]) });
+  }
+  for (const c of sp.comets) { c.x += c.vx * dt; c.y += c.vy * dt; c.life -= dt; }
+  sp.comets = sp.comets.filter(c => c.life > 0 && c.x > -60 && c.y < H + 60);
+}
+function drawSpace(amt) {
+  // sparkly stars
+  const tile = H * 2;
+  for (const s of SPACE_STARS) {
+    const x = Math.round(s.x * W), y = Math.round((((s.y * tile - game.camY * 0.1) % tile) + tile) % tile);
+    if (y > H + 3) continue;
+    ctx.globalAlpha = amt * (0.55 + 0.45 * Math.sin(game.time * s.sp + s.tw));
+    starShape(x, y, s.kind, s.c);
+  }
+  // planets drifting by
+  const top = game.camY * PLANET_PAR;
+  for (const p of game.space.list) {
+    const spr = PLANETS[p.i], y = Math.round(H - (p.y - top));
+    if (y < -spr.height || y > H) continue;
+    ctx.globalAlpha = amt; ctx.drawImage(spr, Math.round(p.x), y);
+  }
+  // comets: bright head, tail fading along the path
+  for (const c of game.space.comets) {
+    const len = 30, dx = -c.vx / Math.hypot(c.vx, c.vy), dy = -c.vy / Math.hypot(c.vx, c.vy);
+    for (let i = len; i >= 0; i--) {
+      const t = i / len, px = Math.round(c.x + dx * i * 1.3), py = Math.round(c.y + dy * i * 1.3);
+      ctx.globalAlpha = amt * Math.pow(1 - t, 0.8) * clamp(c.life, 0, 1);
+      ctx.fillStyle = t < 0.12 ? c.hue[0] : t < 0.45 ? c.hue[1] : c.hue[2];
+      const sz = t < 0.08 ? 3 : t < 0.5 ? 2 : 1; ctx.fillRect(px - (sz >> 1), py - (sz >> 1), sz, sz);
+      if (t > 0.15 && i % 3 === 0) { ctx.globalAlpha *= 0.6; ctx.fillRect(px + (i % 2 ? 2 : -2), py + (i % 2 ? -1 : 1), 1, 1); } // sparks
+    }
+    ctx.globalAlpha = amt * clamp(c.life, 0, 1); ctx.fillStyle = '#ffffff'; ctx.fillRect(Math.round(c.x) - 1, Math.round(c.y), 3, 1); ctx.fillRect(Math.round(c.x), Math.round(c.y) - 1, 1, 3);
+  }
+  ctx.globalAlpha = 1;
+}
+
 function drawSky() {
-  const ph = dayPhase(), sk = skyAt(ph), night = nightAmount(ph);
+  const ph = dayPhase(), sk = skyAt(ph), night = nightAmount(ph), space = spaceAmt();
+  const top = mixHex(sk.top, '#06061a', space), bot = mixHex(sk.bot, '#241048', space);
   const band = 6;
-  for (let y = 0; y < H; y += band) { ctx.fillStyle = mixHex(sk.top, sk.bot, y / H); ctx.fillRect(0, y, W, band); }
-  if (night > 0.02) {
+  for (let y = 0; y < H; y += band) { ctx.fillStyle = mixHex(top, bot, y / H); ctx.fillRect(0, y, W, band); }
+  const starA = Math.max(night, space);
+  if (starA > 0.02) {
     const tile = H * 2;
     for (const s of STARS) {
       const x = Math.round(s.x * W), y = Math.round((((s.y * tile - game.camY * 0.15) % tile) + tile) % tile);
       if (y > H) continue;
       const tw = 0.6 + 0.4 * Math.sin(game.time * 3 + s.tw);
-      ctx.globalAlpha = night * tw; ctx.fillStyle = '#ffffff'; ctx.fillRect(x, y, 1, 1);
+      ctx.globalAlpha = starA * tw; ctx.fillStyle = '#ffffff'; ctx.fillRect(x, y, 1, 1);
       if (s.big) { ctx.fillRect(x - 1, y, 1, 1); ctx.fillRect(x + 1, y, 1, 1); ctx.fillRect(x, y - 1, 1, 1); ctx.fillRect(x, y + 1, 1, 1); }
     }
     ctx.globalAlpha = 1;
   }
-  // sun & moon
-  // the sun sets (slides down behind the horizon) while the moon rises
-  const bodyY = 26 + Math.round(((game.camY * 0.05) % 20 + 20) % 20);
-  const sunY = bodyY + Math.round(night * (H * 0.9)), moonY = bodyY + Math.round((1 - night) * (H * 0.9));
-  if (night < 1) ctx.drawImage(ICON.sun, W - 44, sunY);
-  if (night > 0) ctx.drawImage(ICON.moon, W - 44, moonY);
+  // sun & moon share a fixed spot in the upper right: at dusk the sun sinks a little and fades out while the
+  // moon rises into the same spot and fades in (and the reverse at dawn); both fade away in space
+  const baseY = SAFE_TOP + 58, sx = W - 40, sink = 18;
+  if (night < 1) { ctx.globalAlpha = (1 - night) * (1 - space); ctx.drawImage(ICON.sun, sx, baseY + Math.round(night * sink)); }
+  if (night > 0) { ctx.globalAlpha = night * (1 - space); ctx.drawImage(ICON.moon, sx, baseY + Math.round((1 - night) * sink)); }
+  ctx.globalAlpha = 1;
+  if (space > 0) drawSpace(space);
 }
 function drawClouds() {
-  const [a, b, t] = cloudBlend(dayPhase());
+  const [a, b, t] = cloudBlend(dayPhase()), fade = 1 - spaceAmt();
+  if (fade <= 0) return;
   for (const L of game.clouds) {
-    const alpha = L.par < 0.5 ? 0.7 : 1;
+    const alpha = (L.par < 0.5 ? 0.7 : 1) * fade;
     for (const c of L.list) {
       const y = Math.round(H - (c.y - game.camY * L.par));
       const sprA = CLOUDS[a][c.i];
@@ -880,17 +997,18 @@ function drawHUD() {
   // Returns the bottom edge so banners can stack.
   const banner = (t, dur, y0, title, sub) => {
     const k = 1 - t / dur, ease = 1 - Math.pow(1 - clamp(k / 0.18, 0, 1), 3);
-    const border = 2, pad = 2, padX = 4, lineH = Math.round(textH(8));
-    const pw = Math.round(Math.max(textW(title, 8, 1), sub ? textW(sub, 8, 1) : 0) + 2 * (padX + border));
+    // bold expanded face for both lines
+    const border = 2, pad = 3, padX = 5, lineH = Math.round(textH(8, true));
+    const pw = Math.round(Math.max(textW(title, 8, 1, true), sub ? textW(sub, 8, 1, true) : 0) + 2 * (padX + border));
     const titleBlock = pad * 2 + lineH, subBlock = sub ? lineH + 4 : 0;
     const ph = border * 2 + titleBlock + subBlock;
     const px = Math.round(6 - (1 - ease) * (pw + 12)), py = Math.round(y0);
     ctx.globalAlpha = clamp(t * 3, 0, 1);
     logoPanel(px, py, pw, ph, 2);
-    text(title, px + pw / 2, py + border + pad, { size: 8, track: 1, align: 'center', color: INK, shadow: false });
+    text(title, px + pw / 2, py + border + pad, { size: 8, track: 1, align: 'center', color: INK, shadow: false, wide: true });
     if (sub) {
       ctx.fillStyle = INK; ctx.fillRect(px + border, py + border + titleBlock, pw - 2 * border, subBlock);
-      text(sub, px + pw / 2, py + border + titleBlock + 2, { size: 8, track: 1, align: 'center', color: LIME, shadow: false });
+      text(sub, px + pw / 2, py + border + titleBlock + 2, { size: 8, track: 1, align: 'center', color: LIME, shadow: false, wide: true });
     }
     ctx.globalAlpha = 1;
     return y0 + ph + 6;
