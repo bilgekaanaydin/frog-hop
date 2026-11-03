@@ -135,37 +135,112 @@ function resize() {
 }
 addEventListener('resize', resize); resize();
 
-// ============================================================ text
-const FONT = 'PPNeueBit';
-function text(str, x, y, o = {}) {
-  const size = o.size || 16;
-  ctx.font = `bold ${size}px ${FONT}, monospace`;
-  ctx.textAlign = o.align || 'left'; ctx.textBaseline = 'top';
-  x = Math.round(x); y = Math.round(y);
-  if (o.shadow !== false) { ctx.fillStyle = o.shadow || '#1b1a2e'; const d = size >= 24 ? 2 : 1; ctx.fillText(str, x + d, y + d); }
-  ctx.fillStyle = o.color || '#ffffff'; ctx.fillText(str, x, y);
+// ============================================================ text: a hand-made 5x7 bitmap font
+// Browsers always anti-alias canvas text, which looks blurry once the low-res canvas is scaled up.
+// Drawing glyphs as pixel rectangles keeps every letter perfectly crisp at any integer scale.
+const GLYPHS = {
+  A: ['.###.', '#...#', '#...#', '#####', '#...#', '#...#', '#...#'],
+  B: ['####.', '#...#', '#...#', '####.', '#...#', '#...#', '####.'],
+  C: ['.####', '#....', '#....', '#....', '#....', '#....', '.####'],
+  D: ['####.', '#...#', '#...#', '#...#', '#...#', '#...#', '####.'],
+  E: ['#####', '#....', '#....', '####.', '#....', '#....', '#####'],
+  F: ['#####', '#....', '#....', '####.', '#....', '#....', '#....'],
+  G: ['.####', '#....', '#....', '#.###', '#...#', '#...#', '.####'],
+  H: ['#...#', '#...#', '#...#', '#####', '#...#', '#...#', '#...#'],
+  I: ['#####', '..#..', '..#..', '..#..', '..#..', '..#..', '#####'],
+  J: ['....#', '....#', '....#', '....#', '#...#', '#...#', '.###.'],
+  K: ['#...#', '#..#.', '#.#..', '##...', '#.#..', '#..#.', '#...#'],
+  L: ['#....', '#....', '#....', '#....', '#....', '#....', '#####'],
+  M: ['#...#', '##.##', '#.#.#', '#.#.#', '#...#', '#...#', '#...#'],
+  N: ['#...#', '##..#', '#.#.#', '#..##', '#...#', '#...#', '#...#'],
+  O: ['.###.', '#...#', '#...#', '#...#', '#...#', '#...#', '.###.'],
+  P: ['####.', '#...#', '#...#', '####.', '#....', '#....', '#....'],
+  Q: ['.###.', '#...#', '#...#', '#...#', '#.#.#', '#..#.', '.##.#'],
+  R: ['####.', '#...#', '#...#', '####.', '#.#..', '#..#.', '#...#'],
+  S: ['.####', '#....', '#....', '.###.', '....#', '....#', '####.'],
+  T: ['#####', '..#..', '..#..', '..#..', '..#..', '..#..', '..#..'],
+  U: ['#...#', '#...#', '#...#', '#...#', '#...#', '#...#', '.###.'],
+  V: ['#...#', '#...#', '#...#', '#...#', '.#.#.', '.#.#.', '..#..'],
+  W: ['#...#', '#...#', '#...#', '#.#.#', '#.#.#', '##.##', '#...#'],
+  X: ['#...#', '#...#', '.#.#.', '..#..', '.#.#.', '#...#', '#...#'],
+  Y: ['#...#', '#...#', '.#.#.', '..#..', '..#..', '..#..', '..#..'],
+  Z: ['#####', '....#', '...#.', '..#..', '.#...', '#....', '#####'],
+  0: ['.###.', '#...#', '#..##', '#.#.#', '##..#', '#...#', '.###.'],
+  1: ['..#..', '.##..', '..#..', '..#..', '..#..', '..#..', '.###.'],
+  2: ['.###.', '#...#', '....#', '...#.', '..#..', '.#...', '#####'],
+  3: ['#####', '...#.', '..#..', '...#.', '....#', '#...#', '.###.'],
+  4: ['...#.', '..##.', '.#.#.', '#..#.', '#####', '...#.', '...#.'],
+  5: ['#####', '#....', '####.', '....#', '....#', '#...#', '.###.'],
+  6: ['..##.', '.#...', '#....', '####.', '#...#', '#...#', '.###.'],
+  7: ['#####', '....#', '...#.', '..#..', '.#...', '.#...', '.#...'],
+  8: ['.###.', '#...#', '#...#', '.###.', '#...#', '#...#', '.###.'],
+  9: ['.###.', '#...#', '#...#', '.####', '....#', '..#..', '.##..'],
+  '!': ['..#..', '..#..', '..#..', '..#..', '..#..', '.....', '..#..'],
+  '+': ['.....', '..#..', '..#..', '#####', '..#..', '..#..', '.....'],
+  '-': ['.....', '.....', '.....', '#####', '.....', '.....', '.....'],
+  ':': ['.....', '..#..', '..#..', '.....', '..#..', '..#..', '.....'],
+  '.': ['.....', '.....', '.....', '.....', '.....', '.....', '..#..'],
+  ',': ['.....', '.....', '.....', '.....', '.....', '..#..', '.#...'],
+  '?': ['.###.', '#...#', '....#', '...#.', '..#..', '.....', '..#..'],
+  '&': ['.##..', '#..#.', '#..#.', '.##..', '#.#.#', '#..#.', '.##.#'],
+  "'": ['..#..', '..#..', '.....', '.....', '.....', '.....', '.....'],
+  '/': ['....#', '....#', '...#.', '..#..', '.#...', '#....', '#....'],
+  '%': ['##..#', '##..#', '...#.', '..#..', '.#...', '#..##', '#..##'],
+  ' ': ['.....', '.....', '.....', '.....', '.....', '.....', '.....'],
+};
+const glyphCache = {};
+function glyph(ch, color) {
+  const key = color + ch;
+  if (glyphCache[key]) return glyphCache[key];
+  const rows = GLYPHS[ch] || GLYPHS['?'];
+  const c = makeSprite(rows, { '#': color });
+  glyphCache[key] = c; return c;
 }
-function textW(str, size = 16) { ctx.font = `bold ${size}px ${FONT}, monospace`; return ctx.measureText(str).width; }
-
-// pixel panel (cream box with dark border + drop shadow) like the reference UI
-function panel(x, y, w, h, fill = P.e) {
+const INK = '#1a1a1a', PAPER = '#ffffff', ACCENT = '#ff5c5c', ACCENT_DARK = '#d94444', PINK = '#ffd2d2', PINK_DOT = '#f3a9a9', GRAY = '#9a9a9a';
+// size is kept for call-site compatibility: it maps to an integer pixel scale (8 -> 1x, 16 -> 2x, 24 -> 3x, 48 -> 6x)
+const textScale = size => Math.max(1, Math.round((size || 16) / 8));
+function textW(str, size = 16) { return str.length * 6 * textScale(size) - textScale(size); }
+function text(str, x, y, o = {}) {
+  str = String(str).toUpperCase();
+  const sc = textScale(o.size), w = textW(str, o.size);
   x = Math.round(x); y = Math.round(y);
-  ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fillRect(x + 2, y + 3, w, h);
-  ctx.fillStyle = P.d; ctx.fillRect(x, y, w, h);
+  if (o.align === 'center') x -= Math.round(w / 2); else if (o.align === 'right') x -= w;
+  const color = o.color || PAPER;
+  const passes = [];
+  if (o.shadow !== false) passes.push([o.shadow || INK, sc >= 3 ? 2 : 1]);
+  passes.push([color, 0]);
+  for (const [col, d] of passes) {
+    let cx = x;
+    for (const ch of str) {
+      if (ch !== ' ') { const gl = glyph(ch, col); ctx.drawImage(gl, cx + d, y + d, 5 * sc, 7 * sc); }
+      cx += 6 * sc;
+    }
+  }
+}
+const textH = size => 7 * textScale(size);
+
+// pixel panel: white box, thick ink border, hard drop shadow (like the reference UI)
+function panel(x, y, w, h, fill = PAPER) {
+  x = Math.round(x); y = Math.round(y);
+  ctx.fillStyle = INK; ctx.fillRect(x + 2, y + 2, w, h);
+  ctx.fillStyle = INK; ctx.fillRect(x, y, w, h);
   ctx.fillStyle = fill; ctx.fillRect(x + 1, y + 1, w - 2, h - 2);
-  ctx.fillStyle = P.E; ctx.fillRect(x + 1, y + h - 3, w - 2, 2);
 }
 function button(b, label, o = {}) {
-  const pressed = b.pressed ? 1 : 0;
-  const x = b.x, y = b.y + pressed, w = b.w, h = b.h;
-  ctx.fillStyle = P.d; ctx.fillRect(x, y + 3 - pressed, w, h);
-  ctx.fillStyle = P.d; ctx.fillRect(x, y, w, h);
-  ctx.fillStyle = o.fill || P.y; ctx.fillRect(x + 1, y + 1, w - 2, h - 2);
-  ctx.fillStyle = o.hi || '#ffe98a'; ctx.fillRect(x + 1, y + 1, w - 2, 1);
-  if (label) text(label, x + w / 2, y + (h - (o.size || 16)) / 2 + 1, { align: 'center', size: o.size || 16, color: o.color || P.d, shadow: false });
+  const x = b.x, y = b.y, w = b.w, h = b.h;
+  const fill = o.fill || ACCENT, color = o.color || (o.fill ? INK : PAPER);
+  ctx.fillStyle = INK; ctx.fillRect(x + 2, y + 2, w, h);
+  ctx.fillStyle = INK; ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = fill; ctx.fillRect(x + 1, y + 1, w - 2, h - 2);
+  if (label) text(label, x + w / 2, y + Math.round((h - textH(o.size || 16)) / 2), { align: 'center', size: o.size || 16, color, shadow: false });
   if (o.icon) ctx.drawImage(o.icon, Math.round(x + (w - o.icon.width) / 2), Math.round(y + (h - o.icon.height) / 2));
 }
-const hit = (b, px, py) => px >= b.x && px <= b.x + b.w && py >= b.y && py <= b.y + b.h;
+const hit = (b, px, py) => px >= b.x && px <= b.x + b.w + 2 && py >= b.y && py <= b.y + b.h + 2;
+// dotted pastel background used by the shop and overlays
+function dotBackground(bg = PINK, dot = PINK_DOT) {
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = dot; for (let y = 2; y < H; y += 6) for (let x = 2; x < W; x += 6) ctx.fillRect(x, y, 1, 1);
+}
 
 // ============================================================ audio
 let ac = null;
@@ -193,13 +268,21 @@ const sfx = {
   buy: () => { tone(800, 800, 0.08, 'square', 0.08); tone(1000, 1000, 0.08, 'square', 0.08, 0.08); tone(1300, 1300, 0.14, 'square', 0.08, 0.16); },
   nope: () => tone(200, 120, 0.2, 'square', 0.08),
   crumble: () => tone(160, 60, 0.2, 'sawtooth', 0.06),
+  glass: () => { tone(2400, 900, 0.12, 'square', 0.05); tone(1800, 500, 0.2, 'triangle', 0.06, 0.03); tone(3000, 1200, 0.1, 'square', 0.03, 0.08); },
+  squish: () => { tone(160, 70, 0.25, 'sawtooth', 0.07); tone(90, 60, 0.2, 'square', 0.05, 0.05); },
+  levelup: () => { [523, 659, 784, 1046].forEach((f, i) => tone(f, f, 0.12, 'square', 0.08, i * 0.09)); },
+  oneup: () => { [659, 784, 1318, 1046, 1175, 1568].forEach((f, i) => tone(f, f, 0.1, 'square', 0.07, i * 0.08)); },
+  revive: () => { tone(300, 900, 0.3, 'triangle', 0.1); tone(600, 1200, 0.25, 'square', 0.05, 0.1); },
   buzz: () => tone(180, 160, 0.15, 'sawtooth', 0.03),
 };
 function vibrate(ms) { if (save.vib && navigator.vibrate) { try { navigator.vibrate(ms); } catch (e) { } } }
 
 // ============================================================ game constants
 const GRAV = 1000, JUMP_V = 420, SPRING_V = 640, SUPER_V = 840, MOVE_SPEED = 150, PLAT_H = 6;
-const POWER_LAND = 6, POWER_COIN = 12, POWER_FLY = 30, TONGUE_TIME = 9, TONGUE_RANGE = 64;
+const EXP_LAND = 8, EXP_COIN = 6, EXP_FLY = 25, TONGUE_TIME = 10, TONGUE_RANGE = 84;
+const JUMP_BOOST_PER_LEVEL = 0.04, JUMP_BOOST_MAX = 0.24, LIFE_EVERY_LEVELS = 3, MAX_LIVES = 2;
+const expNeeded = level => 100 + 40 * (level - 1);
+const jumpBoost = () => 1 + Math.min(JUMP_BOOST_MAX, JUMP_BOOST_PER_LEVEL * (game.level - 1));
 const DAY_CYCLE = 3200; // px of height per full day/night cycle
 
 let scene = 'title'; // title | play | dead | shop
@@ -210,11 +293,12 @@ const input = { touchX: null, keys: {}, tiltX: 0 };
 function camY0() { return -Math.round(H * 0.22); }
 
 function newGame() {
-  game.frog = { x: W / 2, y: 0, vx: 0, vy: 0, prevY: 0, anim: 'sit', animT: 0, dizzy: 0, blink: 0, blinkT: rnd(2, 4) };
+  game.frog = { x: W / 2, y: 0, vx: 0, vy: 0, prevY: 0, anim: 'sit', landT: 9, dizzy: 0, blink: 0, blinkT: rnd(2, 4) };
   game.camY = camY0(); game.maxY = 0; game.score = 0; game.runCoins = 0;
-  game.power = 0; game.superT = 0; game.tongueT = 0; game.tongue = null; game.charged = false;
+  game.exp = 0; game.level = 1; game.lives = 0; game.levelUpT = 0; game.oneUpT = 0; game.invuln = 0;
+  game.superT = 0; game.tongueT = 0; game.tongue = null; game.charged = false;
   game.plats = []; game.coins = []; game.flies = []; game.items = []; game.parts = []; game.floaters = [];
-  game.genY = 20; game.lastType = 'normal'; game.nextItemY = rnd(320, 450); game.shake = 0; game.time = 0; game.deadT = 0;
+  game.genY = 20; game.lastType = 'normal'; game.nextItemY = rnd(220, 320); game.shake = 0; game.time = 0; game.deadT = 0;
   game.clouds = [{ par: 0.3, genY: -200, list: [] }, { par: 0.6, genY: -200, list: [] }];
   game.started = false; game.newBest = false;
   genUpTo(game.camY + H + 120);
@@ -235,9 +319,10 @@ function addPlatformBand(y, d, gap) {
   const w = Math.round(lerp(46, 32, d));
   let type = 'normal';
   const r = Math.random();
-  const pc = (game.lastType === 'crumble' || y < 150) ? 0 : 0.03 + 0.18 * d;
-  const pm = y < 120 ? 0 : 0.05 + 0.25 * d;
-  if (r < pc) type = 'crumble'; else if (r < pc + pm) type = 'moving';
+  const pc = (game.lastType === 'crumble' || y < 150) ? 0 : 0.03 + 0.16 * d; // glass: shatters after one bounce
+  const pm = y < 120 ? 0 : 0.05 + 0.22 * d;                                  // moving (yellow pill)
+  const ps = (game.lastType === 'swamp' || y < 200) ? 0 : 0.03 + 0.1 * d;     // swamp: weak, muddy bounce
+  if (r < pc) type = 'crumble'; else if (r < pc + pm) type = 'moving'; else if (r < pc + pm + ps) type = 'swamp';
   const p = { x: rnd(6, W - w - 6), y, w, type, alive: true, t: rnd(0, 6), broken: false, fallV: 0,
     vx: type === 'moving' ? (rnd(28, 45) + 55 * d) * (Math.random() < 0.5 ? -1 : 1) : 0,
     spring: type === 'normal' && y > 100 && Math.random() < 0.07 };
@@ -263,7 +348,7 @@ function addPlatformBand(y, d, gap) {
   // tongue power-up
   if (y > game.nextItemY) {
     game.items.push({ x: rnd(30, W - 30), y: y + 24, t: rnd(0, 6), taken: false });
-    game.nextItemY = y + rnd(650, 1000);
+    game.nextItemY = y + rnd(380, 600);
   }
 }
 function genClouds() {
@@ -287,22 +372,41 @@ function burst(x, y, n, colors, spd = 60, life = 0.5, gravity = 300) {
 function land(p) {
   const f = game.frog;
   f.y = p ? p.y : 0; f.prevY = f.y;
-  let v = JUMP_V, kind = 'jump';
-  if (game.power >= 100) { v = SUPER_V; kind = 'super'; game.power = 0; game.charged = false; game.superT = 0.7; game.shake = 4; addFloater(f.x, f.y + 40, 'SUPER!', P.Y); }
-  else if (p && p.spring) { v = SPRING_V; kind = 'spring'; p.springT = 0.3; }
-  f.vy = v; f.anim = 'crouch'; f.animT = kind === 'jump' ? 0.07 : 0.1;
+  const boost = jumpBoost(); // every level makes the frog jump a little higher
+  let v = JUMP_V * boost, kind = 'jump';
+  if (game.charged) { v = SUPER_V * boost; kind = 'super'; game.charged = false; game.superT = 0.7; game.shake = 4; addFloater(f.x, f.y + 40, 'SUPER!', P.Y); }
+  else if (p && p.spring) { v = SPRING_V * boost; kind = 'spring'; p.springT = 0.3; }
+  else if (p && p.type === 'swamp') { v = JUMP_V * boost * 0.62; kind = 'swamp'; p.splashT = 0.4; }
+  f.vy = v; f.landT = 0; // restarts the squash -> stretch animation
   if (p) {
-    if (p.type === 'crumble') { p.alive = false; p.broken = true; sfx.crumble(); burst(p.x + p.w / 2, p.y, 6, [P.n, P.m, P.t], 50, 0.5); }
-    if (kind === 'jump') addPower(POWER_LAND);
+    if (p.type === 'crumble') { p.alive = false; p.broken = true; sfx.glass(); burst(p.x + p.w / 2, p.y, 12, ['#dff6ff', '#8ed8ff', '#ffffff', '#3b2d6b'], 70, 0.6); }
+    addExp(EXP_LAND);
   }
-  burst(f.x, f.y, kind === 'super' ? 14 : 4, kind === 'super' ? [P.Y, P.y, P.w] : ['#ffffff', '#dddddd'], kind === 'super' ? 120 : 40, 0.35, kind === 'super' ? 0 : 200);
-  if (kind === 'jump') sfx.jump(); else if (kind === 'spring') sfx.spring(); else sfx.superjump();
+  if (kind === 'swamp') burst(f.x, f.y, 8, ['#4f6b2a', '#7a9a3a', '#2f4a1a'], 60, 0.45, 300);
+  else burst(f.x, f.y, kind === 'super' ? 14 : 4, kind === 'super' ? [P.Y, P.y, P.w] : ['#ffffff', '#dddddd'], kind === 'super' ? 120 : 40, 0.35, kind === 'super' ? 0 : 200);
+  if (kind === 'jump') sfx.jump(); else if (kind === 'spring') sfx.spring(); else if (kind === 'swamp') sfx.squish(); else sfx.superjump();
   vibrate(kind === 'super' ? 40 : 8);
 }
-function addPower(n) {
-  if (game.power >= 100) return;
-  game.power = Math.min(100, game.power + n);
-  if (game.power >= 100 && !game.charged) { game.charged = true; sfx.charged(); addFloater(game.frog.x, game.frog.y + 44, 'CHARGED!', P.Y); }
+function addExp(n) {
+  game.exp += n;
+  while (game.exp >= expNeeded(game.level)) {
+    game.exp -= expNeeded(game.level); game.level++;
+    game.charged = true; game.levelUpT = 1.4; sfx.levelup(); vibrate([20, 30, 20]);
+    if (game.level % LIFE_EVERY_LEVELS === 0 && game.lives < MAX_LIVES) { game.lives++; game.oneUpT = 1.6; sfx.oneup(); }
+  }
+}
+// with a spare life the frog comes back on a platform instead of dying
+function respawn() {
+  const f = game.frog;
+  game.lives--; game.invuln = 2.5; f.dizzy = 0; game.tongue = null;
+  let p = null;
+  for (const q of game.plats) if (q.alive && q.type !== 'crumble' && q.y > game.camY + H * 0.3 && q.y < game.camY + H * 0.75 && (!p || q.y > p.y)) p = q;
+  if (!p) { p = { x: W / 2 - 24, y: game.camY + H * 0.5, w: 48, type: 'normal', alive: true, t: 0, broken: false, fallV: 0, vx: 0, spring: false }; game.plats.push(p); }
+  f.x = p.x + p.w / 2; f.y = p.y + 2; f.prevY = f.y; f.vx = 0; f.vy = JUMP_V * jumpBoost(); f.landT = 0;
+  for (const fl of game.flies) if (Math.abs(fl.y - f.y) < 120) fl.esc = true;
+  sfx.revive(); vibrate(30); game.shake = 2;
+  burst(f.x, f.y + 10, 16, [P.Y, P.w, '#8fd032'], 90, 0.6, 0);
+  addFloater(f.x, f.y + 44, 'SAVED!', P.Y);
 }
 
 // ------------------------------------------------------------ one physics step
@@ -328,25 +432,32 @@ function step(dt) {
   }
   if (f.y > game.maxY) game.maxY = f.y;
   game.score = Math.floor(game.maxY / 10);
-  // --- animation state
-  if (f.animT > 0) { f.animT -= dt; if (f.animT <= 0) f.anim = 'jump'; }
-  else f.anim = f.vy > 120 ? 'jump' : f.vy < -100 ? 'fall' : 'sit';
+  // --- animation state: squash on landing, then stretch, then frames by vertical speed
+  f.landT += dt;
+  if (f.landT < 0.05) f.anim = 'crouch2';
+  else if (f.landT < 0.09) f.anim = 'crouch1';
+  else if (f.landT < 0.15) f.anim = 'stretch1';
+  else f.anim = f.vy > 260 ? 'jump' : f.vy > 90 ? 'stretch1' : f.vy > -90 ? 'sit' : f.vy > -330 ? 'fall1' : 'fall2';
   if (f.dizzy > 0) f.dizzy -= dt;
   if (game.superT > 0) { game.superT -= dt; if (f.vy > 0) game.parts.push({ x: f.x + rnd(-8, 8), y: f.y + rnd(0, 10), vx: rnd(-20, 20), vy: -60, life: 0.4, max: 0.4, c: pick([P.Y, P.y, P.w]), g: 0 }); }
   if (game.tongueT > 0) game.tongueT -= dt;
+  if (game.levelUpT > 0) game.levelUpT -= dt;
+  if (game.oneUpT > 0) game.oneUpT -= dt;
+  if (game.invuln > 0) game.invuln -= dt;
   // --- platforms
   for (const p of game.plats) {
     p.t += dt;
     if (p.vx) { p.x += p.vx * dt; if (p.x < 2) { p.x = 2; p.vx = Math.abs(p.vx); } else if (p.x + p.w > W - 2) { p.x = W - 2 - p.w; p.vx = -Math.abs(p.vx); } }
     if (p.broken) { p.fallV += GRAV * dt * 0.6; p.y -= p.fallV * dt; }
     if (p.springT > 0) p.springT -= dt;
+    if (p.splashT > 0) p.splashT -= dt;
   }
   // --- coins
   for (const c of game.coins) {
     if (c.taken) continue; c.t += dt;
     if (c.on) c.x = c.on.x + c.on.w / 2 + c.dx;
     if (Math.abs(c.x - f.x) < 14 && c.y > f.y - 4 && c.y < f.y + 30) {
-      c.taken = true; game.runCoins++; addPower(POWER_COIN); sfx.coin(); addFloater(c.x, c.y + 6, '+1', P.Y);
+      c.taken = true; game.runCoins++; addExp(EXP_COIN); sfx.coin(); addFloater(c.x, c.y + 6, '+1', P.Y);
       burst(c.x, c.y, 5, [P.Y, P.y, P.w], 50, 0.35, 0);
     }
   }
@@ -354,7 +465,7 @@ function step(dt) {
   for (const it of game.items) {
     if (it.taken) continue; it.t += dt;
     if (Math.abs(it.x - f.x) < 16 && it.y > f.y - 6 && it.y < f.y + 32) {
-      it.taken = true; game.tongueT = TONGUE_TIME; sfx.pickup(); vibrate(15); addFloater(it.x, it.y + 8, 'TONGUE!', P.p);
+      it.taken = true; game.tongueT = TONGUE_TIME; sfx.pickup(); vibrate(15); addFloater(it.x, it.y + 8, 'EAT THE FLIES!', P.p);
       burst(it.x, it.y, 8, [P.p, P.a, P.w], 60, 0.4, 0);
     }
   }
@@ -366,9 +477,9 @@ function step(dt) {
     fl.y = fl.by + Math.cos(fl.t * fl.sp * 1.6) * 6;
     const dx = fl.x - f.x, dy = fl.y - (f.y + 14);
     if (game.tongueT > 0 && !game.tongue && dx * dx + dy * dy < TONGUE_RANGE * TONGUE_RANGE && fl.y - game.camY > 10) {
-      game.tongue = { fly: fl, t: 0, dur: 0.32, ate: false }; fl.targeted = true;
+      game.tongue = { fly: fl, t: 0, dur: 0.5, ate: false }; fl.targeted = true;
     } else if (!fl.targeted && Math.abs(dx) < 12 && fl.y > f.y + 2 && fl.y < f.y + 28) {
-      if (game.superT > 0 || game.tongueT > 0) { fl.esc = true; }
+      if (game.superT > 0 || game.tongueT > 0 || game.invuln > 0) { fl.esc = true; }
       else if (f.dizzy <= 0) {
         f.dizzy = 1.1; fl.esc = true; sfx.hit(); vibrate(60);
         f.vy = Math.min(f.vy, -60); f.vx = (dx > 0 ? -1 : 1) * 130; game.shake = 3;
@@ -379,9 +490,10 @@ function step(dt) {
   // --- tongue animation / eating
   if (game.tongue) {
     const T = game.tongue; T.t += dt;
+    if (T.t < T.dur * 0.5) { T.fly.x += 0; } // fly is caught on the tip at the halfway point
     if (!T.ate && T.t >= T.dur * 0.5) {
       T.ate = true; T.fly.dead = true; sfx.eat(); vibrate(20);
-      game.runCoins += 2; addPower(POWER_FLY); addFloater(T.fly.x, T.fly.y + 8, 'YUM +2', P.p);
+      game.runCoins += 2; addExp(EXP_FLY); addFloater(T.fly.x, T.fly.y + 8, 'YUM +2', P.p);
       burst(T.fly.x, T.fly.y, 6, [P.q, P.w, P.k], 50, 0.35, 100);
     }
     if (T.t >= T.dur) game.tongue = null;
@@ -403,8 +515,8 @@ function step(dt) {
   game.flies = game.flies.filter(fl => !fl.dead && fl.y > cut - 100);
   game.items = game.items.filter(it => !it.taken && it.y > cut);
   if (game.shake > 0) game.shake = Math.max(0, game.shake - 12 * dt);
-  // --- death
-  if (f.y < game.camY - 30) die();
+  // --- death (or a second chance with a spare life)
+  if (f.y < game.camY - 30) { if (game.lives > 0) respawn(); else die(); }
 }
 function die() {
   scene = 'dead'; game.deadT = 0; sfx.die(); vibrate([40, 40, 80]); game.shake = 5;
@@ -521,36 +633,60 @@ function drawGround() {
   ctx.fillStyle = '#61a53f'; ctx.fillRect(18, gy + 26, 12, 3); ctx.fillRect(W - 40, gy + 34, 14, 3);
   ctx.fillStyle = '#8fd032'; ctx.fillRect(19, gy + 26, 10, 1); ctx.fillRect(W - 39, gy + 34, 12, 1);
 }
+// pixel pill: rounded ends, navy outline, white highlight along the top (like the reference platform art)
+const PILL_OUTLINE = '#2b1d4e';
+function pill(x, y, w, h, fill, hi) {
+  const inset = r => (r === 0 || r === h - 1) ? 2 : (r === 1 || r === h - 2) ? 1 : 0;
+  ctx.fillStyle = PILL_OUTLINE;
+  for (let r = 0; r < h; r++) ctx.fillRect(x + inset(r), y + r, w - 2 * inset(r), 1);
+  ctx.fillStyle = fill;
+  for (let r = 1; r < h - 1; r++) { const i = inset(r) + 1; ctx.fillRect(x + i, y + r, w - 2 * i, 1); }
+  if (hi) { ctx.fillStyle = hi; ctx.fillRect(x + 3, y + 1, w - 6, 1); ctx.fillRect(x + 2, y + 2, 1, 1); ctx.fillRect(x + w - 3, y + 2, 1, 1); }
+}
 function drawPlat(p) {
-  const x = Math.round(p.x), y = sy(p.y), w = p.w, h = PLAT_H;
+  const x = Math.round(p.x), y = sy(p.y), w = p.w, h = PLAT_H + 1;
   if (y < -10 || y > H + 10) return;
-  let body = '#61a53f', hi = '#8fd032', dark = '#3d7a2a';
-  if (p.type === 'moving') { body = '#a8743e'; hi = '#d2a86a'; dark = '#6b4a2a'; }
-  if (p.type === 'crumble') { body = '#c08a3a'; hi = '#e0b060'; dark = '#8a5a2a'; }
-  ctx.fillStyle = P.k; ctx.fillRect(x + 1, y, w - 2, h); ctx.fillRect(x, y + 1, 1, h - 2); ctx.fillRect(x + w - 1, y + 1, 1, h - 2);
-  ctx.fillStyle = body; ctx.fillRect(x + 1, y + 1, w - 2, h - 2);
-  ctx.fillStyle = hi; ctx.fillRect(x + 2, y + 1, w - 4, 1);
-  ctx.fillStyle = dark; ctx.fillRect(x + 2, y + h - 2, w - 4, 1);
-  if (p.type === 'normal') { for (let i = 4; i < w - 4; i += 7) ctx.fillRect(x + i, y + 2, 2, 1); }
-  else if (p.type === 'moving') { ctx.fillStyle = dark; for (let i = 3; i < w - 3; i += 9) ctx.fillRect(x + i, y + 2, 4, 1); ctx.fillStyle = hi; ctx.fillRect(x + 5, y + 3, 2, 1); }
-  else { ctx.fillStyle = P.k; for (let i = 6; i < w - 6; i += 10) { ctx.fillRect(x + i, y + 1, 1, 2); ctx.fillRect(x + i + 1, y + 3, 1, 2); } }
+  if (p.type === 'normal') pill(x, y, w, h, '#8cc63f', '#ffffff');
+  else if (p.type === 'moving') pill(x, y, w, h, '#ffb400', '#ffffff');
+  else if (p.type === 'swamp') {
+    pill(x, y, w, h, '#5a7a2e', '#8aa84a');
+    // bubbles that pop in the mud
+    ctx.fillStyle = '#9ec25a';
+    for (let i = 0; i < 3; i++) { const ph = (p.t * 1.5 + i * 1.7) % 2; if (ph < 1.2) { const bx = x + 6 + ((i * 13 + Math.floor(p.t / 2) * 7) % Math.max(1, w - 12)); ctx.fillRect(bx, y + 2 + Math.round(ph * 1.5), ph < 0.6 ? 1 : 2, ph < 0.6 ? 1 : 2); } }
+    if (p.splashT > 0) { ctx.fillStyle = '#3f5a1e'; ctx.fillRect(x + 2, y + 1, w - 4, 2); }
+  } else { // glass: pale cyan, see-through look, crack lines
+    pill(x, y, w, h, '#bfefff', '#ffffff');
+    ctx.fillStyle = '#7fcbe8';
+    for (let i = 5; i < w - 5; i += 9) { ctx.fillRect(x + i, y + 2, 1, 1); ctx.fillRect(x + i + 1, y + 3, 1, 1); ctx.fillRect(x + i + 2, y + 4, 1, 1); ctx.fillRect(x + i + 1, y + 1, 1, 1); }
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(x + w - 10, y + 3, 4, 1);
+  }
   if (p.spring) { const sp = ICON.spring, sx = Math.round(x + w / 2 - sp.width / 2); const comp = p.springT > 0 ? 2 : 0; ctx.drawImage(sp, 0, 0, sp.width, sp.height, sx, y - sp.height + 1 + comp, sp.width, sp.height - comp); }
 }
 function drawFrogAt(cx, feetY, anim, lean, blink, eq) {
   const spr = FROG[anim] || FROG.sit;
-  const x0 = Math.round(cx - FROG_W / 2), y0 = Math.round(feetY - spr.height);
+  const x0 = Math.round(cx - spr.width / 2), y0 = Math.round(feetY - spr.height);
+  const wo = (spr.width - FROG_W) / 2; // wider squash/spread frames keep accessories centred
   if (lean) { const half = Math.floor(spr.height / 2); ctx.drawImage(spr, 0, 0, spr.width, half, x0 + lean, y0, spr.width, half); ctx.drawImage(spr, 0, half, spr.width, spr.height - half, x0, y0 + half, spr.width, spr.height - half); }
   else ctx.drawImage(spr, x0, y0);
-  if (blink && anim === 'sit') { ctx.fillStyle = '#61a53f'; ctx.fillRect(x0 + 7, y0 + 4, 5, 4); ctx.fillRect(x0 + 26, y0 + 4, 5, 4); ctx.fillStyle = '#293f21'; ctx.fillRect(x0 + 7, y0 + 7, 5, 1); ctx.fillRect(x0 + 26, y0 + 7, 5, 1); }
+  if (blink) { // eyelids: the eyes sit at the same rows in every frame (top-anchored)
+    const ex = x0 + wo, ey = y0 + (anim === 'crouch2' ? 3 : 4);
+    ctx.fillStyle = '#61a53f'; ctx.fillRect(ex + 7, ey, 5, 4); ctx.fillRect(ex + 26, ey, 5, 4);
+    ctx.fillStyle = '#293f21'; ctx.fillRect(ex + 7, ey + 3, 5, 1); ctx.fillRect(ex + 26, ey + 3, 5, 1);
+  }
   for (const cat of ['glasses', 'acc', 'hat']) {
     const it = ITEMS[cat].find(i => i.id === (eq || save.eq)[cat]);
-    if (it && it.spr) ctx.drawImage(it.spr, x0 + it.ox + (lean && it.oy < 8 ? lean : 0), y0 + it.oy);
+    if (it && it.spr) ctx.drawImage(it.spr, x0 + wo + it.ox + (lean && it.oy < 8 ? lean : 0), y0 + it.oy);
   }
   return { x0, y0, h: spr.height };
 }
 function drawFrog() {
   const f = game.frog;
   const lean = Math.abs(f.vx) > 50 ? Math.sign(f.vx) : 0;
+  if (game.invuln > 0 && Math.floor(game.time * 12) % 2 === 0) ctx.globalAlpha = 0.45; // respawn flicker
+  if (game.tongueT > 0) { // tongue mode: pink glow ring so the power-up state is obvious
+    ctx.globalAlpha = 0.35 + 0.15 * Math.sin(game.time * 8); ctx.fillStyle = P.p;
+    ctx.beginPath(); ctx.arc(Math.round(f.x), sy(f.y) - 14, 24, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = game.invuln > 0 && Math.floor(game.time * 12) % 2 === 0 ? 0.45 : 1;
+  }
   const pos = drawFrogAt(f.x, sy(f.y), f.anim, lean, f.blink > 0, null);
   if (f.x < FROG_W / 2) drawFrogAt(f.x + W + FROG_W, sy(f.y), f.anim, lean, f.blink > 0, null);
   else if (f.x > W - FROG_W / 2) drawFrogAt(f.x - W - FROG_W, sy(f.y), f.anim, lean, f.blink > 0, null);
@@ -558,15 +694,18 @@ function drawFrog() {
   if (game.tongueT > 0 && !game.tongue) { // ready tongue: little pink tip at the mouth
     ctx.fillStyle = P.p; ctx.fillRect(Math.round(f.x - 1), pos.y0 + 11, 3, 1);
   }
+  ctx.globalAlpha = 1;
 }
 function drawTongue() {
   const T = game.tongue; if (!T) return;
-  const f = game.frog, k = T.t / T.dur, ext = k < 0.5 ? k * 2 : (1 - k) * 2;
+  const f = game.frog, k = T.t / T.dur, ext = k < 0.5 ? Math.min(1, k * 2.4) : Math.max(0, (1 - k) * 2);
   const mx = Math.round(f.x), my = sy(f.y) - 17; // mouth
   const tx = Math.round(mx + (T.fly.x - f.x) * ext), ty = Math.round(my + (sy(T.fly.y) - my) * ext);
-  ctx.strokeStyle = P.k; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(mx, my); ctx.lineTo(tx, ty); ctx.stroke();
-  ctx.strokeStyle = P.p; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(mx, my); ctx.lineTo(tx, ty); ctx.stroke();
-  ctx.fillStyle = P.k; ctx.fillRect(tx - 3, ty - 3, 6, 6); ctx.fillStyle = P.a; ctx.fillRect(tx - 2, ty - 2, 4, 4);
+  ctx.strokeStyle = P.k; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(mx, my); ctx.lineTo(tx, ty); ctx.stroke();
+  ctx.strokeStyle = P.p; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(mx, my); ctx.lineTo(tx, ty); ctx.stroke();
+  ctx.strokeStyle = P.a; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(mx, my - 1); ctx.lineTo(tx, ty - 1); ctx.stroke();
+  ctx.fillStyle = P.k; ctx.fillRect(tx - 4, ty - 4, 8, 8); ctx.fillStyle = P.a; ctx.fillRect(tx - 3, ty - 3, 6, 6);
+  if (k >= 0.5) { const spr = ICON.fly1; ctx.drawImage(spr, tx - 5, ty - 3); } // the fly rides the tongue back into the mouth
 }
 const FLY_L = [flipSprite(ICON.fly0), flipSprite(ICON.fly1)];
 function drawFly(fl) {
@@ -612,23 +751,47 @@ function drawWorld() {
 }
 
 // ------------------------------------------------------------ HUD / screens
-function drawCoinCounter(x, y, n) { ctx.drawImage(ICON.coin, x, y + 2); text('' + n, x + 11, y, { size: 16, color: P.Y }); }
+function drawCoinCounter(x, y, n, color = P.Y, shadow) { ctx.drawImage(ICON.coin, x, y); text('' + n, x + 11, y, { size: 8, color, shadow }); }
+function iconButton(x, y, icon, fn, o = {}) {
+  const b = addBtn(x, y, 18, 18, fn);
+  button(b, null, { icon, fill: o.fill || PAPER });
+  return b;
+}
 function drawHUD() {
-  drawCoinCounter(5, 4, game.runCoins);
-  text('' + game.score, W / 2, 2, { size: 24, align: 'center' });
-  // power bar
-  const bw = 56, bx = Math.round(W / 2 - bw / 2), by = 26;
-  const full = game.power >= 100, blinkOn = Math.floor(game.time * 6) % 2 === 0;
-  ctx.fillStyle = P.k; ctx.fillRect(bx - 1, by - 1, bw + 2, 8);
-  ctx.fillStyle = '#2a2a3a'; ctx.fillRect(bx, by, bw, 6);
-  ctx.fillStyle = full ? (blinkOn ? P.Y : P.y) : '#8fd032'; ctx.fillRect(bx, by, Math.round(bw * game.power / 100), 6);
-  if (!full) { ctx.fillStyle = '#c8ff80'; ctx.fillRect(bx, by, Math.round(bw * game.power / 100), 1); }
-  ctx.drawImage(ICON.bolt, bx - 8, by - 1);
-  if (full && blinkOn) text('SUPER JUMP!', W / 2, by + 9, { size: 16, align: 'center', color: P.Y });
+  drawCoinCounter(5, 5, game.runCoins);
+  text('' + game.score, W / 2, 3, { size: 24, align: 'center' });
+  // EXP bar (green, ink outline, label inside) + level
+  const bw = 72, bh = 11, bx = Math.round(W / 2 - bw / 2), by = 27, blinkOn = Math.floor(game.time * 6) % 2 === 0;
+  const frac = clamp(game.exp / expNeeded(game.level), 0, 1);
+  ctx.fillStyle = INK; ctx.fillRect(bx - 1, by - 1, bw + 2, bh + 2);
+  ctx.fillStyle = PAPER; ctx.fillRect(bx, by, bw, bh);
+  ctx.fillStyle = '#8fd27a'; ctx.fillRect(bx, by, Math.round(bw * frac), bh);
+  ctx.fillStyle = '#b9ea9a'; ctx.fillRect(bx, by, Math.round(bw * frac), 1);
+  text('EXP', bx + 3, by + 2, { size: 8, color: INK, shadow: false });
+  text('LV' + game.level, bx + bw + 4, by + 2, { size: 8, color: PAPER });
+  if (game.charged && blinkOn) text('SUPER JUMP!', W / 2, by + bh + 3, { size: 8, align: 'center', color: P.Y });
+  // spare lives
+  for (let i = 0; i < game.lives; i++) ctx.drawImage(ICON.heart, 5 + i * 10, 17);
   // tongue timer
   if (game.tongueT > 0) {
     const tx = W - 14, ty = 6; ctx.drawImage(ICON.tongue, tx, ty);
-    ctx.fillStyle = P.k; ctx.fillRect(tx - 32, ty + 3, 30, 5); ctx.fillStyle = P.p; ctx.fillRect(tx - 31, ty + 4, Math.round(28 * game.tongueT / TONGUE_TIME), 3);
+    ctx.fillStyle = INK; ctx.fillRect(tx - 34, ty + 2, 32, 7); ctx.fillStyle = PAPER; ctx.fillRect(tx - 33, ty + 3, 30, 5);
+    ctx.fillStyle = P.p; ctx.fillRect(tx - 33, ty + 3, Math.round(30 * game.tongueT / TONGUE_TIME), 5);
+    text('TONGUE', tx - 34, ty + 11, { size: 8, color: P.a });
+  }
+  // level-up / 1UP banners
+  if (game.levelUpT > 0) {
+    const k = 1 - game.levelUpT / 1.4, yy = Math.round(H * 0.3 - k * 12);
+    ctx.globalAlpha = clamp(game.levelUpT * 2, 0, 1);
+    text('LEVEL UP', W / 2, yy, { size: 24, align: 'center', color: '#8fd27a' });
+    text('JUMP +' + Math.round((jumpBoost() - 1) * 100) + '%', W / 2, yy + 24, { size: 8, align: 'center', color: PAPER });
+    ctx.globalAlpha = 1;
+  }
+  if (game.oneUpT > 0) {
+    const k = 1 - game.oneUpT / 1.6, yy = Math.round(H * 0.42 - k * 16);
+    ctx.globalAlpha = clamp(game.oneUpT * 2, 0, 1);
+    text('+1UP', W / 2, yy, { size: 24, align: 'center', color: blinkOn ? '#ffb400' : '#ff5c1c' });
+    ctx.globalAlpha = 1;
   }
 }
 let buttons = [];
@@ -636,87 +799,84 @@ function addBtn(x, y, w, h, fn) { const b = { x, y, w, h, fn }; buttons.push(b);
 
 function drawTitle() {
   // frog idle on the ground
-  const bob = Math.sin(game.time * 3) * 2;
-  text('FROG', W / 2 + 1, H * 0.13 + bob, { size: 48, align: 'center', color: P.y, shadow: P.d });
-  text('HOP', W / 2, H * 0.13 + 40 + bob, { size: 48, align: 'center', color: P.y, shadow: P.d });
-  const by = H * 0.13 + 96;
-  ctx.drawImage(ICON.trophy, Math.round(W / 2 - 18), by + 1); text('' + save.best, W / 2 - 4, by - 1, { size: 16 });
-  drawCoinCounter(5, 4, save.coins);
-  const cart = addBtn(W - 26, 2, 24, 22, () => { scene = 'shop'; shopTab = 0; });
-  ctx.drawImage(ICON.cart, cart.x + 6, cart.y + 6);
-  const gear = addBtn(2, 20, 22, 22, () => { settingsOpen = true; });
-  ctx.drawImage(ICON.gear, gear.x + 6, gear.y + 6);
+  const bob = Math.round(Math.sin(game.time * 3) * 2);
+  text('FROG', W / 2, H * 0.12 + bob, { size: 48, align: 'center', color: P.y });
+  text('HOP', W / 2, H * 0.12 + 50 + bob, { size: 48, align: 'center', color: P.y });
+  const by = H * 0.12 + 104;
+  ctx.drawImage(ICON.trophy, Math.round(W / 2 - 16), by); text('' + save.best, W / 2 - 4, by + 1, { size: 8 });
+  drawCoinCounter(5, 5, save.coins);
+  iconButton(W - 23, 4, ICON.cart, () => { scene = 'shop'; shopTab = 0; });
+  iconButton(W - 23, 26, ICON.gear, () => { settingsOpen = true; });
   // tap hint
-  if (Math.floor(game.time * 2) % 2 === 0) { const hy = sy(0) + 24; ctx.drawImage(ICON.hand, W / 2 - 22, hy + Math.round(Math.sin(game.time * 8))); text('TAP!', W / 2 + 10, hy, { size: 16, color: P.Y }); }
-  if (save.runs < 3) text('HOLD & DRAG TO MOVE', W / 2, sy(0) + 40, { size: 16, align: 'center', color: '#ffffff' });
+  if (Math.floor(game.time * 2) % 2 === 0) { const hy = sy(0) + 24; ctx.drawImage(ICON.hand, W / 2 - 22, hy + Math.round(Math.sin(game.time * 8))); text('TAP!', W / 2 - 8, hy + 2, { size: 16, color: P.Y }); }
+  if (save.runs < 3) text('HOLD & DRAG TO MOVE', W / 2, sy(0) + 44, { size: 8, align: 'center', color: PAPER });
 }
 function drawDead() {
   const t = clamp(game.deadT * 2.2, 0, 1), ease = 1 - Math.pow(1 - t, 3);
   ctx.fillStyle = 'rgba(20,10,30,' + (0.45 * ease) + ')'; ctx.fillRect(0, 0, W, H);
   if (game.deadT < 0.25) return;
-  const pw = W - 36, ph = 164, px = 18, py = Math.round(H * 0.5 - ph / 2 - 10 + (1 - ease) * 40);
+  const pw = Math.min(W - 28, 190), ph = 146, px = Math.round((W - pw) / 2), py = Math.round(H * 0.5 - ph / 2 - 10 + (1 - ease) * 40);
   panel(px, py, pw, ph);
-  text('SPLASH!', W / 2, py + 6, { size: 24, align: 'center', color: P.d, shadow: false });
-  text('' + game.score, W / 2, py + 30, { size: 48, align: 'center', color: P.d, shadow: P.E });
-  if (game.newBest) { if (Math.floor(game.time * 4) % 2 === 0) text('NEW BEST!', W / 2, py + 76, { size: 16, align: 'center', color: '#c03030', shadow: false }); }
-  else { ctx.drawImage(ICON.trophy, Math.round(W / 2 - 18), py + 78); text('' + save.best, W / 2 - 4, py + 76, { size: 16, color: P.d, shadow: false }); }
-  ctx.drawImage(ICON.coin, Math.round(W / 2 - 16), py + 96); text('+' + game.runCoins, W / 2 - 4, py + 94, { size: 16, color: P.d, shadow: false });
+  text('SPLASH!', W / 2, py + 10, { size: 16, align: 'center', color: ACCENT, shadow: false });
+  text('' + game.score, W / 2, py + 30, { size: 40, align: 'center', color: INK, shadow: false });
+  const rowY = py + 72;
+  if (game.newBest) { if (Math.floor(game.time * 4) % 2 === 0) text('NEW BEST!', W / 2, rowY, { size: 8, align: 'center', color: ACCENT, shadow: false }); }
+  else { const bw = 12 + textW('' + save.best, 8); ctx.drawImage(ICON.trophy, Math.round(W / 2 - bw / 2), rowY - 1); text('' + save.best, W / 2 - bw / 2 + 12, rowY, { size: 8, color: INK, shadow: false }); }
+  const cw = 12 + textW('+' + game.runCoins, 8);
+  ctx.drawImage(ICON.coin, Math.round(W / 2 - cw / 2), rowY + 11); text('+' + game.runCoins, W / 2 - cw / 2 + 12, rowY + 11, { size: 8, color: INK, shadow: false });
   if (game.deadT < 0.6) return;
-  const rb = addBtn(px + 12, py + ph - 48, pw - 24, 22, () => { newGame(); startGame(); });
+  const rb = addBtn(px + 10, py + ph - 48, pw - 22, 20, () => { newGame(); startGame(); });
   button(rb, 'RETRY', { size: 16 });
-  const hb = addBtn(px + 12, py + ph - 24, (pw - 28) / 2, 18, () => { newGame(); scene = 'title'; });
-  button(hb, null, { icon: ICON.home, fill: P.e });
-  const sb = addBtn(px + 16 + (pw - 28) / 2, py + ph - 24, (pw - 28) / 2, 18, () => { scene = 'shop'; shopTab = 0; });
-  button(sb, null, { icon: ICON.cart, fill: P.e });
+  const half = Math.floor((pw - 26) / 2);
+  const hb = addBtn(px + 10, py + ph - 24, half, 14, () => { newGame(); scene = 'title'; });
+  button(hb, null, { icon: ICON.home, fill: PAPER });
+  const sb = addBtn(px + 14 + half, py + ph - 24, half, 14, () => { scene = 'shop'; shopTab = 0; });
+  button(sb, null, { icon: ICON.cart, fill: PAPER });
 }
 let shopTab = 0, shopMsg = null;
 function drawShop() {
-  ctx.fillStyle = '#3b2a3f'; ctx.fillRect(0, 0, W, H);
-  ctx.fillStyle = '#463250'; for (let y = 0; y < H; y += 12) for (let x = (y / 12) % 2 ? 6 : 0; x < W; x += 12) ctx.fillRect(x, y, 1, 1);
-  drawCoinCounter(5, 4, save.coins);
-  const cb = addBtn(W - 24, 2, 22, 20, () => { scene = game.started ? 'dead' : 'title'; });
-  ctx.drawImage(ICON.close, cb.x + 7, cb.y + 7);
-  // preview
-  const cy = 60;
-  ctx.fillStyle = 'rgba(255,255,255,0.12)'; ctx.beginPath(); ctx.arc(W / 2, cy, 28, 0, Math.PI * 2); ctx.fill();
-  ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(W / 2, cy, 28.5, 0, Math.PI * 2); ctx.stroke();
-  drawFrogAt(W / 2, cy + 16 + Math.round(Math.sin(game.time * 3)), 'sit', 0, game.frog.blink > 0, null);
-  // tabs
-  const tabW = 34, tabY = 98, tabs = [ITEMS.hat[2].spr, ICON.glassesTab, ICON.heart];
+  dotBackground();
+  drawCoinCounter(6, 8, save.coins, INK, false);
+  iconButton(W - 23, 5, ICON.close, () => { scene = game.started ? 'dead' : 'title'; });
+  // preview panel with the frog wearing the equipped items
+  const pvW = 72, pvH = 50, pvX = Math.round(W / 2 - pvW / 2), pvY = 28;
+  panel(pvX, pvY, pvW, pvH);
+  drawFrogAt(W / 2, pvY + pvH - 7 + Math.round(Math.sin(game.time * 3)), 'sit', 0, game.frog.blink > 0, null);
+  // category tabs
+  const tabW = 30, tabY = pvY + pvH + 10, tabs = [ITEMS.hat[2].spr, ICON.glassesTab, ICON.heart];
   for (let i = 0; i < 3; i++) {
-    const tx = Math.round(W / 2 - tabW * 1.5 - 8 + i * (tabW + 8));
-    const b = addBtn(tx, tabY, tabW, 26, () => { shopTab = i; });
-    ctx.fillStyle = P.d; ctx.fillRect(tx, tabY, tabW, 26);
-    ctx.fillStyle = shopTab === i ? P.e : '#8c7d5c'; ctx.fillRect(tx + 1, tabY + 1, tabW - 2, 24);
-    const ic = tabs[i]; ctx.drawImage(ic, Math.round(tx + tabW / 2 - ic.width / 2), Math.round(tabY + 13 - ic.height / 2));
-    if (shopTab === i) { ctx.fillStyle = P.y; ctx.fillRect(tx + 2, tabY + 28, tabW - 4, 2); }
+    const tx = Math.round(W / 2 - tabW * 1.5 - 6 + i * (tabW + 6));
+    const b = addBtn(tx, tabY, tabW, 20, () => { shopTab = i; });
+    button(b, null, { fill: shopTab === i ? ACCENT : PAPER });
+    const ic = tabs[i]; ctx.drawImage(ic, Math.round(tx + tabW / 2 - ic.width / 2), Math.round(tabY + 10 - ic.height / 2));
   }
-  // grid
+  // item grid
   const cat = CATS[shopTab], list = ITEMS[cat];
-  const cols = 4, gap = 4, cw = Math.floor((W - 12 - gap * (cols - 1)) / cols), ch = 44, gx0 = Math.round((W - (cw * cols + gap * (cols - 1))) / 2), gy0 = tabY + 38;
+  const cols = 4, gap = 6, cw = Math.floor((W - 16 - gap * (cols - 1)) / cols), ch = 40, gx0 = Math.round((W - (cw * cols + gap * (cols - 1))) / 2), gy0 = tabY + 32;
   list.forEach((it, idx) => {
     const col = idx % cols, row = Math.floor(idx / cols);
     const x = gx0 + col * (cw + gap), y = gy0 + row * (ch + gap);
     const key = cat + ':' + it.id, owned = save.owned.includes(key), equipped = save.eq[cat] === it.id;
-    addBtn(x, y, cw, ch, () => shopTap(cat, it));
-    ctx.fillStyle = P.d; ctx.fillRect(x, y, cw, ch);
-    ctx.fillStyle = equipped ? P.e : owned ? '#b8ab7a' : '#6a5a4a'; ctx.fillRect(x + 1, y + 1, cw - 2, ch - 2);
-    if (equipped) { ctx.fillStyle = P.y; ctx.fillRect(x - 1, y - 1, cw + 2, 1); ctx.fillRect(x - 1, y + ch, cw + 2, 1); ctx.fillRect(x - 1, y - 1, 1, ch + 2); ctx.fillRect(x + cw, y - 1, 1, ch + 2); }
+    const b = addBtn(x, y, cw, ch, () => shopTap(cat, it));
+    button(b, null, { fill: equipped ? ACCENT : PAPER });
     if (it.spr) {
-      const s = it.spr, sw = Math.min(s.width, cw - 6);
-      ctx.globalAlpha = owned ? 1 : 0.55;
-      ctx.drawImage(s, Math.round(x + cw / 2 - s.width / 2), Math.round(y + 15 - s.height / 2));
+      const s = it.spr;
+      ctx.globalAlpha = owned ? 1 : 0.45;
+      ctx.drawImage(s, Math.round(x + cw / 2 - s.width / 2), Math.round(y + 14 - s.height / 2));
       ctx.globalAlpha = 1;
-    } else { ctx.fillStyle = P.d; ctx.fillRect(x + cw / 2 - 5, y + 14, 10, 2); }
-    if (owned) { if (equipped) ctx.drawImage(ICON.check, Math.round(x + cw / 2 - 4), y + ch - 14); }
+    } else { ctx.fillStyle = equipped ? PAPER : INK; ctx.fillRect(x + Math.round(cw / 2) - 4, y + 13, 8, 2); }
+    if (owned) { if (equipped) ctx.drawImage(ICON.check, Math.round(x + cw / 2 - 4), y + ch - 12); }
     else {
-      const can = save.coins >= it.price;
-      ctx.drawImage(ICON.coin, x + 3, y + ch - 12); text('' + it.price, x + 13, y + ch - 14, { size: 16, color: can ? '#ffffff' : '#a89a8a', shadow: can ? P.d : false });
+      const can = save.coins >= it.price, pw = 10 + textW('' + it.price, 8);
+      const px = Math.round(x + cw / 2 - pw / 2);
+      ctx.globalAlpha = can ? 1 : 0.5; ctx.drawImage(ICON.coin, px, y + ch - 12); ctx.globalAlpha = 1;
+      text('' + it.price, px + 10, y + ch - 12, { size: 8, color: can ? INK : GRAY, shadow: false });
     }
   });
   const nameIt = list.find(i => i.id === save.eq[cat]);
-  if (shopMsg && shopMsg.t > 0) { shopMsg.t -= 1 / 60; text(shopMsg.s, W / 2, H - 30, { size: 16, align: 'center', color: shopMsg.c }); }
-  else if (nameIt) text(nameIt.name, W / 2, H - 30, { size: 16, align: 'center', color: '#c8b890' });
+  const footY = gy0 + Math.ceil(list.length / cols) * (ch + gap) + 6;
+  if (shopMsg && shopMsg.t > 0) { shopMsg.t -= 1 / 60; text(shopMsg.s, W / 2, footY, { size: 16, align: 'center', color: shopMsg.c, shadow: false }); }
+  else if (nameIt) text(nameIt.name, W / 2, footY, { size: 16, align: 'center', color: INK, shadow: false });
 }
 function shopTap(cat, it) {
   const key = cat + ':' + it.id;
@@ -724,32 +884,31 @@ function shopTap(cat, it) {
     save.eq[cat] = (save.eq[cat] === it.id && it.id !== 'none') ? 'none' : it.id; persist(); sfx.ui();
   } else if (save.coins >= it.price) {
     save.coins -= it.price; save.owned.push(key); save.eq[cat] = it.id; persist(); sfx.buy(); vibrate(20);
-    shopMsg = { s: 'GOT ' + it.name + '!', t: 1.5, c: P.Y };
-  } else { sfx.nope(); vibrate(30); shopMsg = { s: 'NEED ' + (it.price - save.coins) + ' MORE', t: 1.2, c: '#ff8080' }; }
+    shopMsg = { s: 'GOT ' + it.name + '!', t: 1.5, c: ACCENT };
+  } else { sfx.nope(); vibrate(30); shopMsg = { s: 'NEED ' + (it.price - save.coins) + ' MORE', t: 1.2, c: ACCENT }; }
 }
 function drawToggle(x, y, on) {
-  ctx.fillStyle = P.d; ctx.fillRect(x, y, 26, 12);
-  ctx.fillStyle = on ? '#5fcf4a' : '#8a8a8a'; ctx.fillRect(x + 1, y + 1, 24, 10);
-  ctx.fillStyle = on ? '#9af07a' : '#b0b0b0'; ctx.fillRect(x + 1, y + 1, 24, 1);
-  ctx.fillStyle = '#ffffff'; ctx.fillRect(on ? x + 15 : x + 2, y + 2, 9, 8);
-  ctx.fillStyle = '#d0d0d0'; ctx.fillRect(on ? x + 15 : x + 2, y + 9, 9, 1);
+  ctx.fillStyle = INK; ctx.fillRect(x + 1, y + 1, 26, 12);
+  ctx.fillStyle = INK; ctx.fillRect(x, y, 26, 12);
+  ctx.fillStyle = on ? ACCENT : GRAY; ctx.fillRect(x + 1, y + 1, 24, 10);
+  ctx.fillStyle = INK; ctx.fillRect(on ? x + 14 : x + 2, y + 2, 10, 8);
+  ctx.fillStyle = PAPER; ctx.fillRect(on ? x + 15 : x + 3, y + 3, 8, 6);
 }
 function drawSettings() {
   ctx.fillStyle = 'rgba(20,10,30,0.5)'; ctx.fillRect(0, 0, W, H);
-  const pw = W - 44, ph = 118, px = 22, py = Math.round(H / 2 - ph / 2 - 20);
+  const pw = Math.min(W - 36, 170), ph = 112, px = Math.round((W - pw) / 2), py = Math.round(H / 2 - ph / 2 - 20);
   panel(px, py, pw, ph);
-  ctx.drawImage(ICON.gear, Math.round(W / 2 - 5), py + 7);
-  const cb = addBtn(px + pw - 22, py + 2, 20, 20, () => { settingsOpen = false; });
-  ctx.drawImage(ICON.close, cb.x + 7, cb.y + 7);
-  const rows = [['speaker', 'sound'], ['vibrate', 'vib'], ['tilt', 'tilt']];
+  text('SETTINGS', px + 10, py + 9, { size: 8, color: INK, shadow: false });
+  iconButton(px + pw - 24, py + 5, ICON.close, () => { settingsOpen = false; });
+  const rows = [['speaker', 'sound', 'SOUND'], ['vibrate', 'vib', 'BUZZ'], ['tilt', 'tilt', 'TILT']];
   rows.forEach((r, i) => {
-    const y = py + 30 + i * 28;
-    ctx.drawImage(ICON[r[0]], px + 22, y + 1);
-    const b = addBtn(px + pw - 52, y - 4, 40, 20, () => {
+    const y = py + 36 + i * 24;
+    ctx.drawImage(ICON[r[0]], px + 12, y);
+    text(r[2], px + 28, y + 1, { size: 8, color: INK, shadow: false });
+    const b = addBtn(px + pw - 40, y - 4, 32, 18, () => {
       if (r[1] === 'tilt' && !save.tilt) enableTilt(); else { save[r[1]] = !save[r[1]]; persist(); }
     });
-    drawToggle(b.x + 7, b.y + 4, save[r[1]]);
-    text(r[1] === 'tilt' ? 'TILT' : r[1] === 'vib' ? 'BUZZ' : 'SOUND', px + 42, y - 2, { size: 16, color: P.d, shadow: false });
+    drawToggle(b.x + 3, b.y + 3, save[r[1]]);
   });
 }
 function enableTilt() {
@@ -762,7 +921,7 @@ function enableTilt() {
 // ============================================================ input
 function startGame() {
   scene = 'play'; settingsOpen = false; game.started = true;
-  game.frog.vy = JUMP_V; game.frog.anim = 'jump'; sfx.jump(); vibrate(8);
+  game.frog.vy = JUMP_V; game.frog.landT = 0; sfx.jump(); vibrate(8);
 }
 function toLogical(e) { const r = view.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * W, (e.clientY - r.top) / r.height * H]; }
 let activePointer = null;
@@ -804,7 +963,7 @@ function frame(now) {
   let dt = clamp((now - last) / 1000 || 0, 0, 0.05); last = now; // rAF timestamps can precede performance.now() on the first frame
   const f = game.frog;
   // idle blink timer
-  f.blinkT -= dt; if (f.blinkT <= 0) { f.blink = 0.12; f.blinkT = rnd(2, 5); }
+  f.blinkT -= dt; if (f.blinkT <= 0) { f.blink = 0.14; f.blinkT = rnd(1.5, 3.5); }
   if (f.blink > 0) f.blink -= dt;
   if (scene === 'play') {
     acc += dt;
@@ -838,10 +997,7 @@ function frame(now) {
 addEventListener('resize', () => { if (scene === 'title' || scene === 'shop') { newGame(); } });
 document.addEventListener('visibilitychange', () => { if (document.hidden && scene === 'play') { input.touchX = null; } });
 
-// ---- boot: load the pixel font first so the UI never flashes a fallback font
+// ---- boot
 newGame();
-const fontFace = new FontFace(FONT, 'url(data:font/otf;base64,' + ASSETS.fontB64 + ')');
-let booted = false;
-const boot = () => { if (booted) return; booted = true; last = performance.now(); requestAnimationFrame(frame); };
-fontFace.load().then(ff => { document.fonts.add(ff); boot(); }).catch(boot);
-setTimeout(boot, 1500);
+last = performance.now();
+requestAnimationFrame(frame);

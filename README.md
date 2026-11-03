@@ -23,12 +23,18 @@ Safari'de "Ana Ekrana Ekle" dersen tam ekran açılır.
 - **Klavye:** Sol/Sağ ok ya da A/D. Boşluk / Enter ile başlat ve yeniden oyna.
 - **Eğim (Tilt):** Ayarlar panelinden açılır (iOS izin ister).
 
+## Geliştirme
+
+Kaynak kod `src/` içinde. Değişiklikten sonra `python3 build.py` çalıştır: `src/` dosyalarını tek bir `index.html` içine gömer ve `frog-hop.zip`'i yeniler.
+Yazılar tarayıcı fontu yerine koddaki 5x7 bitmap fontla çizilir; bu sayede her ölçekte keskin kalır.
+
 ## Oyun içeriği
 
-- **Platformlar:** Yeşil (normal), odun (hareketli), kuru/çatlak (bir kez zıpladıktan sonra kırılır), yaylı (ekstra yüksek zıplama).
-- **Zorluk:** Yükseldikçe platform aralığı açılır, platformlar daralır, hareketli/kırılan platform ve sinek oranı artar. 450 m civarında tavana ulaşır; ara sıra aynı seviyede ikinci bir platform çıkarak yol kolaylaşır.
-- **Güç barı (SUPER JUMP):** Platforma her konuşta, her coin'de ve yenen her sinekte dolar. Dolunca bir sonraki zıplama ekranın neredeyse tamamı kadar yükseğe çıkar.
-- **Dil gücü (TONGUE):** Yolda çıkan pembe halkayı alınca 9 saniye boyunca menzile giren sinekleri dille yer. Her sinek +2 coin ve güç barına bonus.
+- **Platformlar:** Yeşil hap (normal, kırılmaz), sarı hap (hareketli), cam (bir kez zıpladıktan sonra kırılıp parçalanır), bataklık (yapışkan, zayıf zıplatır), yaylı (ekstra yüksek zıplama).
+- **Zorluk:** Yükseldikçe platform aralığı açılır, platformlar daralır, hareketli/cam/bataklık platform ve sinek oranı artar. 450 m civarında tavana ulaşır; ara sıra aynı seviyede ikinci bir platform çıkarak yol kolaylaşır.
+- **EXP ve seviye:** Her zıplayış, her coin ve yenen her sinek EXP verir. Bar dolunca LEVEL UP: her seviye zıplamayı %4 artırır (en fazla %24) ve bir sonraki zıplama SUPER JUMP olur.
+- **Ekstra can (+1UP):** Her 3. seviyede bir can kazanılır (en fazla 2). Düşünce kurbağa görünür bir platforma geri döner ve kısa süre dokunulmaz olur.
+- **Dil gücü (TONGUE):** Yolda çıkan pembe halkayı alınca 10 saniye boyunca kurbağanın etrafında pembe bir hale belirir ve menzile giren sinekler dille yakalanıp yenir. Her sinek +2 coin ve EXP.
 - **Sinekler:** Dil gücü yokken çarpınca kurbağa sersemler ve aşağı itilir (yakalayacak platform yoksa düşer).
 - **Coin:** Platform üstlerinde ve havada kavis şeklinde. Mağazada harcanır.
 - **Gece/gündüz:** Her 320 m'de bir tam döngü. Güneş batar, yıldızlar çıkar, ay doğar; bulutlar da renk değiştirir.
