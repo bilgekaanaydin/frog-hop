@@ -846,10 +846,10 @@ function iconButton(x, y, icon, fn, o = {}) {
   return b;
 }
 // logo-style box: lime face, 2px black outline and a stepped black 3D extrusion down-right
-function logoPanel(x, y, w, h) {
+function logoPanel(x, y, w, h, depth = 4) {
   x = Math.round(x); y = Math.round(y);
   ctx.fillStyle = INK;
-  for (let i = 4; i >= 1; i--) ctx.fillRect(x + i, y + i, w, h);
+  for (let i = depth; i >= 1; i--) ctx.fillRect(x + i, y + i, w, h);
   ctx.fillRect(x, y, w, h);
   ctx.fillStyle = LIME; ctx.fillRect(x + 2, y + 2, w - 4, h - 4);
 }
@@ -887,28 +887,30 @@ function drawHUD() {
     ctx.fillStyle = blinkOff ? INK : mixHex(LIME, '#ff3b30', warn); ctx.fillRect(tx - 36, ty + 4, Math.round(31 * game.tongueT / TONGUE_TIME), 5);
   }
   // level-up / 1UP banners
-  // banners drop in from the top, hold, then fade out
-  // returns the bottom edge so banners can stack
-  const banner = (t, dur, y0, title, sub, TS = 12) => {
-    const k = 1 - t / dur, drop = Math.round((1 - easeOutBounce(clamp(k / 0.25, 0, 1))) * -40);
-    // measured from the real glyph metrics: equal padding above the title and below the subtitle's descenders
-    const SS = 8, TT = 2, ST = 2; // subtitle size, letter spacing
-    const border = 2, pad = TS <= 8 ? 4 : 5, gap = 4, padX = TS <= 8 ? 7 : 10;
-    const titleH = Math.round(textH(TS)), subH = sub ? Math.round(textH(SS)) : 0;
-    const pw = Math.round(Math.max(textW(title, TS, TT), sub ? textW(sub, SS, ST) : 0) + 2 * (padX + border));
-    const ph = border * 2 + pad * 2 + titleH + (sub ? gap + subH : 0);
-    const px = Math.round(W / 2 - pw / 2), py = Math.round(y0 + drop);
+  // small banners on the left, under the hearts: they slide in from the edge, hold, then fade out.
+  // The title sits on the lime face; an optional subtitle goes in a black strip at the bottom (like the EXP bar).
+  // Returns the bottom edge so banners can stack.
+  const banner = (t, dur, y0, title, sub) => {
+    const k = 1 - t / dur, ease = 1 - Math.pow(1 - clamp(k / 0.18, 0, 1), 3);
+    const border = 2, pad = 4, padX = 6, lineH = Math.round(textH(8));
+    const pw = Math.round(Math.max(textW(title, 8, 2), sub ? textW(sub, 8, 1) : 0) + 2 * (padX + border));
+    const titleBlock = pad * 2 + lineH, subBlock = sub ? lineH + 6 : 0;
+    const ph = border * 2 + titleBlock + subBlock;
+    const px = Math.round(6 - (1 - ease) * (pw + 12)), py = Math.round(y0);
     ctx.globalAlpha = clamp(t * 3, 0, 1);
-    logoPanel(px, py, pw, ph);
-    text(title, W / 2, py + border + pad, { size: TS, track: TT, align: 'center', color: INK, shadow: false });
-    if (sub) text(sub, W / 2, py + border + pad + titleH + gap, { size: SS, track: ST, align: 'center', color: INK, shadow: false });
+    logoPanel(px, py, pw, ph, 3);
+    text(title, px + pw / 2, py + border + pad, { size: 8, track: 2, align: 'center', color: INK, shadow: false });
+    if (sub) {
+      ctx.fillStyle = INK; ctx.fillRect(px + border, py + border + titleBlock, pw - 2 * border, subBlock);
+      text(sub, px + pw / 2, py + border + titleBlock + 3, { size: 8, track: 1, align: 'center', color: LIME, shadow: false });
+    }
     ctx.globalAlpha = 1;
-    return y0 + ph + 10;
+    return y0 + ph + 8;
   };
-  let bannerY = top + 62;
+  let bannerY = top + 50;
   if (game.levelUpT > 0) bannerY = banner(game.levelUpT, 1.4, bannerY, 'LEVEL UP', 'JUMP +' + Math.round((jumpBoost() - 1) * 100) + '%');
   if (game.oneUpT > 0) bannerY = banner(game.oneUpT, 1.6, bannerY, '+1UP', 'EXTRA LIFE');
-  if (game.eatT > 0) bannerY = banner(game.eatT, 1.6, bannerY, 'EAT THE FLIES!', null, 8);
+  if (game.eatT > 0) bannerY = banner(game.eatT, 1.6, bannerY, 'EAT THE FLIES!', null);
 }
 let buttons = [];
 function addBtn(x, y, w, h, fn) { const b = { x, y, w, h, fn }; buttons.push(b); return b; }
