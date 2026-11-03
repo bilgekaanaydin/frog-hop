@@ -51,9 +51,10 @@ const CLOUDS = {};
 for (const k in CLOUD_PALS) CLOUDS[k] = ASSETS.clouds.map(c => makeSprite(c.rows, CLOUD_PALS[k]));
 
 const ICON = {
-  coin: makeSprite(['..kkkkk..', '.kyYYYyk.', 'kyYYyyyok', 'kyYyykyok', 'kyyykyyok', 'kyyyyyook', 'kyyoooook', '.kooooook', '..kkkkk..'], CP),
-  coinThin: makeSprite(['..kkk..', '.kyYyk.', 'kyYyyok', 'kyYkyok', 'kyykyok', 'kyyyook', 'kyooook', '.koook.', '..kkk..'], CP),
-  coinLine: makeSprite(['.kk.', 'kyok', 'kyok', 'kyok', 'kyok', 'kyok', 'kyok', 'kyok', '.kk.'], CP),
+  coin: makeSprite(['...kkkkk...', '..kyYYYyk..', '.kyYYyyyyk.', 'kyYYyyyyyok', 'kyYyyykyyok', 'kyyyykyyyok', 'kyyykyyyook', 'kyyyyyyoook', '.kyyyooook.', '..koooook..', '...kkkkk...'], CP),
+  coinThin: makeSprite(['..kkk..', '.kyYyk.', 'kyYyyok', 'kyYyyok', 'kyYkyok', 'kyykyok', 'kyyyyok', 'kyyyook', 'kyooook', '.koook.', '..kkk..'], CP),
+  coinLine: makeSprite(['.kk.', 'kyok', 'kyok', 'kyok', 'kyok', 'kyok', 'kyok', 'kyok', 'kyok', 'kyok', '.kk.'], CP),
+  coinSmall: makeSprite(['..kkkkk..', '.kyYYYyk.', 'kyYYyyyok', 'kyYyykyok', 'kyyykyyok', 'kyyyyyook', 'kyyoooook', '.kooooook', '..kkkkk..'], CP),
   trophy: makeSprite(['kkkkkkkkk', 'kyyyyyyyk', 'kkyYyyykk', '.kyyyyyk.', '..kyyyk..', '...kyk...', '...kyk...', '..kyyyk..', '.kkkkkkk.'], P),
   cart: makeSprite(['kkk.........', '..kkkkkkkkkk', '..kyyyyyyyyk', '..kyyyyyyyyk', '...kyyyyyyk.', '...kkkkkkkk.', '...kwk..kwk.', '....k....k..'], P),
   gear: makeSprite(['....kk....', '.kk.kk.kk.', '.kkkkkkkk.', '..kk..kk..', 'kkkk..kkkk', 'kkkk..kkkk', '..kk..kk..', '.kkkkkkkk.', '.kk.kk.kk.', '....kk....'], P),
@@ -313,7 +314,8 @@ const diffAt = y => clamp(y / 4500, 0, 1);
 function genUpTo(limit) {
   while (game.genY < limit) {
     const d = diffAt(game.genY);
-    const gap = lerp(34, 70, d) * rnd(0.85, 1.1);
+    let gap = lerp(34, 70, d) * rnd(0.85, 1.1);
+    if (game.lastType === 'swamp') gap = Math.min(gap, 46); // a swamp bounce is weaker: keep the next platform in reach
     game.genY += gap;
     addPlatformBand(game.genY, d, gap);
   }
@@ -339,14 +341,14 @@ function addPlatformBand(y, d, gap) {
   // coins on the platform
   if (Math.random() < 0.16 && type !== 'crumble') {
     const n = rndi(1, 2);
-    for (let i = 0; i < n; i++) game.coins.push({ x: p.x + p.w / 2 + (i - (n - 1) / 2) * 11, y: y + 16, t: rnd(0, 6), on: type === 'moving' ? p : null, dx: (i - (n - 1) / 2) * 11, taken: false });
-  } else if (Math.random() < 0.04) { // an arc of coins in the air (rare)
-    const cx = rnd(30, W - 30);
-    for (let i = 0; i < 5; i++) game.coins.push({ x: cx + (i - 2) * 12, y: y + 30 + Math.sin(i / 4 * Math.PI) * 14, t: i * 0.3, on: null, taken: false });
+    for (let i = 0; i < n; i++) game.coins.push({ x: p.x + p.w / 2 + (i - (n - 1) / 2) * 14, y: y + 17, t: rnd(0, 6), on: type === 'moving' ? p : null, dx: (i - (n - 1) / 2) * 14, taken: false });
+  } else if (Math.random() < 0.05) { // a single coin floating between platforms
+    game.coins.push({ x: rnd(30, W - 30), y: y + 30, t: rnd(0, 6), on: null, taken: false });
   }
   // flies
-  if (y > 260 && Math.random() < 0.05 + 0.24 * d) {
-    game.flies.push({ bx: rnd(30, W - 30), by: y + gap * 0.55, t: rnd(0, 6), amp: rnd(25, 60), sp: rnd(1.1, 2.0) + d, x: 0, y: 0, esc: false, dead: false });
+  if (y > 200 && Math.random() < 0.14 + 0.3 * d) {
+    const bx = rnd(30, W - 30), by = y + gap * 0.55;
+    game.flies.push({ bx, by, t: rnd(0, 6), amp: rnd(25, 60), sp: rnd(1.1, 2.0) + d, x: bx, y: by, esc: false, dead: false });
   }
   // tongue power-up
   if (y > game.nextItemY) {
@@ -379,7 +381,7 @@ function land(p) {
   let v = JUMP_V * boost, kind = 'jump';
   if (game.charged) { v = SUPER_V * boost; kind = 'super'; game.charged = false; game.superT = 0.7; game.shake = 4; addFloater(f.x, f.y + 40, 'SUPER!', P.Y); }
   else if (p && p.spring) { v = SPRING_V * boost; kind = 'spring'; p.springT = 0.3; }
-  else if (p && p.type === 'swamp') { v = JUMP_V * boost * 0.62; kind = 'swamp'; p.splashT = 0.4; }
+  else if (p && p.type === 'swamp') { v = JUMP_V * boost * 0.8; kind = 'swamp'; p.splashT = 0.4; }
   f.vy = v; f.landT = 0; // restarts the squash -> stretch animation
   if (p) {
     if (p.type === 'crumble') { p.alive = false; p.broken = true; sfx.glass(); burst(p.x + p.w / 2, p.y, 12, ['#dff6ff', '#8ed8ff', '#ffffff', '#3b2d6b'], 70, 0.6); }
@@ -459,7 +461,7 @@ function step(dt) {
   for (const c of game.coins) {
     if (c.taken) continue; c.t += dt;
     if (c.on) c.x = c.on.x + c.on.w / 2 + c.dx;
-    if (Math.abs(c.x - f.x) < 14 && c.y > f.y - 4 && c.y < f.y + 30) {
+    if (Math.abs(c.x - f.x) < 16 && c.y > f.y - 5 && c.y < f.y + 31) {
       c.taken = true; game.runCoins++; addExp(EXP_COIN); sfx.coin(); addFloater(c.x, c.y + 6, '+1', P.Y);
       burst(c.x, c.y, 5, [P.Y, P.y, P.w], 50, 0.35, 0);
     }
@@ -759,7 +761,7 @@ const COIN_FRAMES = [ICON.coin, ICON.coinThin, ICON.coinLine, ICON.coinThin];
 function drawCoin(c) {
   const y = sy(c.y), fr = COIN_FRAMES[Math.abs(Math.floor(c.t * 6)) % 4];
   if (y < -10 || y > H + 10) return;
-  ctx.drawImage(fr, Math.round(c.x - fr.width / 2), y - 4);
+  ctx.drawImage(fr, Math.round(c.x - fr.width / 2), y - Math.floor(fr.height / 2));
 }
 function drawItem(it) {
   const y = sy(it.y) + Math.round(Math.sin(it.t * 3) * 2), x = Math.round(it.x);
@@ -789,7 +791,7 @@ function drawWorld() {
 }
 
 // ------------------------------------------------------------ HUD / screens
-function drawCoinCounter(x, y, n, color = P.Y, shadow) { ctx.drawImage(ICON.coin, x, y); text('' + n, x + 11, y, { size: 8, color, shadow }); }
+function drawCoinCounter(x, y, n, color = P.Y, shadow) { ctx.drawImage(ICON.coinSmall, x, y); text('' + n, x + 11, y, { size: 8, color, shadow }); }
 function iconButton(x, y, icon, fn, o = {}) {
   const b = addBtn(x, y, 18, 18, fn);
   button(b, null, { icon, fill: o.fill || PAPER });
@@ -871,7 +873,7 @@ function drawDead() {
   if (game.newBest) { if (Math.floor(game.time * 4) % 2 === 0) text('NEW BEST!', W / 2, rowY, { size: 8, align: 'center', color: ACCENT, shadow: false }); }
   else { const bw = 12 + textW('' + save.best, 8); ctx.drawImage(ICON.trophy, Math.round(W / 2 - bw / 2), rowY - 1); text('' + save.best, W / 2 - bw / 2 + 12, rowY, { size: 8, color: INK, shadow: false }); }
   const cw = 12 + textW('+' + game.runCoins, 8);
-  ctx.drawImage(ICON.coin, Math.round(W / 2 - cw / 2), rowY + 11); text('+' + game.runCoins, W / 2 - cw / 2 + 12, rowY + 11, { size: 8, color: INK, shadow: false });
+  ctx.drawImage(ICON.coinSmall, Math.round(W / 2 - cw / 2), rowY + 11); text('+' + game.runCoins, W / 2 - cw / 2 + 12, rowY + 11, { size: 8, color: INK, shadow: false });
   if (game.deadT < 0.6) return;
   const rb = addBtn(px + 10, py + ph - 46, pw - 22, 18, () => { newGame(); startGame(); });
   button(rb, 'RETRY', { size: 8 });
@@ -917,7 +919,7 @@ function drawShop() {
     else {
       const can = FREE_SHOP || save.coins >= it.price, pw = 10 + textW('' + it.price, 8);
       const px = Math.round(x + cw / 2 - pw / 2);
-      ctx.globalAlpha = can ? 1 : 0.5; ctx.drawImage(ICON.coin, px, y + ch - 12); ctx.globalAlpha = 1;
+      ctx.globalAlpha = can ? 1 : 0.5; ctx.drawImage(ICON.coinSmall, px, y + ch - 12); ctx.globalAlpha = 1;
       text('' + it.price, px + 10, y + ch - 12, { size: 8, color: can ? INK : GRAY, shadow: false });
     }
   });
