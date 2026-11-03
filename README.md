@@ -35,7 +35,7 @@ Arayüz yalnızca iki renk kullanır: lime `#d0f053` ve siyah `#000000`. Başlı
 ## Oyun içeriği
 
 - **Platformlar:** Yeşil hap (normal, kırılmaz), sarı hap (hareketli), cam (bir kez zıpladıktan sonra kırılıp parçalanır), bataklık (yapışkan, zayıf zıplatır), yaylı (ekstra yüksek zıplama).
-- **Zorluk:** Yükseldikçe platform aralığı açılır, platformlar daralır, hareketli/cam/bataklık platform ve sinek oranı artar. 450 m civarında tavana ulaşır; ara sıra aynı seviyede ikinci bir platform çıkarak yol kolaylaşır.
+- **Zorluk:** Yükseldikçe platform aralığı açılır, platformlar daralır, hareketli/cam/bataklık platform ve sinek oranı artar. 750 skorda tavana ulaşır; ara sıra aynı seviyede ikinci bir platform çıkarak yol kolaylaşır.
 - **EXP ve seviye:** Her zıplayış, her coin ve yenen her sinek EXP verir. Bar dolunca LEVEL UP: her seviye zıplamayı %4 artırır (en fazla %24) ve bir sonraki zıplama SUPER JUMP olur.
 - **Ekstra can (+1UP):** Her 3. seviyede bir can kazanılır (en fazla 2). Düşünce kurbağa görünür bir platforma geri döner ve kısa süre dokunulmaz olur.
 - **Dil gücü (TONGUE):** Yolda çıkan pembe iksir şişesini alınca 10 saniye boyunca kurbağanın etrafında pembe bir hale belirir ve menzile giren sinekler dille yakalanıp yenir. Her sinek +2 coin ve EXP.

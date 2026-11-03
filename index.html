@@ -460,7 +460,8 @@ function newGame() {
   genClouds();
 }
 
-const diffAt = y => clamp(y / 4500, 0, 1);
+const DIFF_MAX_SCORE = 750; // difficulty climbs steadily and peaks at this score (score = height / 10)
+const diffAt = y => clamp(y / (DIFF_MAX_SCORE * 10), 0, 1);
 
 function genUpTo(limit) {
   while (game.genY < limit) {
