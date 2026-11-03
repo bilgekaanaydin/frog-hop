@@ -230,7 +230,7 @@ function glyph(ch, color, wide = false) {
 // brand palette: the logo's lime (#d0f053) and pure black, used across the whole interface
 const INK = '#000000', LIME = '#d0f053', LIME_DOT = '#b6d63e', GRAY = '#7d8f32';
 const PAPER = LIME; // default UI text / panel colour
-const BUILD = '__BUILD__'; // replaced with the build time by build.py, shown on the title screen
+const BUILD = '__BUILD__'; // replaced with the build time by build.py (kept in the bundle for debugging, not shown)
 const FREE_SHOP = true; // test build: everything in the shop is free
 // size keeps its old meaning: the cap height is 7 * round(size / 8) game pixels (8 -> 7px, 16 -> 14px, 24 -> 21px)
 const capOf = size => (size || 16) * 7 / 8; // cap height in game pixels (8 -> 7, 12 -> 10.5, 16 -> 14, 24 -> 21)
@@ -1234,7 +1234,6 @@ function drawTitle() {
     if (ph < 0.45) { const k = ph / 0.45; ctx.globalAlpha = 1 - k; pixelRing(hx + 3, hy - 1, 2 + k * 6, '#ffffff'); ctx.globalAlpha = 1; }
   }
   if (save.runs < 3) text('HOLD & DRAG TO MOVE', W / 2, sy(0) + 50, { size: 8, align: 'center', color: LIME });
-  ctx.globalAlpha = 0.7; text('BUILD ' + BUILD, W - 4, H - 10, { size: 6, align: 'right', color: LIME }); ctx.globalAlpha = 1;
 }
 // pause overlay: dim the run, logo-style PAUSED box, resume and home buttons
 function drawPause() {
