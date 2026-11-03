@@ -1030,6 +1030,16 @@ ICON.heartBigEmpty = makeSprite(HEART_ROWS, { k: 'rgba(255,255,255,0.7)', r: 'rg
 // the same potion with a red brew, cross-faded in as the tongue power runs out
 ICON.potionRed = makeSprite(ASSETS_POTION_ROWS, Object.assign({}, P, { p: '#e8322a', a: '#ff7a6e', P: '#8f1410' }));
 const darkness = () => Math.max(nightAmount(dayPhase()), spaceAmt()); // 0 = day sky, 1 = night / space
+// 1px light outline that follows a sprite's shape, so dark sprites stay readable on dark skies
+const glowCache = new Map();
+function outlineOf(spr, col = '#cfc4ff') {
+  const key = spr; if (glowCache.has(key)) return glowCache.get(key);
+  const w = spr.width + 2, h = spr.height + 2, c = document.createElement('canvas'); c.width = w; c.height = h;
+  const x = c.getContext('2d');
+  for (const [dx, dy] of [[0, 1], [2, 1], [1, 0], [1, 2]]) x.drawImage(spr, dx, dy);
+  x.globalCompositeOperation = 'source-in'; x.fillStyle = col; x.fillRect(0, 0, w, h);
+  glowCache.set(key, c); return c;
+}
 function drawFly(fl) {
   const y = sy(fl.y), x = Math.round(fl.x);
   if (y < -10 || y > H + 10) return;
@@ -1038,7 +1048,7 @@ function drawFly(fl) {
   const right = fl.esc || Math.cos(fl.t * fl.sp) > 0;
   const spr = right ? [ICON.fly0, ICON.fly1][fr] : FLY_L[fr];
   const dark = darkness();
-  if (dark > 0.2) { ctx.globalAlpha = 0.35 * dark; ctx.fillStyle = '#d8ccff'; ctx.beginPath(); ctx.ellipse(x, y, 8, 6, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; }
+  if (dark > 0.2) { ctx.globalAlpha = 0.85 * dark; ctx.drawImage(outlineOf(spr), x - 6, y - 4); ctx.globalAlpha = 1; }
   ctx.drawImage(spr, x - 5, y - 3);
   if (game.tongueT > 0 && !fl.esc) { ctx.fillStyle = POTION; ctx.fillRect(x - 1, y - 10, 2, 2); }
 }
@@ -1052,9 +1062,10 @@ function drawCoin(c) {
 function drawItem(it) {
   const y = sy(it.y) + Math.round(Math.sin(it.t * 3) * 2), x = Math.round(it.x);
   if (y < -16 || y > H + 16) return;
-  const dk = darkness(); if (dk > 0.2) { ctx.globalAlpha = 0.3 * dk; ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI * 2); ctx.fill(); }
   ctx.globalAlpha = 0.18 + 0.1 * Math.sin(it.t * 5); ctx.fillStyle = POTION; ctx.beginPath(); ctx.arc(x, y, 10, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
-  const pt = ICON.potion; ctx.drawImage(pt, x - Math.floor(pt.width / 2), y - Math.floor(pt.height / 2));
+  const pt = ICON.potion, dk = darkness();
+  if (dk > 0.2) { ctx.globalAlpha = 0.85 * dk; ctx.drawImage(outlineOf(pt, '#e4dcff'), x - Math.floor(pt.width / 2) - 1, y - Math.floor(pt.height / 2) - 1); ctx.globalAlpha = 1; }
+  ctx.drawImage(pt, x - Math.floor(pt.width / 2), y - Math.floor(pt.height / 2));
   ctx.fillStyle = '#ffffff';
   for (let i = 0; i < 3; i++) { const ph = (it.t * 1.3 + i * 0.33) % 1; if (ph < 0.5) { const a = i * 2.1 + Math.floor(it.t * 1.3) * 1.3; ctx.fillRect(x + Math.round(Math.cos(a) * 10), y + Math.round(Math.sin(a) * 9), 1, 1); } }
 }
@@ -1134,10 +1145,10 @@ function drawHUD() {
   for (let i = 0; i < 1 + MAX_LIVES; i++) hiresSprite(i <= game.lives ? ICON.heartBig : ICON.heartBigEmpty, 6 + 6 + i * 14, hy + 6, 12, 12);
   if (game.charged && blinkOn) text('SUPER JUMP!', 6 + (1 + MAX_LIVES) * 14 + 3, hy + 2, { size: 8 });
   // right column: score, and the tongue timer under it while the potion is active
-  text('' + game.score, W - 28, top + 4, { size: 16, align: 'right' });
-  if (scene === 'play' && !paused) iconButton(W - 23, top + 3, ICON.pause, () => { paused = true; input.touchX = null; });
+  text('' + game.score, W - 6, top + 4, { size: 16, align: 'right' });
+  if (scene === 'play' && !paused) iconButton(5, H - 27, ICON.pause, () => { paused = true; input.touchX = null; });
   if (game.tongueT > 0) {
-    const pt = ICON.potion, tx = W - pt.width - 5, ty = top + 30; // below the score and its shadow
+    const pt = ICON.potion, tx = W - pt.width - 5, ty = top + 4 + Math.ceil(textH(16)) + 5; // below the score and its shadow
     // running out: over the last 3 seconds the bar and the brew turn red, and both blink in the final second
     const warn = clamp((3 - game.tongueT) / 3, 0, 1), blinkOff = game.tongueT < 1 && Math.floor(game.time * 10) % 2 === 0;
     if (!blinkOff) {
