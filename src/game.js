@@ -962,20 +962,46 @@ function drawFrogAt(cx, feetY, anim, lean, blink, eq) {
   }
   return { x0, y0, h: spr.height };
 }
+// tongue-power radar: crisp pixel rings pulse outwards and fade, a sweep beam rotates and leaves a fading trail
+function pixelRing(cx, cy, r, col) {
+  ctx.fillStyle = col;
+  const n = Math.max(12, Math.round(r * 6.3));
+  let lx = null, ly = null;
+  for (let i = 0; i < n; i++) {
+    const a = i / n * Math.PI * 2, x = Math.round(cx + Math.cos(a) * r), y = Math.round(cy + Math.sin(a) * r);
+    if (x !== lx || y !== ly) ctx.fillRect(x, y, 1, 1);
+    lx = x; ly = y;
+  }
+}
+function drawRadar(cx, cy) {
+  const base = ctx.globalAlpha, R = 32, end = game.tongueT < 3 ? clamp(game.tongueT / 3, 0.35, 1) : 1;
+  // pulse rings: bright outer edge, soft inner glow, fading as they grow
+  for (let i = 0; i < 3; i++) {
+    const k = (game.time * 0.8 + i / 3) % 1, r = 9 + k * (R - 9), fade = Math.pow(1 - k, 1.6) * end;
+    ctx.globalAlpha = base * fade; pixelRing(cx, cy, r, '#d8caff');
+    ctx.globalAlpha = base * 0.8 * fade; pixelRing(cx, cy, r - 1, POTION);
+    ctx.globalAlpha = base * 0.35 * fade; pixelRing(cx, cy, r - 2, POTION);
+  }
+  // rotating sweep beam with a short fading trail, like a radar screen
+  const ang = game.time * 3.2;
+  for (let t = 0; t < 7; t++) {
+    const a = ang - t * 0.09;
+    ctx.globalAlpha = base * 0.7 * (1 - t / 7) * end; ctx.fillStyle = t === 0 ? '#e4dcff' : POTION;
+    for (let r = 10; r <= R - 2; r += 2) ctx.fillRect(Math.round(cx + Math.cos(a) * r), Math.round(cy + Math.sin(a) * r), 1, 1);
+  }
+  // blips on the outer edge
+  ctx.fillStyle = '#ffffff';
+  for (let i = 0; i < 4; i++) {
+    const a = i * 1.7 + Math.floor(game.time * 1.5) * 0.9, on = (game.time * 1.5 + i * 0.25) % 1 < 0.35;
+    if (on) { ctx.globalAlpha = base * 0.8 * end; ctx.fillRect(Math.round(cx + Math.cos(a) * (R - 3)), Math.round(cy + Math.sin(a) * (R - 3)), 1, 1); }
+  }
+  ctx.globalAlpha = base;
+}
 function drawFrog() {
   const f = game.frog;
   const lean = Math.abs(f.vx) > 50 ? Math.sign(f.vx) : 0;
   if (game.invuln > 0 && Math.floor(game.time * 12) % 2 === 0) ctx.globalAlpha = 0.45; // respawn flicker
-  if (game.tongueT > 0) { // tongue mode: radar pulses that grow out of the frog and fade as they expand
-    const base = ctx.globalAlpha, cx = Math.round(f.x), cy = sy(f.y) - 14;
-    ctx.strokeStyle = POTION; ctx.lineWidth = 2;
-    for (let i = 0; i < 3; i++) {
-      const k = ((game.time * 0.9 + i / 3) % 1), r = 10 + k * 26;
-      ctx.globalAlpha = base * 0.7 * (1 - k) * (1 - k);
-      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
-    }
-    ctx.globalAlpha = base;
-  }
+  if (game.tongueT > 0) drawRadar(Math.round(f.x), sy(f.y) - 14);
   const pos = drawFrogAt(f.x, sy(f.y), f.anim, lean, f.blink > 0, null);
   if (f.x < FROG_W / 2) drawFrogAt(f.x + W + FROG_W, sy(f.y), f.anim, lean, f.blink > 0, null);
   else if (f.x > W - FROG_W / 2) drawFrogAt(f.x - W - FROG_W, sy(f.y), f.anim, lean, f.blink > 0, null);
