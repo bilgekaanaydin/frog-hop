@@ -138,7 +138,11 @@ const BASE_W = 216;
 const view = document.getElementById('c');
 const vctx = view.getContext('2d');
 const g = document.createElement('canvas');
-const ctx = g.getContext('2d');
+let ctx = g.getContext('2d'); // swapped to the object layer while world objects are drawn
+const mainCtx = ctx;
+// world objects (platforms, coins, potions, flies) get their own layer so they can fade in at the top of the screen
+const og = document.createElement('canvas');
+const octx = og.getContext('2d');
 let W = BASE_W, H = 384, S = 2, CSS_W = 0, CSS_H = 0, SAFE_TOP = 0;
 // reads the iPhone notch / status-bar inset (env(safe-area-inset-top)) so the top bar never hides under it
 const safeProbe = document.createElement('div');
@@ -153,7 +157,7 @@ function resize() {
   SAFE_TOP = Math.ceil(safeProbe.getBoundingClientRect().height * dpr / S);
   view.width = W * S; view.height = H * S;
   view.style.width = (W * S / dpr) + 'px'; view.style.height = (H * S / dpr) + 'px';
-  g.width = W; g.height = H;
+  g.width = W; g.height = H; og.width = W; og.height = H; octx.imageSmoothingEnabled = false;
   ctx.imageSmoothingEnabled = false; vctx.imageSmoothingEnabled = false;
 }
 addEventListener('resize', resize); resize();
@@ -769,22 +773,37 @@ function drawItem(it) {
   ctx.fillStyle = '#ffffff';
   for (let i = 0; i < 3; i++) { const ph = (it.t * 1.3 + i * 0.33) % 1; if (ph < 0.5) { const a = i * 2.1 + Math.floor(it.t * 1.3) * 1.3; ctx.fillRect(x + Math.round(Math.cos(a) * 10), y + Math.round(Math.sin(a) * 9), 1, 1); } }
 }
+// objects coming in from the top start transparent and become fully opaque as they move down into view
+function fadeTop(c) {
+  const a = SAFE_TOP + 6, b = SAFE_TOP + 70;
+  const gr = c.createLinearGradient(0, a, 0, b);
+  gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(0,0,0,1)');
+  c.globalCompositeOperation = 'destination-in'; c.fillStyle = gr; c.fillRect(0, 0, W, H);
+  c.globalCompositeOperation = 'source-over';
+}
 function drawWorld() {
-  ctx.save();
-  if (game.shake > 0) ctx.translate(Math.round(rnd(-game.shake, game.shake)), Math.round(rnd(-game.shake, game.shake)));
+  const shx = game.shake > 0 ? Math.round(rnd(-game.shake, game.shake)) : 0, shy = game.shake > 0 ? Math.round(rnd(-game.shake, game.shake)) : 0;
+  ctx.save(); ctx.translate(shx, shy);
   drawSky(); drawMountains(); drawClouds(); drawGround();
   // best-score line
   if (save.best > 0 && scene !== 'title') {
     const by = sy(save.best * 10);
-    if (by > 10 && by < H) { ctx.fillStyle = 'rgba(255,255,255,0.6)'; for (let x = 0; x < W; x += 6) ctx.fillRect(x, by, 3, 1); ctx.drawImage(ICON.trophy, 4, by - 10); text('' + save.best, 16, by - 13, { size: 16 }); }
+    if (by > 10 && by < H) { ctx.fillStyle = 'rgba(255,255,255,0.6)'; for (let x = 0; x < W; x += 6) ctx.fillRect(x, by, 3, 1); ctx.drawImage(ICON.trophy, 4, by - 10); text('' + save.best, 16, by - 13, { size: 8 }); }
   }
+  ctx.restore();
+  // platforms, coins, potions, particles and flies on the object layer, faded at the top
+  ctx = octx; ctx.clearRect(0, 0, W, H); ctx.save(); ctx.translate(shx, shy);
   for (const p of game.plats) drawPlat(p);
   for (const c of game.coins) drawCoin(c);
   for (const it of game.items) drawItem(it);
   for (const pt of game.parts) { ctx.globalAlpha = clamp(pt.life / pt.max * 1.5, 0, 1); ctx.fillStyle = pt.c; const s = pt.life > pt.max * 0.5 ? 2 : 1; ctx.fillRect(Math.round(pt.x), sy(pt.y), s, s); }
   ctx.globalAlpha = 1;
-  drawFrog(); drawTongue();
   for (const fl of game.flies) drawFly(fl);
+  ctx.restore(); fadeTop(octx);
+  ctx = mainCtx; ctx.drawImage(og, 0, 0);
+  // the frog is always fully visible
+  ctx.save(); ctx.translate(shx, shy);
+  drawFrog(); drawTongue();
   for (const fl of game.floaters) { ctx.globalAlpha = clamp(fl.life * 2, 0, 1); text(fl.str, fl.x, sy(fl.y), { size: 8, align: 'center', color: fl.color }); }
   ctx.globalAlpha = 1;
   ctx.restore();
@@ -797,14 +816,19 @@ function iconButton(x, y, icon, fn, o = {}) {
   button(b, null, { icon, fill: o.fill || LIME });
   return b;
 }
-const HUD_BAR_H = 46; // height of the lime top bar below the safe-area inset
+// logo-style box: lime face, 2px black outline and a stepped black 3D extrusion down-right
+function logoPanel(x, y, w, h) {
+  x = Math.round(x); y = Math.round(y);
+  ctx.fillStyle = INK;
+  for (let i = 4; i >= 1; i--) ctx.fillRect(x + i, y + i, w, h);
+  ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = LIME; ctx.fillRect(x + 2, y + 2, w - 4, h - 4);
+}
 function drawHUD() {
-  // lime top bar, extended up behind the notch / status bar
-  flush(); // world text (floaters) stays under the bar
+  flush(); // world text (floaters) stays under the HUD
   const top = SAFE_TOP, blinkOn = Math.floor(game.time * 6) % 2 === 0;
-  ctx.fillStyle = LIME; ctx.fillRect(0, 0, W, top + HUD_BAR_H);
-  // left column, stacked: coins, EXP bar, hearts
-  drawCoinCounter(6, top + 5, game.runCoins, INK, false);
+  // left column, stacked under the safe area: coins, EXP bar, hearts (outlined so they read on any sky)
+  drawCoinCounter(6, top + 5, game.runCoins);
   const bw = 58, bh = 11, bx = 7, by = top + 18;
   const frac = clamp(game.exp / expNeeded(game.level), 0, 1), fw = Math.round(bw * frac);
   ctx.fillStyle = INK; ctx.fillRect(bx - 2, by - 2, bw + 4, bh + 4);
@@ -819,9 +843,9 @@ function drawHUD() {
   // hearts: the current life plus spare lives, empty outlines for the slots still to earn
   const hy = by + bh + 5;
   for (let i = 0; i < 1 + MAX_LIVES; i++) ctx.drawImage(i <= game.lives ? ICON.heart : ICON.heartEmpty, bx - 1 + i * 10, hy);
-  if (game.charged && blinkOn) text('SUPER JUMP!', bx + (1 + MAX_LIVES) * 10 + 4, hy, { size: 8, color: INK, shadow: false });
+  if (game.charged && blinkOn) text('SUPER JUMP!', bx + (1 + MAX_LIVES) * 10 + 4, hy, { size: 8 });
   // right column: score, and the tongue timer under it while the potion is active
-  text('' + game.score, W - 6, top + 4, { size: 24, align: 'right', color: INK, shadow: false });
+  text('' + game.score, W - 6, top + 4, { size: 24, align: 'right' });
   if (game.tongueT > 0) {
     const pt = ICON.potion, tx = W - pt.width - 5, ty = top + 29;
     ctx.drawImage(pt, tx, ty - 2);
@@ -829,19 +853,19 @@ function drawHUD() {
     ctx.fillStyle = LIME; ctx.fillRect(tx - 36, ty + 4, Math.round(31 * game.tongueT / TONGUE_TIME), 5);
   }
   // level-up / 1UP banners
-  if (game.levelUpT > 0) {
-    const k = 1 - game.levelUpT / 1.4, yy = Math.round(H * 0.3 - k * 12);
-    ctx.globalAlpha = clamp(game.levelUpT * 2, 0, 1);
-    text('LEVEL UP', W / 2, yy, { size: 24, align: 'center', color: LIME });
-    text('JUMP +' + Math.round((jumpBoost() - 1) * 100) + '%', W / 2, yy + 24, { size: 8, align: 'center', color: LIME });
+  // banners drop in from the top, hold, then fade out
+  const banner = (t, dur, y0, title, sub) => {
+    const k = 1 - t / dur, drop = Math.round((1 - easeOutBounce(clamp(k / 0.25, 0, 1))) * -40);
+    const pw = Math.round(Math.max(textW(title, 16), sub ? textW(sub, 8) : 0) + 20), ph = sub ? 34 : 24;
+    const px = Math.round(W / 2 - pw / 2), py = Math.round(y0 + drop);
+    ctx.globalAlpha = clamp(t * 3, 0, 1);
+    logoPanel(px, py, pw, ph);
+    text(title, W / 2, py + 5, { size: 16, align: 'center', color: INK, shadow: false });
+    if (sub) text(sub, W / 2, py + 22, { size: 8, align: 'center', color: INK, shadow: false });
     ctx.globalAlpha = 1;
-  }
-  if (game.oneUpT > 0) {
-    const k = 1 - game.oneUpT / 1.6, yy = Math.round(H * 0.42 - k * 16);
-    ctx.globalAlpha = clamp(game.oneUpT * 2, 0, 1);
-    if (blinkOn) text('+1UP', W / 2, yy, { size: 24, align: 'center', color: LIME });
-    ctx.globalAlpha = 1;
-  }
+  };
+  if (game.levelUpT > 0) banner(game.levelUpT, 1.4, top + 62, 'LEVEL UP', 'jump +' + Math.round((jumpBoost() - 1) * 100) + '%');
+  if (game.oneUpT > 0) banner(game.oneUpT, 1.6, top + (game.levelUpT > 0 ? 104 : 62), '+1UP', 'extra life');
 }
 let buttons = [];
 function addBtn(x, y, w, h, fn) { const b = { x, y, w, h, fn }; buttons.push(b); return b; }
