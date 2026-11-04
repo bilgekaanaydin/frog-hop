@@ -66,6 +66,30 @@ function frogFrames(id) {
   }
   return (FROG_SKINS[id] = out);
 }
+// head tipped back to look straight up (for flies overhead): pupils roll up, the mouth opens on top of the
+// head facing the sky and the yellow chin shows below it. Built per frame as a patch of that frame's head
+// (only the changed pixels are kept, so arms and legs stay untouched); frames differ by a row in face height.
+const LOOKUP_HEAD = {};
+function lookUpHead(id, anim) {
+  const key = id + ':' + anim; if (LOOKUP_HEAD[key]) return LOOKUP_HEAD[key];
+  const base = ASSETS.frog[anim] || ASSETS.frog.sit, g = base.map(r => r.split(''));
+  const o = (base[0].length - 38) / 2, L = base.findIndex(r => r.includes('bbbbbbbbbb')); // L = the lip row
+  const put = (r, c, s) => { for (let i = 0; i < s.length; i++) g[r][c + o + i] = s[i]; };
+  for (let r = 4; r <= L - 3; r++) for (const c of [7, 8, 9, 10, 27, 28, 29, 30]) if (g[r][c + o] === 'e') g[r][c + o] = 'f'; // old pupils
+  put(3, 8, 'eee'); put(4, 8, 'eee'); put(3, 27, 'eee'); put(4, 27, 'eee');                                // pupils up
+  put(2, 15, 'eeeeeeee');                                                                                   // the open mouth
+  put(3, 13, 'eemmmmmmmmee');
+  for (let r = 4; r <= L - 6; r++) put(r, 12, 'emmmmmmmmmmmme');
+  put(L - 5, 12, 'emmmmmppmmmmme');
+  put(L - 4, 12, 'emmmmppppmmmme');
+  put(L - 3, 13, 'eemppppppmee');
+  put(L - 2, 13, 'feeeeeeeeeef');
+  put(L - 1, 11, 'bgffffffffffffgb');                                                                       // the chin
+  put(L, 9, 'db' + 'g'.repeat(16) + 'bb');                                  // neck crease under the chin
+  const rows = g.slice(0, L + 1).map((r, y) => r.map((ch, x) => ch === base[y][x] ? '.' : ch).join(''));
+  return (LOOKUP_HEAD[key] = makeSprite(rows, Object.assign({}, skinPal(id), { m: '#7a1030', p: P.p })));
+}
+let frogLookUp = false; // set while the tongue goes straight up
 const FROG = frogFrames('green');
 const FROG_W = FROG.sit.width; // 38
 
@@ -661,8 +685,11 @@ function step(dt) {
     fl.x = fl.bx + Math.sin(fl.t * fl.sp) * fl.amp;
     fl.y = fl.by + Math.cos(fl.t * fl.sp * 1.6) * 6;
     const dx = fl.x - f.x, dy = fl.y - (f.y + 14);
-    // a fly right over (or on) the frog is snapped up: the mouth opens and the fly zips straight in
-    if (game.tongueT > 0 && !game.tongue && Math.abs(dx) < 16 && dy > -14 && dy < 32) {
+    // a fly straight above the head: the tongue goes up behind the head and stretches straight to it
+    if (game.tongueT > 0 && !game.tongue && Math.abs(dx) < 16 && dy >= 14 && dy < TONGUE_RANGE && sy(fl.y) > 8) {
+      game.tongue = { fly: fl, t: 0, dur: 0.5, ate: false, dir: dx >= 0 ? 1 : -1, up: true }; fl.targeted = true;
+    // a fly on the frog itself is snapped up: the mouth opens and the fly zips straight in
+    } else if (game.tongueT > 0 && !game.tongue && Math.abs(dx) < 16 && dy > -14 && dy < 14) {
       game.tongue = { fly: fl, t: 0, dur: 0.32, ate: false, dir: dx >= 0 ? 1 : -1, gulp: true, fx: fl.x, fy: fl.y }; fl.targeted = true;
     // the tongue shoots straight sideways, so flies roughly at mouth height get caught
     } else if (game.tongueT > 0 && !game.tongue && Math.abs(dx) < TONGUE_RANGE && Math.abs(dy) < 20 && fl.y - game.camY > 10) {
@@ -683,7 +710,8 @@ function step(dt) {
     if (T.gulp) { // the fly is sucked into the open mouth
       const s = Math.min(1, T.t / (T.dur * 0.5)), e = s * s;
       T.fly.x = T.fx + (f.x - T.fx) * e; T.fly.y = T.fy + (mouthWorldY - T.fy) * e;
-    } else T.fly.y += (mouthWorldY - T.fly.y) * Math.min(1, 14 * dt); // the fly gets pulled onto the straight tongue line
+    } else if (T.up) T.fly.x += (f.x - T.fly.x) * Math.min(1, 14 * dt); // the fly gets pulled onto the upright tongue line
+    else T.fly.y += (mouthWorldY - T.fly.y) * Math.min(1, 14 * dt); // the fly gets pulled onto the straight tongue line
     if (!T.ate && T.t >= T.dur * 0.5) {
       T.ate = true; T.fly.dead = true; sfx.eat(); vibrate(20);
       game.runCoins += 2; game.fliesEaten++; addExp(EXP_FLY); addFloater(T.fly.x, T.fly.y + 8, 'YUM +2', P.p);
@@ -1050,7 +1078,8 @@ function drawFrogAt(cx, feetY, anim, lean, blink, eq) {
   const wo = (spr.width - FROG_W) / 2; // wider squash/spread frames keep accessories centred
   if (lean) { const half = Math.floor(spr.height / 2); ctx.drawImage(spr, 0, 0, spr.width, half, x0 + lean, y0, spr.width, half); ctx.drawImage(spr, 0, half, spr.width, spr.height - half, x0, y0 + half, spr.width, spr.height - half); }
   else ctx.drawImage(spr, x0, y0);
-  if (blink) { // eyelids: the eyes sit at the same rows in every frame (top-anchored)
+  if (frogLookUp) ctx.drawImage(lookUpHead(eqs.skin || 'green', frames[anim] ? anim : 'sit'), x0 + (lean || 0), y0);
+  else if (blink) { // eyelids: the eyes sit at the same rows in every frame (top-anchored)
     const ex = x0 + wo, ey = y0 + (anim === 'crouch2' ? 3 : 4);
     ctx.fillStyle = pal.b; ctx.fillRect(ex + 7, ey, 5, 4); ctx.fillRect(ex + 26, ey, 5, 4);
     ctx.fillStyle = pal.a; ctx.fillRect(ex + 7, ey + 3, 5, 1); ctx.fillRect(ex + 26, ey + 3, 5, 1);
@@ -1090,10 +1119,13 @@ function drawFrog() {
   const lean = Math.abs(f.vx) > 50 ? Math.sign(f.vx) : 0;
   if (game.invuln > 0 && Math.floor(game.time * 12) % 2 === 0) ctx.globalAlpha = 0.45; // respawn flicker
   if (game.tongueT > 0) drawRadar(Math.round(f.x), sy(f.y) - 14);
+  frogLookUp = !!(game.tongue && game.tongue.up);
   const pos = drawFrogAt(f.x, sy(f.y), f.anim, lean, f.blink > 0, null);
   if (f.x < FROG_W / 2) drawFrogAt(f.x + W + FROG_W, sy(f.y), f.anim, lean, f.blink > 0, null);
   else if (f.x > W - FROG_W / 2) drawFrogAt(f.x - W - FROG_W, sy(f.y), f.anim, lean, f.blink > 0, null);
   if (f.dizzy > 0) { ctx.fillStyle = P.Y; for (let i = 0; i < 3; i++) { const a = game.time * 6 + i * 2.1; ctx.fillRect(Math.round(f.x + Math.cos(a) * 11), pos.y0 - 5 + Math.round(Math.sin(a) * 3), 2, 2); } }
+  game.mouthUpY = pos.y0 + 2; game.mouthUpX = Math.round(f.x) + (lean || 0);
+  if (frogLookUp) { frogLookUp = false; ctx.globalAlpha = 1; return; } // looking up: the mouth is part of the head patch
   if (game.tongueT > 0 && !game.tongue) { // ready tongue: little pink tip at the mouth
     ctx.fillStyle = P.p; ctx.fillRect(Math.round(f.x - 1), pos.y0 + 11, 3, 1);
   }
@@ -1110,7 +1142,7 @@ function drawFrog() {
   ctx.globalAlpha = 1;
 }
 function drawTongue() {
-  const T = game.tongue; if (!T) return;
+  const T = game.tongue; if (!T || T.up) return;
   if (T.gulp) { // a snap needs no tongue: the fly zips into the open mouth, drawn over the face
     if (T.t < T.dur * 0.5) { const spr = T.dir > 0 ? ICON.fly1 : FLY_L[1]; ctx.drawImage(spr, Math.round(T.fly.x) - 5, sy(T.fly.y) - 3); }
     return;
@@ -1140,6 +1172,26 @@ function drawTongue() {
     }
   }
   if (k >= 0.5) { const spr = T.dir > 0 ? ICON.fly1 : FLY_L[1]; ctx.drawImage(spr, tx - 5, ty - 3); } // the fly rides the tongue back into the mouth
+}
+// a fly straight overhead: the frog tips its head back and the tongue shoots straight up out of the open
+// mouth on top of its head, then brings the fly back down into it
+function drawTongueUp() {
+  const T = game.tongue; if (!T || !T.up) return;
+  const k = T.t / T.dur, ext = k < 0.5 ? Math.min(1, k * 2.4) : Math.max(0, (1 - k) * 2);
+  const x = game.mouthUpX, lip = game.mouthUpY, reach = Math.max(0, lip - sy(T.fly.y));
+  const len = Math.round(reach * ext), ty = lip - len;
+  ctx.fillStyle = P.p; ctx.fillRect(x - 1, lip, 2, 4);                       // from the root in the mouth up through the lip
+  if (len > 0) {
+    ctx.fillStyle = P.k; ctx.fillRect(x - 2, ty, 1, len); ctx.fillRect(x + 1, ty, 1, len);
+    ctx.fillStyle = P.p; ctx.fillRect(x - 1, ty, 2, len);
+    ctx.fillStyle = P.a; ctx.fillRect(x - 1, ty, 1, len);
+    if (len > 3) { // rounded sticky tip
+      ctx.fillStyle = P.k; ctx.fillRect(x - 3, ty - 2, 6, 5); ctx.fillRect(x - 2, ty - 3, 4, 7);
+      ctx.fillStyle = P.p; ctx.fillRect(x - 2, ty - 1, 4, 3); ctx.fillRect(x - 1, ty - 2, 2, 5);
+      ctx.fillStyle = P.a; ctx.fillRect(x - 2, ty - 1, 1, 2);
+    }
+  }
+  if (k >= 0.5) { const spr = T.dir > 0 ? ICON.fly1 : FLY_L[1]; ctx.drawImage(spr, x - 5, ty - 4); } // the fly rides the tongue back down
 }
 const FLY_L = [flipSprite(ICON.fly0), flipSprite(ICON.fly1)];
 // HUD hearts, drawn at the same size as the UI coin: outline, highlight, shade and a glint
@@ -1218,7 +1270,7 @@ function drawWorld() {
   ctx = mainCtx; ctx.drawImage(og, 0, 0);
   // the frog is always fully visible
   ctx.save(); ctx.translate(shx, shy);
-  drawFrog(); drawTongue();
+  drawFrog(); drawTongueUp(); drawTongue();
   for (const fl of game.floaters) { ctx.globalAlpha = clamp(fl.life * 2, 0, 1); text(fl.str, fl.x, sy(fl.y), { size: 8, align: 'center', color: fl.color, wide: true }); }
   ctx.globalAlpha = 1;
   ctx.restore();
