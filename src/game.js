@@ -429,7 +429,7 @@ function camY0() { return -Math.round(H * 0.22); }
 function newGame() {
   game.frog = { x: W / 2, y: 0, vx: 0, vy: 0, prevY: 0, anim: 'sit', landT: 9, dizzy: 0, blink: 0, blinkT: rnd(2, 4) };
   game.camY = camY0(); game.maxY = 0; game.score = 0; game.runCoins = 0;
-  game.exp = 0; game.level = 1; game.lives = 0; game.levelUpT = 0; game.oneUpT = 0; game.eatT = 0; game.bestT = 0; game.spaceT = 0; game.bestShown = false; game.spaceShown = false; game.startBest = save.best; game.invuln = 0;
+  game.exp = 0; game.level = 1; game.lives = 0; game.fliesEaten = 0; game.levelUpT = 0; game.oneUpT = 0; game.eatT = 0; game.bestT = 0; game.spaceT = 0; game.bestShown = false; game.spaceShown = false; game.startBest = save.best; game.invuln = 0;
   game.superT = 0; game.tongueT = 0; game.tongue = null; game.charged = false;
   game.plats = []; game.coins = []; game.flies = []; game.items = []; game.parts = []; game.floaters = [];
   game.genY = 20; game.lastType = 'normal'; game.nextItemY = rnd(220, 320); game.shake = 0; game.time = 0; game.deadT = 0;
@@ -641,7 +641,7 @@ function step(dt) {
     T.fly.y += ((f.y + 14) - T.fly.y) * Math.min(1, 14 * dt); // the fly gets pulled onto the tongue line
     if (!T.ate && T.t >= T.dur * 0.5) {
       T.ate = true; T.fly.dead = true; sfx.eat(); vibrate(20);
-      game.runCoins += 2; addExp(EXP_FLY); addFloater(T.fly.x, T.fly.y + 8, 'YUM +2', P.p);
+      game.runCoins += 2; game.fliesEaten++; addExp(EXP_FLY); addFloater(T.fly.x, T.fly.y + 8, 'YUM +2', P.p);
       burst(T.fly.x, T.fly.y, 6, [P.q, P.w, P.k], 50, 0.35, 100);
     }
     if (T.t >= T.dur) game.tongue = null;
@@ -1315,8 +1315,17 @@ function drawDead() {
   const rowY = py + 72;
   if (game.newBest) { if (Math.floor(game.time * 4) % 2 === 0) text('NEW BEST!', W / 2, rowY, { size: 8, align: 'center', color: INK, shadow: false }); }
   else { const bw = 13 + textW('' + save.best, 8); hiresSprite(ICON.trophy, W / 2 - bw / 2 + 5, rowY + 3.5, 11, 11); text('' + save.best, W / 2 - bw / 2 + 13, rowY, { size: 8, color: INK, shadow: false }); }
-  const cw = 12 + textW('+' + game.runCoins, 8);
-  uiCoin(Math.round(W / 2 - cw / 2), rowY + 11); text('+' + game.runCoins, W / 2 - cw / 2 + 12, rowY + 11, { size: 8, color: INK, shadow: false });
+  // run summary: coins collected, flies eaten, level reached (three evenly spaced stats)
+  const sy2 = rowY + 12, stats = [
+    { draw: (x) => uiCoin(x, sy2), w: 11, label: '+' + game.runCoins },
+    { draw: (x) => hiresSprite(ICON.fly0, x + 5, sy2 + 3.5, 11, 8), w: 12, label: '' + game.fliesEaten },
+    { draw: null, w: 0, label: 'LV' + game.level },
+  ];
+  stats.forEach((st, i) => {
+    const cx = px + pw * (i + 1) / 4, tw = st.w + textW(st.label, 8), x0 = Math.round(cx - tw / 2);
+    if (st.draw) st.draw(x0);
+    text(st.label, x0 + st.w, sy2, { size: 8, color: INK, shadow: false, wide: true });
+  });
   if (game.deadT < 0.6) return;
   const rb = addBtn(px + 10, py + ph - 58, pw - 22, 24, () => { newGame(); startGame(); });
   button(rb, 'RETRY', { size: 8 });
