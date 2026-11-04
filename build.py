@@ -15,3 +15,11 @@ with zipfile.ZipFile('frog-hop.zip', 'w', zipfile.ZIP_DEFLATED) as z:
     for f in os.listdir('assets'): z.write(os.path.join('assets', f))
     z.write('README.md')
 print('bundled', len(out), 'bytes')
+
+# web bundle for the native app shells (Capacitor copies www/ into the iOS and Android projects)
+import shutil
+os.makedirs('www/icons', exist_ok=True)
+shutil.copyfile('index.html', 'www/index.html')
+shutil.copyfile('manifest.json', 'www/manifest.json')
+for f in os.listdir('icons'): shutil.copyfile(os.path.join('icons', f), os.path.join('www/icons', f))
+print('www/ ready for Capacitor')

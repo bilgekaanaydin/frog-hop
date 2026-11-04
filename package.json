@@ -1,0 +1,22 @@
+{
+  "name": "frohg",
+  "version": "1.0.0",
+  "private": true,
+  "description": "FROHG - a pixel-art frog jumping game",
+  "scripts": {
+    "build": "python3 build.py",
+    "sync": "python3 build.py && npx cap sync",
+    "assets": "npx @capacitor/assets generate --assetPath resources --iconBackgroundColor '#d0f053' --splashBackgroundColor '#d0f053'",
+    "ios": "npx cap open ios",
+    "android": "npx cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "latest",
+    "@capacitor/core": "latest",
+    "@capacitor/ios": "latest"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "latest",
+    "@capacitor/cli": "latest"
+  }
+}
