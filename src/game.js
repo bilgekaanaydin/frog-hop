@@ -356,7 +356,6 @@ function vibrate(ms) { if (save.vib && navigator.vibrate) { try { navigator.vibr
 // ============================================================ music: "Frohg Hop", a looping 8-bit frog song
 // Sequenced live with Web Audio: square-wave lead with frog-like octave hops, triangle bass, noise drums,
 // and a little "ribbit" croak at the end of phrases. Toggle and volume live in the settings panel.
-const BPM = 138, STEP = 60 / BPM / 2;                 // one step = an eighth note
 const NOTE = n => { const m = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }; return 12 * (+n.slice(-1) + 1) + m[n[0]] + (n[1] === '#' ? 1 : 0); };
 const hz = midi => 440 * Math.pow(2, (midi - 69) / 12);
 // melody: 8 steps per bar, '.' = hold/rest, 'R' = ribbit croak
@@ -368,15 +367,12 @@ const SONG_LEAD = [
 ].map(b => b.split(' '));
 const SONG_BASS = ['C3', 'A2', 'F2', 'G2', 'C3', 'A2', 'F2', 'G2', 'F2', 'G2', 'E2', 'A2', 'F2', 'G2', 'C3', 'G2'];
 const BASS_PAT = [0, null, 12, null, 0, 0, 12, 7];   // oom-pah with octave hops
-const music = { gain: null, step: 0, next: 0, timer: null, noise: null };
-function musicLevel() { return save.music ? save.musicVol * 0.3 : 0; }
-function musicApplyVolume() { if (music.gain && ac) music.gain.gain.setTargetAtTime(musicLevel(), ac.currentTime, 0.05); }
-function mNote(type, f, t, dur, vol, slideTo) {
+function mNote(type, f, t, dur, vol, slideTo, dest) {
   const o = ac.createOscillator(), gn = ac.createGain();
   o.type = type; o.frequency.setValueAtTime(f, t); if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
   gn.gain.setValueAtTime(0.0001, t); gn.gain.linearRampToValueAtTime(vol, t + 0.005);
   gn.gain.setValueAtTime(vol, t + dur * 0.7); gn.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  o.connect(gn); gn.connect(music.gain); o.start(t); o.stop(t + dur + 0.02);
+  o.connect(gn); gn.connect(music.gain); if (dest) gn.connect(dest); o.start(t); o.stop(t + dur + 0.02);
 }
 function mNoise(t, dur, vol, hp) {
   const src = ac.createBufferSource(), f = ac.createBiquadFilter(), gn = ac.createGain();
@@ -385,27 +381,67 @@ function mNoise(t, dur, vol, hp) {
   src.connect(f); f.connect(gn); gn.connect(music.gain); src.start(t); src.stop(t + dur + 0.02);
 }
 function ribbit(t) { mNote('sawtooth', 420, t, 0.07, 0.11, 160); mNote('sawtooth', 360, t + 0.1, 0.09, 0.11, 130); }
-function scheduleStep(n, t) {
-  const bar = Math.floor(n / 8) % SONG_LEAD.length, k = n % 8, cell = SONG_LEAD[bar][k];
-  // lead: hold until the next note
-  if (cell === 'R') ribbit(t);
-  else if (cell !== '.') { let len = 1; while (k + len < 8 && SONG_LEAD[bar][k + len] === '.') len++; mNote('square', hz(NOTE(cell)), t, STEP * len * 0.92, 0.075); }
-  // bass
-  const bp = BASS_PAT[k]; if (bp !== null) mNote('triangle', hz(NOTE(SONG_BASS[bar]) + bp), t, STEP * 0.9, 0.22);
-  // drums: kick on 1 and 3, snare on 2 and 4, soft hats on the off-beats
-  if (k === 0 || k === 4) mNote('sine', 140, t, 0.12, 0.35, 45);
-  if (k === 2 || k === 6) mNoise(t, 0.09, 0.16, 1800);
-  if (k % 2 === 1) mNoise(t, 0.03, 0.05, 7000);
-}
+const holdLen = (bar, k) => { let len = 1; while (k + len < 8 && bar[k + len] === '.') len++; return len; };
+// --- song 1, "Frohg Hop" (on earth): bouncy square lead, oom-pah bass, full drum kit
+const EARTH_SONG = {
+  bpm: 138,
+  step(n, t, st) {
+    const bar = Math.floor(n / 8) % SONG_LEAD.length, k = n % 8, cell = SONG_LEAD[bar][k];
+    if (cell === 'R') ribbit(t);
+    else if (cell !== '.') mNote('square', hz(NOTE(cell)), t, st * holdLen(SONG_LEAD[bar], k) * 0.92, 0.075);
+    const bp = BASS_PAT[k]; if (bp !== null) mNote('triangle', hz(NOTE(SONG_BASS[bar]) + bp), t, st * 0.9, 0.22);
+    if (k === 0 || k === 4) mNote('sine', 140, t, 0.12, 0.35, 45);
+    if (k === 2 || k === 6) mNoise(t, 0.09, 0.16, 1800);
+    if (k % 2 === 1) mNoise(t, 0.03, 0.05, 7000);
+  },
+};
+// --- song 2, "Frohg in Orbit" (in space): slower, dreamy A minor, echoing triangle lead,
+// soft square arpeggios, long sine bass, sparse kick and shimmer
+const SPACE_LEAD = [
+  'E5 . A5 . C6 . B5 A5', 'C6 . . . A5 . F5 .', 'G5 . E5 G5 C6 . . .', 'B5 . D6 . B5 . G5 .',
+  'A5 . C6 . E6 . D6 C6', 'A5 . . . F5 . A5 .', 'G5 . B5 . D6 . B5 .', 'G#5 . B5 . E5 . . .',
+].map(b => b.split(' '));
+const SPACE_CHORDS = [['A3', 'C4', 'E4'], ['F3', 'A3', 'C4'], ['C4', 'E4', 'G4'], ['G3', 'B3', 'D4'], ['A3', 'C4', 'E4'], ['F3', 'A3', 'C4'], ['G3', 'B3', 'D4'], ['E3', 'G#3', 'B3']];
+const SPACE_BASS = ['A2', 'F2', 'C3', 'G2', 'A2', 'F2', 'G2', 'E2'];
+const SPACE_SONG = {
+  bpm: 104,
+  step(n, t, st) {
+    const bar = Math.floor(n / 8) % SPACE_LEAD.length, k = n % 8, cell = SPACE_LEAD[bar][k];
+    if (cell !== '.') mNote('triangle', hz(NOTE(cell)), t, st * holdLen(SPACE_LEAD[bar], k) * 0.95, 0.12, null, music.echo);
+    const ch = SPACE_CHORDS[bar]; mNote('square', hz(NOTE(ch[k % 3]) + 12), t, st * 0.6, 0.022, null, music.echo);   // twinkling arpeggio
+    if (k === 0) mNote('sine', hz(NOTE(SPACE_BASS[bar])), t, st * 7.5, 0.26);                                         // long bass
+    if (k === 0) mNote('sine', 110, t, 0.2, 0.22, 40);                                                                    // soft kick
+    if (k === 4) mNoise(t, 0.25, 0.04, 5000);                                                                             // shimmer
+  },
+};
+const music = { gain: null, echo: null, step: 0, next: 0, timer: null, noise: null, song: EARTH_SONG };
+function musicLevel() { return save.music ? save.musicVol * 0.3 : 0; }
+function musicApplyVolume() { if (music.gain && ac) music.gain.gain.setTargetAtTime(musicLevel(), ac.currentTime, 0.05); }
+// which song should play now: the space theme once the run reaches orbit, the earth theme otherwise
+const wantedSong = () => (scene === 'play' || scene === 'dead') && game.camY !== undefined && spaceAmt() >= 0.6 ? SPACE_SONG : EARTH_SONG;
 function musicTick() {
   if (!ac || !music.gain) return;
-  while (music.next < ac.currentTime + 0.15) { scheduleStep(music.step, music.next); music.step++; music.next += STEP; }
+  while (music.next < ac.currentTime + 0.15) {
+    // switch songs on a bar line with a short dip in volume
+    const want = wantedSong();
+    if (want !== music.song && music.step % 8 === 0) {
+      music.song = want; music.step = 0;
+      const g = music.gain.gain, now = Math.max(ac.currentTime, music.next - 0.25);
+      g.cancelScheduledValues(now); g.setValueAtTime(musicLevel() * 0.15, now); g.linearRampToValueAtTime(musicLevel(), music.next + 0.6);
+    }
+    const st = 60 / music.song.bpm / 2;
+    music.song.step(music.step, music.next, st); music.step++; music.next += st;
+  }
 }
 function musicStart() {
   if (!ac || music.timer) return;
   music.gain = ac.createGain(); music.gain.gain.value = musicLevel(); music.gain.connect(ac.destination);
+  // echo bus for the space theme: delay with feedback, mixed into the music gain
+  const d = ac.createDelay(1), fb = ac.createGain(), wet = ac.createGain();
+  d.delayTime.value = 0.43; fb.gain.value = 0.38; wet.gain.value = 0.5;
+  d.connect(fb); fb.connect(d); d.connect(wet); wet.connect(music.gain); music.echo = d;
   const len = ac.sampleRate * 0.5; music.noise = ac.createBuffer(1, len, ac.sampleRate);
-  const d = music.noise.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  const nd = music.noise.getChannelData(0); for (let i = 0; i < len; i++) nd[i] = Math.random() * 2 - 1;
   music.step = 0; music.next = ac.currentTime + 0.1;
   music.timer = setInterval(musicTick, 25);
 }
