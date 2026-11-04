@@ -507,10 +507,10 @@ function addPlatformBand(y, d, gap) {
     game.plats.push({ x: x2, y: y + rndi(-6, 6), w: w2, type: 'normal', alive: true, t: rnd(0, 6), broken: false, fallV: 0, vx: 0, spring: false });
   }
   // coins on the platform
-  if (Math.random() < 0.16 && type !== 'crumble') {
+  if (Math.random() < 0.08 && type !== 'crumble') {
     const n = rndi(1, 2);
     for (let i = 0; i < n; i++) game.coins.push({ x: p.x + p.w / 2 + (i - (n - 1) / 2) * 14, y: y + 17, t: rnd(0, 6), on: type === 'moving' ? p : null, dx: (i - (n - 1) / 2) * 14, taken: false });
-  } else if (Math.random() < 0.05) { // a single coin floating between platforms
+  } else if (Math.random() < 0.025) { // a single coin floating between platforms
     game.coins.push({ x: rnd(30, W - 30), y: y + 30, t: rnd(0, 6), on: null, taken: false });
   }
   // flies
@@ -674,7 +674,8 @@ function step(dt) {
   // --- tongue animation / eating
   if (game.tongue) {
     const T = game.tongue; T.t += dt;
-    T.fly.y += ((f.y + 14) - T.fly.y) * Math.min(1, 14 * dt); // the fly gets pulled onto the tongue line
+    const mouthWorldY = game.mouthY !== undefined ? game.camY + H - game.mouthY : f.y + 14;
+    T.fly.y += (mouthWorldY - T.fly.y) * Math.min(1, 14 * dt); // the fly gets pulled onto the tongue line
     if (!T.ate && T.t >= T.dur * 0.5) {
       T.ate = true; T.fly.dead = true; sfx.eat(); vibrate(20);
       game.runCoins += 2; game.fliesEaten++; addExp(EXP_FLY); addFloater(T.fly.x, T.fly.y + 8, 'YUM +2', P.p);
@@ -1074,6 +1075,8 @@ function drawRadar(cx, cy) {
   }
   ctx.globalAlpha = base;
 }
+// row of the mouth (top of the open-mouth hole) in each frame; frames differ in height, so the tongue must follow
+const MOUTH_ROW = { sit: 9, stretch1: 9, jump: 9, crouch1: 9, crouch2: 8, fall1: 10, fall2: 10 };
 function drawFrog() {
   const f = game.frog;
   const lean = Math.abs(f.vx) > 50 ? Math.sign(f.vx) : 0;
@@ -1086,8 +1089,9 @@ function drawFrog() {
   if (game.tongueT > 0 && !game.tongue) { // ready tongue: little pink tip at the mouth
     ctx.fillStyle = P.p; ctx.fillRect(Math.round(f.x - 1), pos.y0 + 11, 3, 1);
   }
+  game.mouthY = pos.y0 + (MOUTH_ROW[f.anim] ?? 9) + 2;   // screen row of the mouth for this exact frame (used by the tongue)
   if (game.tongue) { // open mouth while the tongue is out
-    const mx = Math.round(f.x) - 5, my = pos.y0 + (f.anim === 'jump' ? 11 : f.anim === 'stretch1' || f.anim === 'fall1' || f.anim === 'fall2' ? 10 : 9);
+    const mx = Math.round(f.x) - 5, my = game.mouthY - 2;
     ctx.fillStyle = P.k; ctx.fillRect(mx, my, 11, 4); ctx.fillStyle = '#7a1030'; ctx.fillRect(mx + 1, my + 1, 9, 2);
   }
   ctx.globalAlpha = 1;
@@ -1096,7 +1100,7 @@ function drawTongue() {
   const T = game.tongue; if (!T) return;
   const f = game.frog, k = T.t / T.dur, ext = k < 0.5 ? Math.min(1, k * 2.4) : Math.max(0, (1 - k) * 2);
   // straight horizontal shot from the mouth, like a classic side-view frog tongue
-  const my = sy(f.y) - 17, mx = Math.round(f.x + T.dir * 4);
+  const my = game.mouthY ?? sy(f.y) - 17, mx = Math.round(f.x + T.dir * 4);
   const len = Math.round(Math.abs(T.fly.x - f.x) * ext), tx = mx + T.dir * len, ty = my;
   const x0 = Math.min(mx, tx), x1 = Math.max(mx, tx);
   ctx.fillStyle = P.k; ctx.fillRect(x0 - 1, my - 3, x1 - x0 + 2, 6);
