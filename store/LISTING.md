@@ -28,7 +28,7 @@ Alt satır (isteğe bağlı) / Optional second line:
 1. Parmağını sürükle, platformdan platforma zıpla. / Drag to steer, bounce from platform to platform.
 2. Gece, gündüz, gezegenler ve kuyruklu yıldızlar. / Day, night, planets and comets.
 3. Dil iksirini iç, sinekleri tek hamlede yakala. / Drink the tongue potion and catch flies in one snap.
-4. Şapkalar, gözlükler ve 7 kurbağa rengi. / Hats, glasses and 7 frog colours.
+4. Şapkalar, gözlükler ve 8 kurbağa rengi. / Hats, glasses and 8 frog colours.
 
 ---
 
@@ -58,7 +58,7 @@ FROHG, sevimli piksel kurbağamızla oynanan, öğrenmesi kolay ama bırakması 
 • Yaylar, hareketli, cam ve bataklık platformlar
 • Seviye atladıkça ekstra can
 • Astronot kaskı, büyücü şapkası, barbar kaskı, taç ve daha fazlası
-• 7 kurbağa rengi, benekli ve çizgili desenler dahil
+• 8 kurbağa rengi, benekli ve çizgili desenler dahil
 • Sıfırdan bestelenmiş 8-bit müzikler
 • İnternet gerekmez, reklam yok, veri toplanmaz
 
@@ -94,7 +94,7 @@ FROHG is an easy-to-learn, hard-to-put-down arcade game starring a cute pixel fr
 • Springs, moving, glass and swamp platforms
 • Extra lives as you level up
 • Astronaut helmet, wizard hat, barbarian helm, crown and more
-• 7 frog colours, including spotted and striped patterns
+• 8 frog colours, including spotted and striped patterns
 • Original 8-bit music
 • Plays offline, no ads, no data collection
 
