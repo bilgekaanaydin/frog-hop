@@ -18,15 +18,15 @@ Gizlilik politikası adresi (iki mağaza da ister): `https://bilgekaanaydin.gith
 
 | Dosya | Türkçe | English |
 |---|---|---|
-| `1-hop.png` | ZIPLA, DAHA YÜKSEĞE ÇIK | HOP HIGHER AND HIGHER |
-| `2-tongue.png` | DİLİNLE SİNEKLERİ KAP! | SNAP UP THE FLIES! |
-| `3-space.png` | UZAYA KADAR YÜKSEL | JUMP ALL THE WAY TO SPACE |
+| `1-title.png` | ZIPLA, DAHA YÜKSEĞE ÇIK | HOP HIGHER AND HIGHER |
+| `2-space.png` | UZAYA KADAR YÜKSEL | JUMP ALL THE WAY TO SPACE |
+| `3-tongue.png` | DİLİNLE SİNEKLERİ KAP! | SNAP UP THE FLIES! |
 | `4-shop.png` | KURBAĞANI GİYDİR | DRESS UP YOUR FROG |
 
 Alt satır (isteğe bağlı) / Optional second line:
 1. Parmağını sürükle, platformdan platforma zıpla. / Drag to steer, bounce from platform to platform.
-2. Dil iksirini iç, sinekleri tek hamlede yakala. / Drink the tongue potion and catch flies in one snap.
-3. Gece, gündüz, gezegenler ve kuyruklu yıldızlar. / Day, night, planets and comets.
+2. Gece, gündüz, gezegenler ve kuyruklu yıldızlar. / Day, night, planets and comets.
+3. Dil iksirini iç, sinekleri tek hamlede yakala. / Drink the tongue potion and catch flies in one snap.
 4. Şapkalar, gözlükler ve 7 kurbağa rengi. / Hats, glasses and 7 frog colours.
 
 ---
