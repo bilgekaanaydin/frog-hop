@@ -19,7 +19,7 @@ Gizlilik politikası adresi (iki mağaza da ister): `https://bilgekaanaydin.gith
 | Dosya | Türkçe | English |
 |---|---|---|
 | `1-title.png` | ZIPLA, DAHA YÜKSEĞE ÇIK | HOP HIGHER AND HIGHER |
-| `2-space.png` | UZAYA KADAR YÜKSEL | JUMP ALL THE WAY TO SPACE |
+| `2-space.png` | UZAYA ZIPLA | JUMP TO SPACE |
 | `3-tongue.png` | DİLİNLE SİNEKLERİ KAP! | SNAP UP THE FLIES! |
 | `4-shop.png` | KURBAĞANI GİYDİR | DRESS UP YOUR FROG |
 
