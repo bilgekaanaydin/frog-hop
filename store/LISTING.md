@@ -9,6 +9,7 @@ Görseller bu klasörde:
 | `feature-graphic-1024x500.png` | Google Play Console > Feature graphic |
 | `screenshots/iphone-6.7/` | App Store > iPhone 6.7" ekran görüntüleri (1290x2796) |
 | `screenshots/play-1080x1920/` | Google Play > Phone screenshots (1080x1920, 9:16), ham oyun görüntüsü: mockup için |
+| `mockups/play/` | **Google Play > Phone screenshots: yüklenecek son hâller** (5 adet, 1080x1920 PNG) |
 
 Gizlilik politikası adresi (iki mağaza da ister): `https://bilgekaanaydin.github.io/frog-hop/privacy.html`
 
