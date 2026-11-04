@@ -263,7 +263,7 @@ function glyph(ch, color, wide = false) {
 // brand palette: the logo's lime (#d0f053) and pure black, used across the whole interface
 const INK = '#000000', LIME = '#d0f053', LIME_DOT = '#b6d63e', GRAY = '#7d8f32';
 const PAPER = LIME; // default UI text / panel colour
-const BUILD = '11.04 07:15'; // replaced with the build time by build.py (kept in the bundle for debugging, not shown)
+const BUILD = '11.04 07:40'; // replaced with the build time by build.py (kept in the bundle for debugging, not shown)
 const FREE_SHOP = true; // test build: everything in the shop is free
 // size keeps its old meaning: the cap height is 7 * round(size / 8) game pixels (8 -> 7px, 16 -> 14px, 24 -> 21px)
 const capOf = size => (size || 16) * 7 / 8; // cap height in game pixels (8 -> 7, 12 -> 10.5, 16 -> 14, 24 -> 21)
@@ -602,7 +602,8 @@ function addExp(n) {
 // with a spare life the frog comes back on a platform instead of dying
 function respawn() {
   const f = game.frog;
-  game.lives--; game.invuln = 2.5; f.dizzy = 0; game.tongue = null;
+  game.lives--; game.invuln = 2.5; f.dizzy = 0;
+  if (game.tongue) { game.tongue.fly.targeted = false; game.tongue = null; }
   let p = null;
   for (const q of game.plats) if (q.alive && q.type !== 'crumble' && q.y > game.camY + H * 0.3 && q.y < game.camY + H * 0.75 && (!p || q.y > p.y)) p = q;
   if (!p) { p = { x: W / 2 - 24, y: game.camY + H * 0.5, w: 48, type: 'normal', alive: true, t: 0, broken: false, fallV: 0, vx: 0, spring: false }; game.plats.push(p); }
@@ -685,12 +686,13 @@ function step(dt) {
   for (const fl of game.flies) {
     if (fl.dead) continue; fl.t += dt;
     if (fl.esc) { fl.y += 220 * dt; fl.x += 140 * dt; if (fl.y - game.camY > H + 40) fl.dead = true; continue; }
+    if (fl.targeted) continue; // caught by the tongue: it hangs still until the tongue reaches it
     fl.x = fl.bx + Math.sin(fl.t * fl.sp) * fl.amp;
     fl.y = fl.by + Math.cos(fl.t * fl.sp * 1.6) * 6;
     const dx = fl.x - f.x, dy = fl.y - (f.y + 14);
-    // the tongue shoots straight sideways, so only flies roughly at mouth height get caught
-    if (game.tongueT > 0 && !game.tongue && Math.abs(dx) < TONGUE_RANGE && Math.abs(dy) < 20 && Math.abs(dx) > 6 && fl.y - game.camY > 10) {
-      game.tongue = { fly: fl, t: 0, dur: 0.5, ate: false, dir: dx > 0 ? 1 : -1 }; fl.targeted = true;
+    // the tongue reaches flies to the sides and above the frog (also straight overhead), not ones far below
+    if (game.tongueT > 0 && !game.tongue && Math.hypot(dx, Math.max(0, dy) * 0.9) < TONGUE_RANGE && dy > -20 && dy < TONGUE_RANGE && fl.y - game.camY > 10 && sy(fl.y) > 8) {
+      game.tongue = { fly: fl, t: 0, dur: 0.5, ate: false, dir: dx >= 0 ? 1 : -1 }; fl.targeted = true;
     } else if (!fl.targeted && Math.abs(dx) < 12 && fl.y > f.y + 2 && fl.y < f.y + 28) {
       if (game.superT > 0 || game.tongueT > 0 || game.invuln > 0) { fl.esc = true; }
       else if (f.dizzy <= 0) {
@@ -704,7 +706,7 @@ function step(dt) {
   if (game.tongue) {
     const T = game.tongue; T.t += dt;
     const mouthWorldY = game.mouthY !== undefined ? game.camY + H - game.mouthY : f.y + 14;
-    T.fly.y += (mouthWorldY - T.fly.y) * Math.min(1, 14 * dt); // the fly gets pulled onto the tongue line
+    if (Math.abs(T.fly.y - mouthWorldY) < 10) T.fly.y += (mouthWorldY - T.fly.y) * Math.min(1, 14 * dt); // nearly level flies snap onto a straight tongue
     if (!T.ate && T.t >= T.dur * 0.5) {
       T.ate = true; T.fly.dead = true; sfx.eat(); vibrate(20);
       game.runCoins += 2; game.fliesEaten++; addExp(EXP_FLY); addFloater(T.fly.x, T.fly.y + 8, 'YUM +2', P.p);
@@ -1137,26 +1139,32 @@ function drawTongue() {
   // facing the fly, and only gets its dark outline once it is outside the mouth
   const M = game.mouthRect || { x: Math.round(f.x) - 6, y: (game.mouthY ?? sy(f.y) - 17) - 2, w: 13, h: 5 };
   const ty = M.y + Math.floor(M.h / 2), edgeX = T.dir > 0 ? M.x + M.w - 1 : M.x, rootX = Math.round(f.x);
-  const reach = Math.abs(T.fly.x - edgeX), len = Math.round(reach * ext), tx = edgeX + T.dir * len;
   // inside the mouth: pink, no outline, from the root up to the lip
   ctx.fillStyle = P.p;
   const ix0 = Math.min(rootX, edgeX), ix1 = Math.max(rootX, edgeX);
   ctx.fillRect(ix0, ty - 1, ix1 - ix0 + 1, 2);
   ctx.fillRect(rootX - 1, ty - 1, 3, Math.max(2, M.y + M.h - 1 - ty));          // the curve down to the root
-  if (len > 0) {
-    // outside: slim tongue with a 1px outline, rounded sticky tip
-    const x0 = Math.min(edgeX + T.dir, tx), x1 = Math.max(edgeX + T.dir, tx);
-    ctx.fillStyle = P.k; ctx.fillRect(x0, ty - 2, x1 - x0 + 1, 1); ctx.fillRect(x0, ty + 1, x1 - x0 + 1, 1);
-    ctx.fillStyle = P.p; ctx.fillRect(x0, ty - 1, x1 - x0 + 1, 2);
-    ctx.fillStyle = P.a; ctx.fillRect(x0, ty - 1, x1 - x0 + 1, 1);
+  // outside: the tongue leaves the lip sideways, then bends towards the fly (a fly overhead gets a tongue
+  // that curls round the side of the head instead of going through it)
+  const ax = edgeX + T.dir, ay = ty, bx = Math.round(T.fly.x), by = sy(T.fly.y);
+  const cx = ax + T.dir * Math.max(14, Math.abs(bx - ax) * 0.5), cy = ay;
+  const at = s => { const u = 1 - s; return [Math.round(u * u * ax + 2 * u * s * cx + s * s * bx), Math.round(u * u * ay + 2 * u * s * cy + s * s * by)]; };
+  const span = Math.abs(bx - ax) + Math.abs(by - ay) + 2 * Math.abs(cx - ax), steps = Math.max(1, Math.ceil(span * ext * 1.5));
+  const pts = []; for (let i = 0; i <= steps; i++) pts.push(at(ext * i / steps));
+  const [tx, ty2] = pts[pts.length - 1], len = Math.abs(tx - ax) + Math.abs(ty2 - ay);
+  if (ext > 0) {
+    // slim tongue with a 1px outline: stamp the outline along the curve first, then the pink core over it
+    ctx.fillStyle = P.k; for (const [x, y] of pts) ctx.fillRect(x - 1, y - 2, 3, 4), ctx.fillRect(x - 2, y - 1, 4, 3);
+    ctx.fillStyle = P.p; for (const [x, y] of pts) ctx.fillRect(x - 1, y - 1, 2, 2);
+    ctx.fillStyle = P.a; for (const [x, y] of pts) ctx.fillRect(x - 1, y - 1, 1, 1);
     ctx.fillStyle = P.p; ctx.fillRect(edgeX, ty - 1, 1, 2);                     // the tongue breaks through the lip
     if (len > 3) {
-      ctx.fillStyle = P.k; ctx.fillRect(tx - 2, ty - 4, 5, 8); ctx.fillRect(tx - 3, ty - 3, 7, 6);
-      ctx.fillStyle = P.p; ctx.fillRect(tx - 2, ty - 3, 5, 6); ctx.fillRect(tx - 1, ty - 3, 3, 6);
-      ctx.fillStyle = P.a; ctx.fillRect(tx - 1, ty - 2, 2, 1);
+      ctx.fillStyle = P.k; ctx.fillRect(tx - 2, ty2 - 4, 5, 8); ctx.fillRect(tx - 3, ty2 - 3, 7, 6);
+      ctx.fillStyle = P.p; ctx.fillRect(tx - 2, ty2 - 3, 5, 6); ctx.fillRect(tx - 1, ty2 - 3, 3, 6);
+      ctx.fillStyle = P.a; ctx.fillRect(tx - 1, ty2 - 2, 2, 1);
     }
   }
-  if (k >= 0.5) { const spr = T.dir > 0 ? ICON.fly1 : FLY_L[1]; ctx.drawImage(spr, tx - 5, ty - 3); } // the fly rides the tongue back into the mouth
+  if (k >= 0.5) { const spr = T.dir > 0 ? ICON.fly1 : FLY_L[1]; ctx.drawImage(spr, tx - 5, ty2 - 3); } // the fly rides the tongue back into the mouth
 }
 const FLY_L = [flipSprite(ICON.fly0), flipSprite(ICON.fly1)];
 // HUD hearts, drawn at the same size as the UI coin: outline, highlight, shade and a glint
