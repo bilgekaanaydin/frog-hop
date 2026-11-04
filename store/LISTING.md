@@ -9,7 +9,9 @@ Görseller bu klasörde:
 | `feature-graphic-1024x500.png` | Google Play Console > Feature graphic |
 | `screenshots/iphone-6.7/` | App Store > iPhone 6.7" ekran görüntüleri (1290x2796) |
 | `screenshots/play-1080x1920/` | Google Play > Phone screenshots (1080x1920, 9:16), ham oyun görüntüsü: mockup için |
-| `mockups/play/` | **Google Play > Phone screenshots: yüklenecek son hâller** (5 adet, 1080x1920 PNG) |
+| `mockups/play-en/` | **Google Play > Phone screenshots, English (en-US)**: yüklenecek son hâller (5 adet, 1080x1920 PNG) |
+| `mockups/play-tr/` | **Google Play > Phone screenshots, Türkçe (tr-TR)**: yüklenecek son hâller (5 adet, 1080x1920 PNG) |
+| `preview/` | Mağaza sayfasının nasıl görüneceğinin önizlemesi (TR ve EN) |
 
 Gizlilik politikası adresi (iki mağaza da ister): `https://bilgekaanaydin.github.io/frog-hop/privacy.html`
 
@@ -19,10 +21,12 @@ Gizlilik politikası adresi (iki mağaza da ister): `https://bilgekaanaydin.gith
 
 | Dosya | Türkçe | English |
 |---|---|---|
-| `1-title.png` | ZIPLA, DAHA YÜKSEĞE ÇIK | HOP HIGHER AND HIGHER |
-| `2-space.png` | UZAYA ZIPLA | JUMP TO SPACE |
-| `3-tongue.png` | DİLİNLE SİNEKLERİ KAP! | SNAP UP THE FLIES! |
-| `4-shop.png` | KURBAĞANI GİYDİR | DRESS UP YOUR FROG |
+| `2-hop-higher.png` | YÜKSEĞE ZIPLA! | HOP HIGHER AND HIGHER |
+| `3-dress-up.png` | KURBAĞANI GİYDİR | DRESS UP YOUR FROG |
+| `4-snap-up-flies.png` | SİNEKLERİ KAP! | SNAP UP THE FLIES! |
+| `5-jump-to-space.png` | UZAYA ÇIK! | JUMP TO SPACE |
+
+`1-intro.png` yazısız, iki dilde de aynı. / Same in both languages (no caption).
 
 Alt satır (isteğe bağlı) / Optional second line:
 1. Parmağını sürükle, platformdan platforma zıpla. / Drag to steer, bounce from platform to platform.
