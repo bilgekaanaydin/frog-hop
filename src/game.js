@@ -99,7 +99,7 @@ const ICON = {
   coinLine: makeSprite(['.k.', 'kok', 'kyk', 'kyk', 'kyk', 'kyk', 'kyk', 'kyk', 'kyk', 'kyk', 'kok', '.k.'], CP),
   trophy: makeSprite(['...kkkkkkkkkk...', '.kkkcyyyyyyokkk.', 'k.kkcyyyyyyokk.k', 'k.kkcyyyyyyokk.k', 'k.kkcyyyyyyokk.k', '.k.kccyyyyyok.k.', '..kkkcyyyyyokk..', '....kkyyyyokk...', '......kcyk......', '......kcyk......', '......kcok......', '.....kcyyok.....', '....kcyyyyok....', '....kkkkkkkk....'], { k: '#0a0a0a', y: '#ffc400', c: '#fff3b0', o: '#e48a00' }), // gold cup with handles
   cart: makeSprite(['kkk...............', '..kkkkkkkkkkkkkkk.', '...kk.k..k...k..k.', '...kkkkkkkkkkkkkk.', '...kk.k..k..k..k..', '...kkkkkkkkkkkkk..', '....k.k.kk..k.k...', '....kkkkkkkkkk....', '....kkkkkkkkkkkk..', '...............k..', '...kkkkkkkkkkkkk..', '....kk......kk....', '....kk......kk....'], P), // solid black cart, basket gaps cut out
-  gear: makeSprite(['....kk....', '.kk.kk.kk.', '.kkkkkkkk.', '..kk..kk..', 'kkkk..kkkk', 'kkkk..kkkk', '..kk..kk..', '.kkkkkkkk.', '.kk.kk.kk.', '....kk....'], P),
+  gear: makeSprite(['.k...k...k.', '.k...k...k.', '.k..kwk..k.', '.k...k...k.', '.k...k...k.', 'kwk..k...k.', '.k...k...k.', '.k...k...k.', '.k...k..kwk', '.k...k...k.', '.k...k...k.'], P), // settings: three sliders
   close: makeSprite(['kk...kk', '.kk.kk.', '..kkk..', '..kkk..', '.kk.kk.', 'kk...kk'], P),
   hand: makeSprite(['..kk.......', '.kwwk......', '.kwwk......', '.kwwk......', '.kwwkkkkk..', '.kwwkwwkwwk', 'kkwwwwwwwwk', 'kwkwwwwwwwk', 'kwwwwwwwwwk', 'kwwwwwwwwwk', '.kwwwwwwwwk', '..kwwwwwwk.', '..kkkkkkkk.'], P), // pointing hand
   note: makeSprite(['...kkkk', '...kkkk', '...k..k', '...k..k', '...k..k', '.kkk.kk', 'kkkkkkk', '.kk.kk.'], P),
