@@ -99,7 +99,7 @@ const ICON = {
   coinLine: makeSprite(['.k.', 'kok', 'kyk', 'kyk', 'kyk', 'kyk', 'kyk', 'kyk', 'kyk', 'kyk', 'kok', '.k.'], CP),
   trophy: makeSprite(['...kkkkkkkkkk...', '.kkkcyyyyyyokkk.', 'k.kkcyyyyyyokk.k', 'k.kkcyyyyyyokk.k', 'k.kkcyyyyyyokk.k', '.k.kccyyyyyok.k.', '..kkkcyyyyyokk..', '....kkyyyyokk...', '......kcyk......', '......kcyk......', '......kcok......', '.....kcyyok.....', '....kcyyyyok....', '....kkkkkkkk....'], { k: '#0a0a0a', y: '#ffc400', c: '#fff3b0', o: '#e48a00' }), // gold cup with handles
   cart: makeSprite(['kkk...............', '..kkkkkkkkkkkkkkk.', '...kk.k..k...k..k.', '...kkkkkkkkkkkkkk.', '...kk.k..k..k..k..', '...kkkkkkkkkkkkk..', '....k.k.kk..k.k...', '....kkkkkkkkkk....', '....kkkkkkkkkkkk..', '...............k..', '...kkkkkkkkkkkkk..', '....kk......kk....', '....kk......kk....'], P), // solid black cart, basket gaps cut out
-  gear: makeSprite(['.k...k...k.', '.k...k...k.', '.k..kwk..k.', '.k...k...k.', '.k...k...k.', 'kwk..k...k.', '.k...k...k.', '.k...k...k.', '.k...k..kwk', '.k...k...k.', '.k...k...k.'], P), // settings: three sliders
+  gear: makeSprite(['...kkkk..........', 'kkkkkkkkkkkkkkkkk', '...kkkk..........', '.................', '..........kkkk...', 'kkkkkkkkkkkkkkkkk', '..........kkkk...', '.................', '......kkkk.......', 'kkkkkkkkkkkkkkkkk', '......kkkk.......'], P), // settings: three horizontal sliders with solid knobs, same footprint as the cart icon
   close: makeSprite(['kk...kk', '.kk.kk.', '..kkk..', '..kkk..', '.kk.kk.', 'kk...kk'], P),
   hand: makeSprite(['..kk.......', '.kwwk......', '.kwwk......', '.kwwk......', '.kwwkkkkk..', '.kwwkwwkwwk', 'kkwwwwwwwwk', 'kwkwwwwwwwk', 'kwwwwwwwwwk', 'kwwwwwwwwwk', '.kwwwwwwwwk', '..kwwwwwwk.', '..kkkkkkkk.'], P), // pointing hand
   note: makeSprite(['...kkkk', '...kkkk', '...k..k', '...k..k', '...k..k', '.kkk.kk', 'kkkkkkk', '.kk.kk.'], P),
@@ -1091,22 +1091,42 @@ function drawFrog() {
   }
   game.mouthY = pos.y0 + (MOUTH_ROW[f.anim] ?? 9) + 2;   // screen row of the mouth for this exact frame (used by the tongue)
   if (game.tongue) { // open mouth while the tongue is out
-    const mx = Math.round(f.x) - 5, my = game.mouthY - 2;
-    ctx.fillStyle = P.k; ctx.fillRect(mx, my, 11, 4); ctx.fillStyle = '#7a1030'; ctx.fillRect(mx + 1, my + 1, 9, 2);
+    // the mouth gapes open as the tongue shoots out and closes as it comes back
+    const T = game.tongue, k = T.t / T.dur, open = k < 0.5 ? Math.min(1, k * 4) : Math.max(0, (1 - k) * 2.2);
+    const mw = 11 + Math.round(open * 4), mh = 3 + Math.round(open * 4), mx = Math.round(f.x) - Math.floor(mw / 2), my = game.mouthY - Math.floor(mh / 2);
+    ctx.fillStyle = P.k; ctx.fillRect(mx, my, mw, mh);
+    ctx.fillStyle = '#7a1030'; ctx.fillRect(mx + 1, my + 1, mw - 2, mh - 2);
+    if (mh > 4) { ctx.fillStyle = P.p; ctx.fillRect(mx + 2, my + mh - 3, mw - 4, 2); }  // tongue root inside the mouth
+    game.mouthRect = { x: mx, y: my, w: mw, h: mh };
   }
   ctx.globalAlpha = 1;
 }
 function drawTongue() {
   const T = game.tongue; if (!T) return;
   const f = game.frog, k = T.t / T.dur, ext = k < 0.5 ? Math.min(1, k * 2.4) : Math.max(0, (1 - k) * 2);
-  // straight horizontal shot from the mouth, like a classic side-view frog tongue
-  const my = game.mouthY ?? sy(f.y) - 17, mx = Math.round(f.x + T.dir * 4);
-  const len = Math.round(Math.abs(T.fly.x - f.x) * ext), tx = mx + T.dir * len, ty = my;
-  const x0 = Math.min(mx, tx), x1 = Math.max(mx, tx);
-  ctx.fillStyle = P.k; ctx.fillRect(x0 - 1, my - 3, x1 - x0 + 2, 6);
-  ctx.fillStyle = P.p; ctx.fillRect(x0, my - 2, x1 - x0, 4);
-  ctx.fillStyle = P.a; ctx.fillRect(x0, my - 2, x1 - x0, 1);
-  ctx.fillStyle = P.k; ctx.fillRect(tx - 4, ty - 4, 8, 8); ctx.fillStyle = P.p; ctx.fillRect(tx - 3, ty - 3, 6, 6); ctx.fillStyle = P.a; ctx.fillRect(tx - 2, ty - 3, 3, 1);
+  // the tongue rises from its root on the floor of the open mouth, pushes out through the lip on the side
+  // facing the fly, and only gets its dark outline once it is outside the mouth
+  const M = game.mouthRect || { x: Math.round(f.x) - 6, y: (game.mouthY ?? sy(f.y) - 17) - 2, w: 13, h: 5 };
+  const ty = M.y + Math.floor(M.h / 2), edgeX = T.dir > 0 ? M.x + M.w - 1 : M.x, rootX = Math.round(f.x);
+  const reach = Math.abs(T.fly.x - edgeX), len = Math.round(reach * ext), tx = edgeX + T.dir * len;
+  // inside the mouth: pink, no outline, from the root up to the lip
+  ctx.fillStyle = P.p;
+  const ix0 = Math.min(rootX, edgeX), ix1 = Math.max(rootX, edgeX);
+  ctx.fillRect(ix0, ty - 1, ix1 - ix0 + 1, 2);
+  ctx.fillRect(rootX - 1, ty - 1, 3, Math.max(2, M.y + M.h - 1 - ty));          // the curve down to the root
+  if (len > 0) {
+    // outside: slim tongue with a 1px outline, rounded sticky tip
+    const x0 = Math.min(edgeX + T.dir, tx), x1 = Math.max(edgeX + T.dir, tx);
+    ctx.fillStyle = P.k; ctx.fillRect(x0, ty - 2, x1 - x0 + 1, 1); ctx.fillRect(x0, ty + 1, x1 - x0 + 1, 1);
+    ctx.fillStyle = P.p; ctx.fillRect(x0, ty - 1, x1 - x0 + 1, 2);
+    ctx.fillStyle = P.a; ctx.fillRect(x0, ty - 1, x1 - x0 + 1, 1);
+    ctx.fillStyle = P.p; ctx.fillRect(edgeX, ty - 1, 1, 2);                     // the tongue breaks through the lip
+    if (len > 3) {
+      ctx.fillStyle = P.k; ctx.fillRect(tx - 2, ty - 4, 5, 8); ctx.fillRect(tx - 3, ty - 3, 7, 6);
+      ctx.fillStyle = P.p; ctx.fillRect(tx - 2, ty - 3, 5, 6); ctx.fillRect(tx - 1, ty - 3, 3, 6);
+      ctx.fillStyle = P.a; ctx.fillRect(tx - 1, ty - 2, 2, 1);
+    }
+  }
   if (k >= 0.5) { const spr = T.dir > 0 ? ICON.fly1 : FLY_L[1]; ctx.drawImage(spr, tx - 5, ty - 3); } // the fly rides the tongue back into the mouth
 }
 const FLY_L = [flipSprite(ICON.fly0), flipSprite(ICON.fly1)];
