@@ -42,6 +42,7 @@ function tintPal(pal, fn) { const o = {}; for (const k in pal) o[k] = fn(pal[k])
 // Patterned skins add spots or stripes on top of the skin. The eyes and outline stay the same.
 const SKINS = {
   green: {},
+  lime: { a: '#2c3a10', d: '#6e8c26', b: '#a5c63c', c: '#d0f053' },   // the app-icon frog, in the brand lime
   yellow: { a: '#5a4a10', d: '#b8901c', b: '#e8c22c', c: '#fff05a', g: '#fff3cf', h: '#f0d49a' },
   blue: { a: '#14284f', d: '#2f5aa8', b: '#3f7fe0', c: '#7fb8ff', g: '#e2f3ff', h: '#b4d6f0' },
   magenta: { a: '#4a1040', d: '#a0287e', b: '#d83aa8', c: '#ff7ad6', g: '#ffe2f5', h: '#f0b6dc' },
@@ -196,7 +197,7 @@ const ITEMS = {
 for (const cat in ITEMS) for (const it of ITEMS[cat]) if (it.rows) it.spr = makeSprite(it.rows, it.pal || P);
 const CATS = ['skin', 'hat', 'glasses', 'acc'];
 ITEMS.skin = [
-  { id: 'green', name: 'GREEN', price: 0 }, { id: 'yellow', name: 'YELLOW', price: 200 }, { id: 'blue', name: 'BLUE', price: 200 },
+  { id: 'green', name: 'GREEN', price: 0 }, { id: 'lime', name: 'LIME', price: 200 }, { id: 'yellow', name: 'YELLOW', price: 200 }, { id: 'blue', name: 'BLUE', price: 200 },
   { id: 'magenta', name: 'MAGENTA', price: 250 }, { id: 'white', name: 'WHITE', price: 300 }, { id: 'dart', name: 'DART FROG', price: 600 },
   { id: 'tiger', name: 'TIGER', price: 600 },
 ];

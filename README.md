@@ -44,7 +44,7 @@ Arayüz yalnızca iki renk kullanır: lime `#d0f053` ve siyah `#000000`. Başlı
 - **Gece/gündüz:** Her 320 m'de bir tam döngü. Güneş sağ üstte batıp sönerken ay aynı yerde doğar; bulutlar da renk değiştirir.
 - **Uzay:** 800 skordan sonra gökyüzü kararır, 1000'de tamamen uzaydasın; platformlar da neon uzay renklerine döner: renkli parıldayan yıldızlar, kayan pixel gezegenler (halkalı, gaz devi, dünya benzeri, Mars, Neptün...) ve kuyruklu yıldızlar.
 - **Mağaza:** Şapka (12: astronot kaskı, uzaylı antenleri, büyücü şapkası, barbar kaskı ve şövalye miğferi dahil), gözlük (5, dalgıç maskesi dahil), aksesuar (6, şnorkel dahil). Satın alınan eşya üzerine tekrar dokununca çıkarılır. Test sürümünde `FREE_SHOP = true` olduğu için her şey bedava; yayına alırken `src/game.js` içinde `false` yap.
-- **Renk paketleri:** Mağazanın ilk sekmesinde kurbağa rengi seçilir: yeşil, sarı, mavi, magenta, beyaz ve desenli iki paket (siyah benekli mavi Dart Frog, çizgili turuncu Tiger).
+- **Renk paketleri:** Mağazanın ilk sekmesinde kurbağa rengi seçilir: yeşil, lime (uygulama ikonundaki kurbağa), sarı, mavi, magenta, beyaz ve desenli iki paket (siyah benekli mavi Dart Frog, çizgili turuncu Tiger).
 - **Müzik:** Döngüde çalan 8-bit bir kurbağa şarkısı (Web Audio ile sentezlenir). Ayarlardan açılıp kapatılır, ses seviyesi çubuğu sürüklenerek ayarlanır.
 - **Ayarlar:** Müzik ve efekt sesleri için ayrı aç/kapa ve ses seviyesi çubukları, titreşim, eğimle kontrol.
 - **Duraklatma:** Sol alttaki butonla (bilgisayarda Esc / P). Uygulama arka plana geçince oyun kendiliğinden durur.
