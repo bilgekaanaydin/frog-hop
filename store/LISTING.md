@@ -38,7 +38,7 @@ Alt satır (isteğe bağlı) / Optional second line:
 
 ## Türkçe
 
-**Uygulama adı (30 karakter):** FROHG: Kurbağa Zıplama
+**Uygulama adı (30 karakter):** FROHG
 
 **Alt başlık / kısa açıklama (App Store 30, Google Play 80 karakter):**
 - App Store: Zıpla, sinek ye, uzaya çık!
@@ -74,7 +74,7 @@ Ne kadar yükseğe zıplayabilirsin?
 
 ## English
 
-**App name (30 characters):** FROHG: Frog Jump
+**App name (30 characters):** FROHG
 
 **Subtitle / short description (App Store 30, Google Play 80 characters):**
 - App Store: Hop, eat flies, reach space!
