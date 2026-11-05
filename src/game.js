@@ -42,7 +42,7 @@ function tintPal(pal, fn) { const o = {}; for (const k in pal) o[k] = fn(pal[k])
 // Patterned skins add spots or stripes on top of the skin. The eyes and outline stay the same.
 const SKINS = {
   green: {},
-  lime: { a: '#2c3a10', d: '#6e8c26', b: '#a5c63c', c: '#d0f053' },   // the app-icon frog, in the brand lime
+  lime: { a: '#283b06', d: '#668d00', b: '#9cc700', c: '#c8f120', f: '#ffef78', g: '#ffc200', h: '#f2a000' },   // the app-icon frog (colours taken from frohg-icon.ai)
   yellow: { a: '#5a4a10', d: '#b8901c', b: '#e8c22c', c: '#fff05a', g: '#fff3cf', h: '#f0d49a' },
   blue: { a: '#14284f', d: '#2f5aa8', b: '#3f7fe0', c: '#7fb8ff', g: '#e2f3ff', h: '#b4d6f0' },
   magenta: { a: '#4a1040', d: '#a0287e', b: '#d83aa8', c: '#ff7ad6', g: '#ffe2f5', h: '#f0b6dc' },
